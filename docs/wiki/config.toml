@@ -1,0 +1,51 @@
+baseURL = 'https://voidpointergroup.com/socketboss'
+languageCode = 'en-us'
+title = 'socketboss wiki'
+theme = 'hugo-book'
+paginate = 10
+
+[markup]
+  [markup.asciidocExt]
+    backend = 'html5'
+    doctype = "inline"
+    failureLevel = 'fatal'
+    noHeaderOrFooter = true
+    preserveTOC = false
+    safeMode = 'unsafe'
+    sectionNumbers = false
+    trace = false
+    verbose = false
+    extensions = ["asciidoctor-kroki"]
+
+[security]
+  enableInlineShortcodes = true
+  [security.exec]
+    allow = ['^dart-sass-embedded$', '^go$', '^npx$', '^postcss$', 'asciidoctor', 'asciidoctor-kroki']
+    osEnv = ['(?i)^(PATH|PATHEXT|APPDATA|TMP|TEMP|TERM)$']
+  [security.funcs]
+    getenv = ['^HUGO_']
+  [security.http]
+    methods = ['(?i)GET|POST']
+    urls = ['.*']
+
+
+
+# (Optional) Set this to true if you use capital letters in file names
+disablePathToLower = true
+# (Optional) Set this to true to enable 'Last Modified by' date and git author
+#  information on 'doc' type pages.
+enableGitInfo = true
+# (Optional) Theme is intended for documentation use, therefore it doesn't render taxonomy.
+# You can remove related files with config below
+disableKinds = ['taxonomy', 'taxonomyTerm']
+
+[params]
+  BookTheme = 'auto'
+  BookToC = true
+#   BookMenuBundle = '/menu'
+  BookSection = 'docs'
+  BookRepo = 'https://github.com/voidpointergroup/socketboss'
+  BookDateFormat = 'Jan 2, 2006'
+  BookSearch = true
+  BookPortableLinks = true
+  BookServiceWorker = true

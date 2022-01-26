@@ -1,0 +1,48 @@
+---
+version: '3'
+services:
+  socketboss:
+    container_name: socketboss
+    restart: always
+    build:
+      dockerfile: ./docker/Dockerfile
+      context: ./socketboss
+    depends_on:
+      - redis
+      - rulesengine
+      - defaultroute
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./socketboss/res:/app/config:ro"
+
+  redis:
+    container_name: redis
+    restart: always
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  redis-commander:
+    container_name: redis-commander
+    restart: always
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "6380:8081"
+
+  rulesengine:
+    container_name: rulesengine
+    restart: always
+    entrypoint: "python3 rules_engine.py"
+    build:
+      dockerfile: ./docker/Dockerfile
+      context: ./support
+  defaultroute:
+    container_name: defaultroute
+    restart: always
+    entrypoint: "python3 defaultroute.py"
+    build:
+      dockerfile: ./docker/Dockerfile
+      context: ./support

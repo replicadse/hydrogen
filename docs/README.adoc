@@ -1,0 +1,5 @@
+= socketboss
+
+`socketboss` is a (very, very much) websocket API gateway that abstracts websocket connections from services while still allowing bidirectional communication.
+
+See https://voidpointergroup.com/senile[the wiki] for more information.
