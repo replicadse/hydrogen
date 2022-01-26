@@ -6,6 +6,6 @@ RUN cargo +nightly build --release
 
 FROM gcr.io/distroless/cc
 WORKDIR /app
-COPY --from=build-env /app/target/release/socketboss .
+COPY --from=build-env /app/target/release/spoderman .
 USER 1000
-CMD ["./socketboss", "serve", "-c", "./config/config.yaml"]
+CMD ["./spoderman", "serve", "-c", "./config/config.yaml"]

@@ -1,12 +1,12 @@
 ---
 version: '3'
 services:
-  socketboss:
-    container_name: socketboss
+  spoderman:
+    container_name: spoderman
     restart: always
     build:
       dockerfile: ./docker/Dockerfile
-      context: ./socketboss
+      context: ./spoderman
     depends_on:
       - redis
       - rulesengine
@@ -14,7 +14,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - "./socketboss/res:/app/config:ro"
+      - "./spoderman/res:/app/config:ro"
 
   redis:
     container_name: redis

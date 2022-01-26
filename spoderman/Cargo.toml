@@ -1,5 +1,5 @@
 [package]
-name = "socketboss"
+name = "spoderman"
 version = "0.1.0"
 authors = ["alexander weber <aw@voidpointergroup.com>"]
 edition = "2018"
