@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct LogMessage {
     time: String,
@@ -24,16 +24,17 @@ impl LogMessage {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Data {
     Event { data: Event },
     Interval { stats: Stats },
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Event {
+    Error { err: String },
     Startup { message: String },
 
     Connect { connection: String },

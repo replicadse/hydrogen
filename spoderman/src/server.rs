@@ -70,7 +70,11 @@ impl Server {
                 match safecall() {
                     | Ok(_) => {},
                     | Err(e) => {
-                        println!("{}", e)
+                        crate::logger::LogMessage::now(instance.to_string(), crate::logger::Data::Event {
+                            data: crate::logger::Event::Error {
+                                err: e.to_string(),
+                            }
+                        });
                     },
                 }
             }
@@ -97,69 +101,73 @@ impl Actor for Server {
 }
 
 impl Handler<Disconnect> for Server {
-    type Result = ();
+    type Result = std::result::Result<(), u16>;
 
-    fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
-        let safecall_disconnect =
-            |conn: &std::option::Option<crate::config::DisconnectRoute>| -> Result<(), Box<dyn std::error::Error>> {
-                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
-                    data: crate::logger::Event::Disconnect {
-                        connection: msg.connection.to_string(),
-                    },
-                });
+    fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) -> Self::Result {
+        let safecall = || -> Result<(), Box<dyn std::error::Error>> {
+            crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                data: crate::logger::Event::Disconnect {
+                    connection: msg.connection.to_string(),
+                },
+            });
 
-                self.sessions.write()?.remove(&msg.connection);
+            let key = self.make_key(msg.connection);
+            let rkey = self.make_reverse_key(msg.connection);
+            redis::pipe()
+                .cmd("DEL")
+                .arg(&key)
+                .cmd("DEL")
+                .arg(&rkey)
+                .query::<()>(&mut self.redis.get_connection()?)?;
 
-                let key = self.make_key(msg.connection);
-                let rkey = self.make_reverse_key(msg.connection);
-                redis::pipe()
-                    .cmd("DEL")
-                    .arg(&key)
-                    .cmd("DEL")
-                    .arg(&rkey)
-                    .query::<()>(&mut self.redis.get_connection()?)?;
+            self.sessions.write()?.remove(&msg.connection);
 
-                match conn {
-                    | Some(c) => {
-                        let mut req = ureq::get(&c.endpoint);
-                        for (k, v) in c.headers.iter() {
-                            req = req.set(k, v);
-                        }
+            match &self.config.routes.disconnect {
+                | Some(c) => {
+                    let mut req = ureq::get(&c.endpoint);
+                    for (k, v) in c.headers.iter() {
+                        req = req.set(k, v);
+                    }
 
-                        let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
-                            instance_id: &self.instance.to_string(),
-                            connection_id: &msg.connection.to_string(),
-                        })?)?;
+                    let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
+                        instance_id: &self.instance.to_string(),
+                        connection_id: &msg.connection.to_string(),
+                    })?)?;
 
-                        crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
-                            data: crate::logger::Event::DisconnectRouteResponse {
-                                connection: msg.connection.to_string(),
-                                response: resp.status(),
-                            },
-                        });
+                    crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                        data: crate::logger::Event::DisconnectRouteResponse {
+                            connection: msg.connection.to_string(),
+                            response: resp.status(),
+                        },
+                    });
 
-                        match resp.status() {
-                            | 200 => Ok(()),
-                            | _ => Err(Box::new(crate::error::DisconnectRouteError::new(&format!(
-                                "disconnect route error code {}",
-                                resp.status()
-                            )))),
-                        }
-                    },
-                    | None => Ok(()),
-                }
-            };
-        match safecall_disconnect(&self.config.routes.disconnect) {
-            | Ok(_) => {},
+                    match resp.status() {
+                        | 200 => Ok(()),
+                        | _ => Err(Box::new(crate::error::DisconnectRouteError::new(&format!(
+                            "disconnect route error code {}",
+                            resp.status()
+                        )))),
+                    }
+                },
+                | None => Ok(()),
+            }
+        };
+        match safecall() {
+            | Ok(_) => Ok(()),
             | Err(e) => {
-                println!("{}", e)
+                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                    data: crate::logger::Event::Error {
+                        err: e.to_string(),
+                    }
+                });
+                Err(500_u16)
             },
         }
     }
 }
 
 impl Handler<Connect> for Server {
-    type Result = ();
+    type Result = std::result::Result<(), u16>;
 
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
@@ -168,6 +176,7 @@ impl Handler<Connect> for Server {
                     connection: msg.connection.to_string(),
                 },
             });
+
             self.sessions.write()?.insert(msg.connection.clone(), msg.addr.clone());
 
             match &self.config.routes.connect {
@@ -221,16 +230,21 @@ impl Handler<Connect> for Server {
             Ok(())
         };
         match safecall() {
-            | Ok(_) => {},
+            | Ok(_) => Ok(()),
             | Err(e) => {
-                println!("{}", e);
+                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                    data: crate::logger::Event::Error {
+                        err: e.to_string(),
+                    }
+                });
+                Err(500_u16)
             },
         }
     }
 }
 
 impl Handler<Heartbeat> for Server {
-    type Result = ();
+    type Result = std::result::Result<(), u16>;
 
     fn handle(&mut self, msg: Heartbeat, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
@@ -247,9 +261,14 @@ impl Handler<Heartbeat> for Server {
             Ok(())
         };
         match safecall() {
-            | Ok(_) => {},
+            | Ok(_) => Ok(()),
             | Err(e) => {
-                println!("{}", e);
+                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                    data: crate::logger::Event::Error {
+                        err: e.to_string(),
+                    }
+                });
+                Err(500_u16)
             },
         }
     }
@@ -277,14 +296,18 @@ impl Handler<ServerMessage> for Server {
         match safecall() {
             | Ok(_) => {},
             | Err(e) => {
-                println!("{}", e);
+                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                    data: crate::logger::Event::Error {
+                        err: e.to_string(),
+                    }
+                });
             },
         }
     }
 }
 
 impl Handler<ClientMessage> for Server {
-    type Result = ();
+    type Result = std::result::Result<(), u16>;
 
     fn handle(&mut self, msg: ClientMessage, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
@@ -348,9 +371,14 @@ impl Handler<ClientMessage> for Server {
             }
         };
         match safecall() {
-            | Ok(_) => {},
+            | Ok(_) => Ok(()),
             | Err(e) => {
-                println!("{}", e);
+                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                    data: crate::logger::Event::Error {
+                        err: e.to_string(),
+                    }
+                });
+                Err(500_u16)
             },
         }
     }

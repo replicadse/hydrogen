@@ -14,11 +14,11 @@ use actix::{
     Handler,
     Running,
     StreamHandler,
-    WrapFuture,
+    WrapFuture, MailboxError,
 };
 use actix_web_actors::{
     ws,
-    ws::Message::Text,
+    ws::{Message::Text, WebsocketContext},
 };
 use uuid::Uuid;
 
@@ -65,10 +65,15 @@ impl Actor for WsConn {
                 connection: self.connection,
             })
             .into_actor(self)
-            .then(|res, _, ctx| {
+            .then(|res: std::result::Result<std::result::Result<(), u16>, MailboxError>, _, ctx: &mut WebsocketContext<WsConn>| {
                 match res {
-                    | Ok(_res) => (),
-                    | _ => ctx.stop(),
+                    | Ok(inner) => {
+                        match inner {
+                            | Ok(..) => (),
+                            | Err(..) => ctx.stop(),
+                        }
+                    },
+                    | Err(..) => ctx.stop(),
                 }
                 fut::ready(())
             })

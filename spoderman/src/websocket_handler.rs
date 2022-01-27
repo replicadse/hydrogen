@@ -65,7 +65,11 @@ pub async fn handler(
             Ok(resp)
         },
         | Err(e) => {
-            println!("{}", e);
+            crate::logger::LogMessage::now(instance.to_string(), crate::logger::Data::Event {
+                data: crate::logger::Event::Error {
+                    err: e.to_string(),
+                }
+            });
             Err(actix_web::error::ErrorUnauthorized(e))
         },
     }

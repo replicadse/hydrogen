@@ -9,26 +9,26 @@ use uuid::Uuid;
 pub struct WsMessage(pub String);
 
 #[derive(Message)]
-#[rtype(result = "()")]
+#[rtype(result = "std::result::Result<(), u16>")]
 pub struct Connect {
     pub connection: Uuid,
     pub addr: Recipient<WsMessage>,
 }
 
 #[derive(Message)]
-#[rtype(result = "()")]
+#[rtype(result = "std::result::Result<(), u16>")]
 pub struct Disconnect {
     pub connection: Uuid,
 }
 
 #[derive(Message)]
-#[rtype(result = "()")]
+#[rtype(result = "std::result::Result<(), u16>")]
 pub struct Heartbeat {
     pub connection: Uuid,
 }
 
 #[derive(Debug, Message, serde::Serialize, serde::Deserialize)]
-#[rtype(result = "()")]
+#[rtype(result = "std::result::Result<(), u16>")]
 pub struct ClientMessage {
     pub connection: Uuid,
     pub msg: String,

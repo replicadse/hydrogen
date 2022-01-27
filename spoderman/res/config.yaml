@@ -15,7 +15,7 @@ routes:
     # connect:
     #     endpoint: "http://localhost:8091"
     #     headers:
-    #         Authorization: boosker_cennect
+    #         Authorization: boosker_connect
     # disconnect:
     #     endpoint: "http://localhost:8093"
     #     headers:
