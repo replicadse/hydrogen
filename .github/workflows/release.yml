@@ -20,7 +20,7 @@ jobs:
     - uses: actions/checkout@v1
     - name: build image
       working-directory: ./spoderman
-      run: invoke docker.build --tag=${{ github.event.inputs.tag }}
+      run: invoke docker.build --tag=voidpointergroup/spoderman:${{ github.event.inputs.tag }}
     - name: publish
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
