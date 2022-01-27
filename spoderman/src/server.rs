@@ -14,6 +14,8 @@ use crate::messages::{
     ServerMessage,
 };
 
+const STATS_INTERVAL: std::time::Duration = std::time::Duration::from_secs(5);
+
 type Socket = actix::prelude::Recipient<crate::messages::WsMessage>;
 
 pub struct Server {
@@ -39,7 +41,7 @@ impl Server {
                     count: t2_sess_arc.read().unwrap().len(),
                 },
             });
-            std::thread::sleep(std::time::Duration::from_secs(10));
+            std::thread::sleep(STATS_INTERVAL);
         });
 
         std::thread::spawn(move || {
@@ -98,72 +100,6 @@ impl Server {
 
 impl Actor for Server {
     type Context = Context<Self>;
-}
-
-impl Handler<Disconnect> for Server {
-    type Result = std::result::Result<(), u16>;
-
-    fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) -> Self::Result {
-        let safecall = || -> Result<(), Box<dyn std::error::Error>> {
-            crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
-                data: crate::logger::Event::Disconnect {
-                    connection: msg.connection.to_string(),
-                },
-            });
-
-            let key = self.make_key(msg.connection);
-            let rkey = self.make_reverse_key(msg.connection);
-            redis::pipe()
-                .cmd("DEL")
-                .arg(&key)
-                .cmd("DEL")
-                .arg(&rkey)
-                .query::<()>(&mut self.redis.get_connection()?)?;
-
-            self.sessions.write()?.remove(&msg.connection);
-
-            match &self.config.routes.disconnect {
-                | Some(c) => {
-                    let mut req = ureq::get(&c.endpoint);
-                    for (k, v) in c.headers.iter() {
-                        req = req.set(k, v);
-                    }
-
-                    let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
-                        instance_id: &self.instance.to_string(),
-                        connection_id: &msg.connection.to_string(),
-                    })?)?;
-
-                    crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
-                        data: crate::logger::Event::DisconnectRouteResponse {
-                            connection: msg.connection.to_string(),
-                            response: resp.status(),
-                        },
-                    });
-
-                    match resp.status() {
-                        | 200 => Ok(()),
-                        | _ => Err(Box::new(crate::error::DisconnectRouteError::new(&format!(
-                            "disconnect route error code {}",
-                            resp.status()
-                        )))),
-                    }
-                },
-                | None => Ok(()),
-            }
-        };
-        match safecall() {
-            | Ok(_) => Ok(()),
-            | Err(e) => {
-                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
-                    data: crate::logger::Event::Error {
-                        err: e.to_string(),
-                    }
-                });
-                Err(500_u16)
-            },
-        }
-    }
 }
 
 impl Handler<Connect> for Server {
@@ -228,6 +164,72 @@ impl Handler<Connect> for Server {
                 .query::<()>(&mut self.redis.get_connection()?)?;
 
             Ok(())
+        };
+        match safecall() {
+            | Ok(_) => Ok(()),
+            | Err(e) => {
+                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                    data: crate::logger::Event::Error {
+                        err: e.to_string(),
+                    }
+                });
+                Err(500_u16)
+            },
+        }
+    }
+}
+
+impl Handler<Disconnect> for Server {
+    type Result = std::result::Result<(), u16>;
+
+    fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) -> Self::Result {
+        let safecall = || -> Result<(), Box<dyn std::error::Error>> {
+            crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                data: crate::logger::Event::Disconnect {
+                    connection: msg.connection.to_string(),
+                },
+            });
+
+            let key = self.make_key(msg.connection);
+            let rkey = self.make_reverse_key(msg.connection);
+            redis::pipe()
+                .cmd("DEL")
+                .arg(&key)
+                .cmd("DEL")
+                .arg(&rkey)
+                .query::<()>(&mut self.redis.get_connection()?)?;
+
+            self.sessions.write()?.remove(&msg.connection);
+
+            match &self.config.routes.disconnect {
+                | Some(c) => {
+                    let mut req = ureq::get(&c.endpoint);
+                    for (k, v) in c.headers.iter() {
+                        req = req.set(k, v);
+                    }
+
+                    let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
+                        instance_id: &self.instance.to_string(),
+                        connection_id: &msg.connection.to_string(),
+                    })?)?;
+
+                    crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                        data: crate::logger::Event::DisconnectRouteResponse {
+                            connection: msg.connection.to_string(),
+                            response: resp.status(),
+                        },
+                    });
+
+                    match resp.status() {
+                        | 200 => Ok(()),
+                        | _ => Err(Box::new(crate::error::DisconnectRouteError::new(&format!(
+                            "disconnect route error code {}",
+                            resp.status()
+                        )))),
+                    }
+                },
+                | None => Ok(()),
+            }
         };
         match safecall() {
             | Ok(_) => Ok(()),
