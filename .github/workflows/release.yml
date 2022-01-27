@@ -1,0 +1,28 @@
+name: pipeline
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'tag'
+        required: true
+
+jobs:
+  publish-ghcr:
+    name: publish to ghcr (${{ github.event.inputs.tag }})
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+    - name: install tools
+      run: |
+        sudo apt-get install build-essential
+        rustup default stable
+        pip install invoke
+    - uses: actions/checkout@v1
+    - name: build image
+      working-directory: ./spoderman
+      run: invoke docker.build --tag=${{ github.event.inputs.tag }}
+    - name: publish
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+        docker tag voidpointergroup/spoderman:${{ github.event.inputs.tag }} docker.pkg.github.com/voidpointergroup/spoderman/spoderman:${{ github.event.inputs.tag }}
+        docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman:${{ github.event.inputs.tag }}
