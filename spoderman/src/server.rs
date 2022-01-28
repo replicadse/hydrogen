@@ -35,9 +35,10 @@ impl Server {
         let stats_interval: u64 = config.server.stats.into();
 
         std::thread::spawn(move || loop {
-            crate::logger::LogMessage::now(t2_instance_id.to_string(), crate::logger::Data::Interval {
+            crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {
                 stats: crate::logger::Stats::ConnectedClients {
                     count: t2_sess_arc.read().unwrap().len(),
+                    clients: t2_sess_arc.read().unwrap().keys().into_iter().collect(),
                 },
             });
             std::thread::sleep(std::time::Duration::from_secs(stats_interval));
@@ -53,9 +54,9 @@ impl Server {
                     let msg = ps.get_message()?;
                     let pl: String = msg.get_payload()?;
                     let payload: ServerMessage = serde_json::from_str::<crate::messages::ServerMessage>(&pl)?;
-                    crate::logger::LogMessage::now(t_instance_id.to_string(), crate::logger::Data::Event {
+                    crate::logger::LogMessage::now(&t_instance_id, crate::logger::Data::Event {
                         data: crate::logger::Event::ServerMessagePost {
-                            connection: payload.connection.to_string(),
+                            connection: &payload.connection.to_string(),
                         },
                     });
                     match t_sess_arc.read()?.get(&payload.connection) {
@@ -71,9 +72,9 @@ impl Server {
                 match safecall() {
                     | Ok(_) => {},
                     | Err(e) => {
-                        crate::logger::LogMessage::now(instance.to_string(), crate::logger::Data::Event {
+                        crate::logger::LogMessage::now(&instance.to_string(), crate::logger::Data::Event {
                             data: crate::logger::Event::Error {
-                                err: e.to_string(),
+                                err: &e.to_string(),
                             }
                         });
                     },
@@ -106,9 +107,9 @@ impl Handler<Connect> for Server {
 
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
-            crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                 data: crate::logger::Event::Connect {
-                    connection: msg.connection.to_string(),
+                    connection: &msg.connection.to_string(),
                 },
             });
             self.sessions.write().unwrap().insert(msg.connection.clone(), msg.addr.clone()); // must never be poisoned
@@ -124,9 +125,9 @@ impl Handler<Connect> for Server {
                         connection_id: &msg.connection.to_string(),
                     })?)?;
 
-                    crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                    crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                         data: crate::logger::Event::ConnectRouteResponse {
-                            connection: msg.connection.to_string(),
+                            connection: &msg.connection.to_string(),
                             response: resp.status(),
                         },
                     });
@@ -165,9 +166,9 @@ impl Handler<Connect> for Server {
         match safecall() {
             | Ok(_) => Ok(()),
             | Err(e) => {
-                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                     data: crate::logger::Event::Error {
-                        err: e.to_string(),
+                        err: &e.to_string(),
                     }
                 });
                 self.sessions.write().unwrap().remove(&msg.connection); // must never be poisoned
@@ -182,9 +183,9 @@ impl Handler<Disconnect> for Server {
 
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
-            crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                 data: crate::logger::Event::Disconnect {
-                    connection: msg.connection.to_string(),
+                    connection: &msg.connection.to_string(),
                 },
             });
 
@@ -211,9 +212,9 @@ impl Handler<Disconnect> for Server {
                         connection_id: &msg.connection.to_string(),
                     })?)?;
 
-                    crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                    crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                         data: crate::logger::Event::DisconnectRouteResponse {
-                            connection: msg.connection.to_string(),
+                            connection: &msg.connection.to_string(),
                             response: resp.status(),
                         },
                     });
@@ -232,9 +233,9 @@ impl Handler<Disconnect> for Server {
         match safecall() {
             | Ok(_) => Ok(()),
             | Err(e) => {
-                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                     data: crate::logger::Event::Error {
-                        err: e.to_string(),
+                        err: &e.to_string(),
                     }
                 });
                 Err(500_u16)
@@ -263,9 +264,9 @@ impl Handler<Heartbeat> for Server {
         match safecall() {
             | Ok(_) => Ok(()),
             | Err(e) => {
-                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                     data: crate::logger::Event::Error {
-                        err: e.to_string(),
+                        err: &e.to_string(),
                     }
                 });
                 Err(500_u16)
@@ -279,9 +280,9 @@ impl Handler<ServerMessage> for Server {
 
     fn handle(&mut self, msg: ServerMessage, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
-            crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                 data: crate::logger::Event::ServerMessageEnqueue {
-                    connection: msg.connection.to_string(),
+                    connection: &msg.connection.to_string(),
                 },
             });
 
@@ -296,9 +297,9 @@ impl Handler<ServerMessage> for Server {
         match safecall() {
             | Ok(_) => {},
             | Err(e) => {
-                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                     data: crate::logger::Event::Error {
-                        err: e.to_string(),
+                        err: &e.to_string(),
                     }
                 });
             },
@@ -311,9 +312,9 @@ impl Handler<ClientMessage> for Server {
 
     fn handle(&mut self, msg: ClientMessage, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
-            crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                 data: crate::logger::Event::ClientMessage {
-                    connection: msg.connection.to_string(),
+                    connection: &msg.connection.to_string(),
                 },
             });
 
@@ -328,9 +329,9 @@ impl Handler<ClientMessage> for Server {
                 msg: &msg.msg,
             })?)?;
 
-            crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                 data: crate::logger::Event::RulesEngineRouteResponse {
-                    connection: msg.connection.to_string(),
+                    connection: &msg.connection.to_string(),
                     response: re_response.status(),
                 },
             });
@@ -355,9 +356,9 @@ impl Handler<ClientMessage> for Server {
                 message: &msg.msg,
             })?)?;
 
-            crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                 data: crate::logger::Event::ForwardRouteResponse {
-                    connection: msg.connection.to_string(),
+                    connection: &msg.connection.to_string(),
                     response: forward_resp.status(),
                 },
             });
@@ -373,9 +374,9 @@ impl Handler<ClientMessage> for Server {
         match safecall() {
             | Ok(_) => Ok(()),
             | Err(e) => {
-                crate::logger::LogMessage::now(self.instance.to_string(), crate::logger::Data::Event {
+                crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                     data: crate::logger::Event::Error {
-                        err: e.to_string(),
+                        err: &e.to_string(),
                     }
                 });
                 Err(500_u16)

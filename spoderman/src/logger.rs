@@ -1,13 +1,13 @@
 #[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
-pub struct LogMessage {
+pub struct LogMessage<'a> {
     time: String,
-    instance: String,
-    data: Data,
+    instance: &'a str,
+    data: Data<'a>,
 }
 
-impl LogMessage {
-    pub fn now(instance: String, data: Data) -> () {
+impl<'a> LogMessage<'a> {
+    pub fn now(instance: &'a str, data: Data<'a>) -> () {
         Self {
             time: chrono::Utc::now().to_rfc3339(),
             instance,
@@ -26,33 +26,33 @@ impl LogMessage {
 
 #[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Data {
-    Event { data: Event },
-    Interval { stats: Stats },
+pub enum Data<'a> {
+    Event { data: Event<'a> },
+    Interval { stats: Stats<'a> },
 }
 
 #[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Event {
-    Error { err: String },
-    Startup { message: String },
+pub enum Event<'a> {
+    Error { err: &'a str },
+    Startup { message: &'a str },
 
-    Connect { connection: String },
-    Disconnect { connection: String },
+    Connect { connection: &'a str },
+    Disconnect { connection: &'a str },
 
-    ClientMessage { connection: String },
-    ServerMessageEnqueue { connection: String },
-    ServerMessagePost { connection: String },
+    ClientMessage { connection: &'a str },
+    ServerMessageEnqueue { connection: &'a str },
+    ServerMessagePost { connection: &'a str },
 
-    AuthRouteResponse { connection: String, response: u16 },
-    ConnectRouteResponse { connection: String, response: u16 },
-    RulesEngineRouteResponse { connection: String, response: u16 },
-    ForwardRouteResponse { connection: String, response: u16 },
-    DisconnectRouteResponse { connection: String, response: u16 },
+    AuthRouteResponse { connection: &'a str, response: u16 },
+    ConnectRouteResponse { connection: &'a str, response: u16 },
+    RulesEngineRouteResponse { connection: &'a str, response: u16 },
+    ForwardRouteResponse { connection: &'a str, response: u16 },
+    DisconnectRouteResponse { connection: &'a str, response: u16 },
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Stats {
-    ConnectedClients { count: usize },
+pub enum Stats<'a> {
+    ConnectedClients { count: usize, clients: Vec::<&'a uuid::Uuid> },
 }

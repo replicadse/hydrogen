@@ -39,9 +39,9 @@ pub async fn handler(
                     headers: c.headers.iter().map(|v| (v.0.to_owned(), v.1.to_owned())).collect(),
                 })?)?;
 
-                crate::logger::LogMessage::now(instance.to_string(), crate::logger::Data::Event {
+                crate::logger::LogMessage::now(&instance.to_string(), crate::logger::Data::Event {
                     data: crate::logger::Event::AuthRouteResponse {
-                        connection: conn_id.to_string(),
+                        connection: &conn_id.to_string(),
                         response: resp.status(),
                     },
                 });
@@ -67,9 +67,9 @@ pub async fn handler(
             Ok(resp)
         },
         | Err(e) => {
-            crate::logger::LogMessage::now(instance.to_string(), crate::logger::Data::Event {
+            crate::logger::LogMessage::now(&instance.to_string(), crate::logger::Data::Event {
                 data: crate::logger::Event::Error {
-                    err: e.to_string(),
+                    err: &e.to_string(),
                 }
             });
             Err(actix_web::error::ErrorUnauthorized(e))

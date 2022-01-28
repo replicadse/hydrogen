@@ -33,23 +33,23 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
 
 async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn Error>> {
     let instance = uuid::Uuid::new_v4();
-    logger::LogMessage::now(instance.to_string(), logger::Data::Event {
+    logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
         data: logger::Event::Startup {
-            message: format!("new instance {}", &instance),
+            message: &format!("new instance {}", &instance),
         },
     });
 
     let redis = redis::Client::open(config.redis.endpoint.clone())?;
-    logger::LogMessage::now(instance.to_string(), logger::Data::Event {
+    logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
         data: logger::Event::Startup {
-            message: format!("redis client opened @ {}", &config.redis.endpoint),
+            message: &format!("redis client opened @ {}", &config.redis.endpoint),
         },
     });
 
     let bind = config.server.address.clone();
-    logger::LogMessage::now(instance.to_string(), logger::Data::Event {
+    logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
         data: logger::Event::Startup {
-            message: format!("instance will bind @ {}", &bind),
+            message: &format!("instance will bind @ {}", &bind),
         },
     });
 
