@@ -340,7 +340,7 @@ impl Handler<ClientMessage> for Server {
 
             let mut forwerd_req = ureq::post(&re_response_parsed.endpoint);
             for h in re_response_parsed.headers.iter() {
-                forwerd_req = forwerd_req.set(&h[0], &h[1]);
+                forwerd_req = forwerd_req.set(h.0, h.1);
             }
 
             let forward_resp = forwerd_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {

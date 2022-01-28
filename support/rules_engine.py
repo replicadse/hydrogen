@@ -19,9 +19,9 @@ class MyServer(BaseHTTPRequestHandler):
         self.end_headers()
         body = {
             "endpoint": "http://defaultroute:8080",
-            "headers": [
-                ("Authorization", "sugarhowyougetsofly")
-            ]
+            "headers": {
+                "Authorization": "sugarhowyougetsofly"
+            }
         }
         self.wfile.write(bytes(JSONEncoder().encode(body), "utf-8"))
 

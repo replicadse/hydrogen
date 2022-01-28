@@ -21,7 +21,7 @@ pub struct RulesEngineRequest<'a> {
 #[derive(Debug, serde::Deserialize)]
 pub struct RulesEngineResponse {
     pub endpoint: String,
-    pub headers: std::vec::Vec<std::vec::Vec<String>>,
+    pub headers: std::collections::HashMap<String, String>,
 }
 
 #[derive(Debug, serde::Serialize)]
