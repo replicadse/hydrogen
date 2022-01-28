@@ -58,9 +58,11 @@ pub async fn handler(
         }
     };
 
-    let ws = WsConn::new(srv.get_ref().clone(), 
-    std::time::Duration::from_secs(config.server.heartbeats.into()),
-        std::time::Duration::from_secs(config.server.connection_timeout.into()));
+    let ws = WsConn::new(
+        srv.get_ref().clone(),
+        std::time::Duration::from_secs(config.server.heartbeats.into()),
+        std::time::Duration::from_secs(config.server.connection_timeout.into()),
+    );
     match safecall_auth(&ws.connection, &config.authorizer) {
         | Ok(_) => {
             let resp = ws::start(ws, &req, stream)?;
@@ -68,9 +70,7 @@ pub async fn handler(
         },
         | Err(e) => {
             crate::logger::LogMessage::now(&instance.to_string(), crate::logger::Data::Event {
-                data: crate::logger::Event::Error {
-                    err: &e.to_string(),
-                }
+                data: crate::logger::Event::Error { err: &e.to_string() },
             });
             Err(actix_web::error::ErrorUnauthorized(e))
         },

@@ -73,9 +73,7 @@ impl Server {
                     | Ok(_) => {},
                     | Err(e) => {
                         crate::logger::LogMessage::now(&instance.to_string(), crate::logger::Data::Event {
-                            data: crate::logger::Event::Error {
-                                err: &e.to_string(),
-                            }
+                            data: crate::logger::Event::Error { err: &e.to_string() },
                         });
                     },
                 }
@@ -112,7 +110,10 @@ impl Handler<Connect> for Server {
                     connection: &msg.connection.to_string(),
                 },
             });
-            self.sessions.write().unwrap().insert(msg.connection.clone(), msg.addr.clone()); // must never be poisoned
+            self.sessions
+                .write()
+                .unwrap()
+                .insert(msg.connection.clone(), msg.addr.clone()); // must never be poisoned
             match &self.config.routes.connect {
                 | Some(c) => {
                     let mut req = ureq::post(&c.endpoint);
@@ -167,9 +168,7 @@ impl Handler<Connect> for Server {
             | Ok(_) => Ok(()),
             | Err(e) => {
                 crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
-                    data: crate::logger::Event::Error {
-                        err: &e.to_string(),
-                    }
+                    data: crate::logger::Event::Error { err: &e.to_string() },
                 });
                 self.sessions.write().unwrap().remove(&msg.connection); // must never be poisoned
                 Err(500_u16)
@@ -234,9 +233,7 @@ impl Handler<Disconnect> for Server {
             | Ok(_) => Ok(()),
             | Err(e) => {
                 crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
-                    data: crate::logger::Event::Error {
-                        err: &e.to_string(),
-                    }
+                    data: crate::logger::Event::Error { err: &e.to_string() },
                 });
                 Err(500_u16)
             },
@@ -265,9 +262,7 @@ impl Handler<Heartbeat> for Server {
             | Ok(_) => Ok(()),
             | Err(e) => {
                 crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
-                    data: crate::logger::Event::Error {
-                        err: &e.to_string(),
-                    }
+                    data: crate::logger::Event::Error { err: &e.to_string() },
                 });
                 Err(500_u16)
             },
@@ -298,9 +293,7 @@ impl Handler<ServerMessage> for Server {
             | Ok(_) => {},
             | Err(e) => {
                 crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
-                    data: crate::logger::Event::Error {
-                        err: &e.to_string(),
-                    }
+                    data: crate::logger::Event::Error { err: &e.to_string() },
                 });
             },
         }
@@ -375,9 +368,7 @@ impl Handler<ClientMessage> for Server {
             | Ok(_) => Ok(()),
             | Err(e) => {
                 crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
-                    data: crate::logger::Event::Error {
-                        err: &e.to_string(),
-                    }
+                    data: crate::logger::Event::Error { err: &e.to_string() },
                 });
                 Err(500_u16)
             },

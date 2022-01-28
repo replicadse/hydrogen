@@ -1,6 +1,4 @@
-use std::time::{
-    Instant,
-};
+use std::time::Instant;
 
 use actix::{
     fut,
@@ -11,13 +9,17 @@ use actix::{
     AsyncContext,
     ContextFutureSpawner,
     Handler,
+    MailboxError,
     Running,
     StreamHandler,
-    WrapFuture, MailboxError,
+    WrapFuture,
 };
 use actix_web_actors::{
     ws,
-    ws::{Message::Text, WebsocketContext},
+    ws::{
+        Message::Text,
+        WebsocketContext,
+    },
 };
 use uuid::Uuid;
 
@@ -65,18 +67,20 @@ impl Actor for WsConn {
                 connection: self.connection,
             })
             .into_actor(self)
-            .then(|res: std::result::Result<std::result::Result<(), u16>, MailboxError>, _, ctx: &mut WebsocketContext<WsConn>| {
-                match res {
-                    | Ok(inner) => {
-                        match inner {
+            .then(
+                |res: std::result::Result<std::result::Result<(), u16>, MailboxError>,
+                 _,
+                 ctx: &mut WebsocketContext<WsConn>| {
+                    match res {
+                        | Ok(inner) => match inner {
                             | Ok(..) => (),
                             | Err(..) => ctx.stop(),
-                        }
-                    },
-                    | Err(..) => ctx.stop(),
-                }
-                fut::ready(())
-            })
+                        },
+                        | Err(..) => ctx.stop(),
+                    }
+                    fut::ready(())
+                },
+            )
             .wait(ctx);
     }
 
@@ -89,7 +93,12 @@ impl Actor for WsConn {
 }
 
 impl WsConn {
-    fn heartbeat(&self, ctx: &mut ws::WebsocketContext<Self>, interval: std::time::Duration, timeout: std::time::Duration) {
+    fn heartbeat(
+        &self,
+        ctx: &mut ws::WebsocketContext<Self>,
+        interval: std::time::Duration,
+        timeout: std::time::Duration,
+    ) {
         ctx.run_interval(interval, move |act, ctx| {
             if Instant::now().duration_since(act.heartbeat) > timeout {
                 act.address.do_send(Disconnect {

@@ -1,9 +1,9 @@
 mod args;
 mod config;
 mod error;
-mod routes;
 mod logger;
 mod messages;
+mod routes;
 mod send_handler;
 mod server;
 mod websocket_handler;

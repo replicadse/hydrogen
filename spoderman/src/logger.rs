@@ -18,8 +18,8 @@ impl<'a> LogMessage<'a> {
 
     pub fn log(&self) -> () {
         match serde_json::to_string(self) {
-            Ok(v) => println!("{}", v),
-            Err(e) => println!("{}", e),
+            | Ok(v) => println!("{}", v),
+            | Err(e) => println!("{}", e),
         }
     }
 }
@@ -54,5 +54,5 @@ pub enum Event<'a> {
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Stats<'a> {
-    ConnectedClients { count: usize, clients: Vec::<&'a uuid::Uuid> },
+    ConnectedClients { count: usize, clients: Vec<&'a uuid::Uuid> },
 }
