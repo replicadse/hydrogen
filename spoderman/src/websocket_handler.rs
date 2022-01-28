@@ -29,7 +29,7 @@ pub async fn handler(
      -> Result<(), Box<dyn std::error::Error>> {
         match auth_route {
             | Some(c) => {
-                let mut auth_req = ureq::get(&c.endpoint);
+                let mut auth_req = ureq::post(&c.endpoint);
                 for (k, v) in c.headers.iter() {
                     auth_req = auth_req.set(k, v);
                 }

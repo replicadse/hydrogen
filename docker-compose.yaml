@@ -32,6 +32,27 @@ services:
     ports:
       - "6380:8081"
 
+  authorizer:
+    container_name: authorizer
+    restart: always
+    entrypoint: "python3 authorizer.py"
+    build:
+      dockerfile: ./docker/Dockerfile
+      context: ./support
+  connect:
+    container_name: connect
+    restart: always
+    entrypoint: "python3 connect.py"
+    build:
+      dockerfile: ./docker/Dockerfile
+      context: ./support
+  disconnect:
+    container_name: disconnect
+    restart: always
+    entrypoint: "python3 disconnect.py"
+    build:
+      dockerfile: ./docker/Dockerfile
+      context: ./support
   rulesengine:
     container_name: rulesengine
     restart: always

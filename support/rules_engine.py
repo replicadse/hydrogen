@@ -7,7 +7,11 @@ serverPort = 8080
 
 class MyServer(BaseHTTPRequestHandler):
     def do_POST(self):
-        print([x for x in self.headers.raw_items()], flush=True)
+        if self.headers.get('Authorization') != 'sugarhowyougetsofly':
+            self.send_response(500)
+            self.end_headers()
+            return
+
         body = JSONDecoder().decode(self.rfile.read(int(self.headers['Content-Length'])).decode('UTF-8'))
         print(body, flush=True)
         self.send_response(200)
@@ -16,12 +20,12 @@ class MyServer(BaseHTTPRequestHandler):
         body = {
             "endpoint": "http://defaultroute:8080",
             "headers": [
-                ("Authorization", "bananarama")
+                ("Authorization", "sugarhowyougetsofly")
             ]
         }
         self.wfile.write(bytes(JSONEncoder().encode(body), "utf-8"))
 
-if __name__ == "__main__":        
+if __name__ == "__main__":
     webServer = HTTPServer((hostName, serverPort), MyServer)
     print("Server started http://%s:%s" % (hostName, serverPort), flush=True)
 
