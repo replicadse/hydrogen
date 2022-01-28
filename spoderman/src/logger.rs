@@ -17,10 +17,10 @@ impl LogMessage {
     }
 
     pub fn log(&self) -> () {
-        let msg = serde_json::to_string(self)
-            .or::<String>(Ok("can not serialize log message".to_owned()))
-            .unwrap();
-        println!("{}", msg);
+        match serde_json::to_string(self) {
+            Ok(v) => println!("{}", v),
+            Err(e) => println!("{}", e),
+        }
     }
 }
 
