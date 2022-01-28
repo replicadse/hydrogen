@@ -2,17 +2,18 @@
 pub struct Config {
     pub version: String,
     pub server: Server,
-    pub authorizer: std::option::Option<Authorizer>,
     pub redis: Redis,
     pub routes: Routes,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Routes {
+    pub authorizer: std::option::Option<Authorizer>,
+
     pub connect: std::option::Option<ConnectRoute>,
     pub disconnect: std::option::Option<DisconnectRoute>,
 
-    pub rules_engine: RuleEngine,
+    pub rules_engine: RulesEngine,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -47,7 +48,7 @@ pub struct DisconnectRoute {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct RuleEngine {
+pub struct RulesEngine {
     pub endpoint: String,
     pub headers: std::collections::HashMap<String, String>,
 }

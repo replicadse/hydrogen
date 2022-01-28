@@ -9,12 +9,11 @@ server:
 redis:
   endpoint: "redis://redis:6379"
 
-authorizer:
-  endpoint: "http://authorizer:8080"
-  headers:
-    Authorization: sugarhowyougetsofly
-
 routes:
+  authorizer:
+    endpoint: "http://authorizer:8080"
+    headers:
+      Authorization: sugarhowyougetsofly
   connect:
     endpoint: "http://connect:8080"
     headers:
