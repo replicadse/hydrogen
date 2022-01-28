@@ -201,7 +201,7 @@ impl Handler<Disconnect> for Server {
 
             match &self.config.routes.disconnect {
                 | Some(c) => {
-                    let mut req = ureq::get(&c.endpoint);
+                    let mut req = ureq::post(&c.endpoint);
                     for (k, v) in c.headers.iter() {
                         req = req.set(k, v);
                     }
@@ -317,7 +317,7 @@ impl Handler<ClientMessage> for Server {
                 },
             });
 
-            let mut re_req = ureq::get(&self.config.routes.rules_engine.endpoint);
+            let mut re_req = ureq::post(&self.config.routes.rules_engine.endpoint);
             for (k, v) in self.config.routes.rules_engine.headers.iter() {
                 re_req = re_req.set(k, v);
             }
@@ -344,7 +344,7 @@ impl Handler<ClientMessage> for Server {
             let re_response_parsed =
                 serde_json::from_str::<crate::routes::RulesEngineResponse>(&re_response.into_string()?)?;
 
-            let mut forwerd_req = ureq::get(&re_response_parsed.endpoint);
+            let mut forwerd_req = ureq::post(&re_response_parsed.endpoint);
             for h in re_response_parsed.headers.iter() {
                 forwerd_req = forwerd_req.set(&h[0], &h[1]);
             }

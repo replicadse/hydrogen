@@ -6,7 +6,7 @@ hostName = "rulesengine"
 serverPort = 8080
 
 class MyServer(BaseHTTPRequestHandler):
-    def do_GET(self):
+    def do_POST(self):
         print([x for x in self.headers.raw_items()], flush=True)
         body = JSONDecoder().decode(self.rfile.read(int(self.headers['Content-Length'])).decode('UTF-8'))
         print(body, flush=True)

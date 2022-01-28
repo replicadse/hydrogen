@@ -1,29 +1,29 @@
 version: 0.1.0
 
 server:
-    address: "0.0.0.0:8080"
-    heartbeats: 10
-    connection_timeout: 31
-    stats: 10
+  address: "0.0.0.0:8080"
+  heartbeats: 10
+  connection_timeout: 31
+  stats: 10
 
 redis:
-    endpoint: "redis://redis:6379"
+  endpoint: "redis://redis:6379"
 
 # authorizer:
-#     endpoint: "http://localhost:8090"
-#     headers:
-#         Authorization: boosker_auth
+#   endpoint: "http://localhost:8090"
+#   headers:
+#     Authorization: boosker_auth
 
 routes:
-    # connect:
-    #     endpoint: "http://localhost:8091"
-    #     headers:
-    #         Authorization: boosker_connect
-    # disconnect:
-    #     endpoint: "http://localhost:8093"
-    #     headers:
-    #         Authorization: boosker_disconnect
-    rules_engine:
-        endpoint: "http://rulesengine:8080"
-        headers:
-            Authorization: boosker_rules_engine
+  # connect:
+  #   endpoint: "http://localhost:8091"
+  #   headers:
+  #     Authorization: boosker_connect
+  # disconnect:
+  #   endpoint: "http://localhost:8093"
+  #   headers:
+  #     Authorization: boosker_disconnect
+  rules_engine:
+    endpoint: "http://rulesengine:8080"
+    headers:
+      Authorization: boosker_rules_engine

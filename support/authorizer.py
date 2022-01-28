@@ -5,7 +5,7 @@ hostName = "localhost"
 serverPort = 8090
 
 class MyServer(BaseHTTPRequestHandler):
-    def do_GET(self):
+    def do_POST(self):
         print([x for x in self.headers.raw_items()], flush=True)
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
