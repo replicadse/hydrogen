@@ -1,5 +1,4 @@
 use std::time::{
-    Duration,
     Instant,
 };
 
@@ -33,21 +32,22 @@ use crate::{
     server::Server,
 };
 
-const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
-const CONNECTION_TIMEOUT: Duration = Duration::from_secs(10);
-
 pub struct WsConn {
     address: Addr<Server>,
     heartbeat: Instant,
     pub connection: Uuid,
+    heartbeat_int: std::time::Duration,
+    timeout: std::time::Duration,
 }
 
 impl WsConn {
-    pub fn new(server: Addr<Server>) -> WsConn {
+    pub fn new(server: Addr<Server>, heartbeat_int: std::time::Duration, timeout: std::time::Duration) -> WsConn {
         WsConn {
             connection: Uuid::new_v4(),
             heartbeat: Instant::now(),
             address: server,
+            heartbeat_int,
+            timeout,
         }
     }
 }
@@ -56,7 +56,7 @@ impl Actor for WsConn {
     type Context = ws::WebsocketContext<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-        self.heartbeat(ctx);
+        self.heartbeat(ctx, self.heartbeat_int, self.timeout);
 
         let addr = ctx.address();
         self.address
@@ -89,9 +89,9 @@ impl Actor for WsConn {
 }
 
 impl WsConn {
-    fn heartbeat(&self, ctx: &mut ws::WebsocketContext<Self>) {
-        ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
-            if Instant::now().duration_since(act.heartbeat) > CONNECTION_TIMEOUT {
+    fn heartbeat(&self, ctx: &mut ws::WebsocketContext<Self>, interval: std::time::Duration, timeout: std::time::Duration) {
+        ctx.run_interval(interval, move |act, ctx| {
+            if Instant::now().duration_since(act.heartbeat) > timeout {
                 act.address.do_send(Disconnect {
                     connection: act.connection,
                 });

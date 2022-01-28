@@ -18,6 +18,9 @@ pub struct Routes {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Server {
     pub address: String,
+    pub heartbeats: u16,
+    pub stats: u16,
+    pub connection_timeout: u16,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

@@ -14,8 +14,6 @@ use crate::messages::{
     ServerMessage,
 };
 
-const STATS_INTERVAL: std::time::Duration = std::time::Duration::from_secs(5);
-
 type Socket = actix::prelude::Recipient<crate::messages::WsMessage>;
 
 pub struct Server {
@@ -34,6 +32,7 @@ impl Server {
         let sess_arc = std::sync::Arc::new(std::sync::RwLock::new(HashMap::<uuid::Uuid, Socket>::new()));
         let t_sess_arc = sess_arc.clone();
         let t2_sess_arc = sess_arc.clone();
+        let stats_interval: u64 = config.server.stats.into();
 
         std::thread::spawn(move || loop {
             crate::logger::LogMessage::now(t2_instance_id.to_string(), crate::logger::Data::Interval {
@@ -41,7 +40,7 @@ impl Server {
                     count: t2_sess_arc.read().unwrap().len(),
                 },
             });
-            std::thread::sleep(STATS_INTERVAL);
+            std::thread::sleep(std::time::Duration::from_secs(stats_interval));
         });
 
         std::thread::spawn(move || {
@@ -112,9 +111,7 @@ impl Handler<Connect> for Server {
                     connection: msg.connection.to_string(),
                 },
             });
-
-            self.sessions.write()?.insert(msg.connection.clone(), msg.addr.clone());
-
+            self.sessions.write().unwrap().insert(msg.connection.clone(), msg.addr.clone()); // must never be poisoned
             match &self.config.routes.connect {
                 | Some(c) => {
                     let mut req = ureq::post(&c.endpoint);
@@ -173,6 +170,7 @@ impl Handler<Connect> for Server {
                         err: e.to_string(),
                     }
                 });
+                self.sessions.write().unwrap().remove(&msg.connection); // must never be poisoned
                 Err(500_u16)
             },
         }
@@ -199,7 +197,7 @@ impl Handler<Disconnect> for Server {
                 .arg(&rkey)
                 .query::<()>(&mut self.redis.get_connection()?)?;
 
-            self.sessions.write()?.remove(&msg.connection);
+            self.sessions.write().unwrap().remove(&msg.connection); // must never be poisoned
 
             match &self.config.routes.disconnect {
                 | Some(c) => {

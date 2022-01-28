@@ -2,6 +2,9 @@ version: 0.1.0
 
 server:
     address: "0.0.0.0:8080"
+    heartbeats: 10
+    connection_timeout: 31
+    stats: 10
 
 redis:
     endpoint: "redis://redis:6379"
