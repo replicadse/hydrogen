@@ -7,10 +7,6 @@ services:
     build:
       dockerfile: ./docker/Dockerfile
       context: ./spoderman
-    depends_on:
-      - redis
-      - rulesengine
-      - defaultroute
     ports:
       - "8080:8080"
     volumes:
