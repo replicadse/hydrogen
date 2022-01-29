@@ -1,0 +1,38 @@
+baseURL = 'spoderman'
+languageCode = 'en-us'
+title = 'spoderman wiki'
+theme = 'hugo-book'
+
+[markup]
+  [markup.asciidocExt]
+    backend = 'html5'
+    failureLevel = 'fatal'
+    noHeaderOrFooter = true
+    preserveTOC = false
+    safeMode = 'unsafe'
+    sectionNumbers = false
+    trace = false
+    verbose = false
+    extensions = ["asciidoctor-kroki"]
+
+[security]
+  enableInlineShortcodes = false
+  [security.exec]
+    allow = ['^dart-sass-embedded$', '^go$', '^npx$', '^postcss$', 'asciidoctor']
+    osEnv = ['(?i)^(PATH|PATHEXT|APPDATA|TMP|TEMP|TERM)$']
+  [security.funcs]
+    getenv = ['^HUGO_']
+  [security.http]
+    methods = ['(?i)GET|POST']
+    urls = ['.*']
+
+[params]
+  BookTheme = 'auto'
+  BookToC = true
+#   BookMenuBundle = '/menu'
+  BookSection = 'docs'
+  BookRepo = ''
+  BookDateFormat = 'Jan 2, 2006'
+  BookSearch = true
+  BookPortableLinks = true
+  BookServiceWorker = true

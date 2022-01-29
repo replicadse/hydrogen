@@ -1,0 +1,29 @@
+---
+doctype: article
+title: spoderman
+weight: 1
+---
+:toc:
+
+== spoderman
+
+`spoderman` is a lightweight, horizontally scaling API gateway for websocket connections. +
+It's primary feature is the handling and abstraction of websocket connections to the services in the background. This feature, and the whole project, is heavily inspired by the `Amazon AWS Websocket API Gateway` which does pretty much the same thing but with a few limitations.
+
+=== Key features
+
+* Abstraction of bidirectional communication (messages) as HTTP requests/responses
+* Horizontal scalability with Redis as map for connections & pub/sub service
+* Bidirectional lookup map(s) inside redis for server to client and vice versa
+* Optional Authorizer, Connect and Disconnect routes
+* Rules engine implemented as downstream service, returning message destination
+* Configurable heartbeat interval and client timeout
+* Events and stats reported as structured log messages (with `Prometheus` in mind)
+* Optimized for a cloud native environment implemented with `Kubernetes`
+
+=== Differences to AWS Websocket API Gateway
+
+* Open Source
+* Portable as container (no AWS lock in)
+* Rules engine implemented as downstream service, not via a template language
+* HTTP integration instead of Lambda integration
