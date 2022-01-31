@@ -41,7 +41,7 @@ jobs:
           path: ./spoderman/docker/image.tar.gz
       - name: import image
         working-directory: ./spoderman
-        run: docker load < ./docker/image.tar.gz
+        run: docker load --input ./docker/image.tar.gz
       - name: publish
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
