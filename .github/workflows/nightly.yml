@@ -1,8 +1,10 @@
-name: release (scheduled nightly)
+name: nightly
 on:
   workflow_dispatch:
-  # daily at 12am
   schedule: [{cron: "0 0 * * *"}]
+  push:
+    branches:
+      - master
 
 jobs:
   publish-ghcr:
@@ -23,3 +25,15 @@ jobs:
         echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
         docker tag voidpointergroup/spoderman:nightly docker.pkg.github.com/voidpointergroup/spoderman/spoderman:nightly
         docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman:nightly
+    - name: run trivy
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'docker.pkg.github.com/voidpointergroup/spoderman/spoderman:nightly'
+        format: 'template'
+        template: '@/contrib/sarif.tpl'
+        output: 'trivy-results.sarif'
+
+    - name: upload trivy results
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: 'trivy-results.sarif'
