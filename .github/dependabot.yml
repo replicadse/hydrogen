@@ -6,12 +6,17 @@
 version: 2
 updates:
   - package-ecosystem: cargo
-    directory: "./"
+    directory: "./spoderman/"
     schedule:
       interval: daily
       time: "04:00"
   - package-ecosystem: docker
-    directory: "./"
+    directory: "./spoderman/docker"
+    schedule:
+      interval: daily
+      time: "04:00"
+  - package-ecosystem: docker
+    directory: "./support/docker"
     schedule:
       interval: daily
       time: "04:00"
