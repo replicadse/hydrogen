@@ -10,7 +10,7 @@ jobs:
     name: website
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
         with:
           submodules: true
       - name: install
