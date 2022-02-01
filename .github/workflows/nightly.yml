@@ -15,6 +15,9 @@ jobs:
           rustup default stable
           pip install invoke
       - uses: actions/checkout@v2
+      - name: check code
+        working-directory: ./spoderman
+        run: cargo check --all --all-features --tests --locked
       - name: build image
         working-directory: ./spoderman
         run: invoke docker.build --tag=voidpointergroup/spoderman:nightly
