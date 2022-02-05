@@ -20,3 +20,8 @@ updates:
     schedule:
       interval: daily
       time: "04:00"
+  - package-ecosystem: gomod
+    directory: "./support/dummy"
+    schedule:
+      interval: daily
+      time: "04:00"
