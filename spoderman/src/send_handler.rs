@@ -13,8 +13,6 @@ use futures::StreamExt;
 
 use crate::server::Server;
 
-// const MAX_SIZE: usize = 262_144; // 256kb
-
 #[post("/send/{connection_id}")]
 pub async fn handler(
     _req: HttpRequest,
