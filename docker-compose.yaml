@@ -29,35 +29,39 @@ services:
   authorizer:
     container_name: authorizer
     restart: always
-    entrypoint: "python3 authorizer.py"
     build:
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/go1.dockerfile
       context: ./support
+      args:
+        service: dummy
   connect:
     container_name: connect
     restart: always
-    entrypoint: "python3 connect.py"
     build:
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/go1.dockerfile
       context: ./support
+      args:
+        service: dummy
   disconnect:
     container_name: disconnect
     restart: always
-    entrypoint: "python3 disconnect.py"
     build:
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/go1.dockerfile
       context: ./support
+      args:
+        service: dummy
   rulesengine:
     container_name: rulesengine
     restart: always
     entrypoint: "python3 rules_engine.py"
     build:
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/python3.dockerfile
       context: ./support
   defaultroute:
     container_name: defaultroute
     restart: always
-    entrypoint: "python3 defaultroute.py"
     build:
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/go1.dockerfile
       context: ./support
+      args:
+        service: dummy
