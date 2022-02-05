@@ -5,6 +5,7 @@ server:
   heartbeats: 10
   connection_timeout: 31
   stats: 10
+  max_out_message_size: 262144 # 256kb
 
 redis:
   endpoint: "redis://redis:6379"

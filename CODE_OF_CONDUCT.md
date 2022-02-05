@@ -1,9 +1,9 @@
 # Code of conduct
 
-## The BSDFL
+## The BDFL
 
-BSDFL stands for benevolent senior developer for life.\
-This project's BSDFL is [replicadse](https://github.com/replicadse). His word counts, no matter the circumstances.
+BDFL stands for benevolent dictator for life.\
+This project's BDFL is [replicadse](https://github.com/replicadse). His word counts, no matter the circumstances.
 
 ## Guidelines
 
@@ -13,4 +13,4 @@ Feel free to voice constructive feedback, have heated conversations about variou
 
 ## Compliance
 
-Not complying with this code might result in a permanent ban from this project. Ultimate decision lies at the BSDFL.
+Not complying with this code might result in a permanent ban from this project. Ultimate decision lies at the BDFL.

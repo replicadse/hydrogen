@@ -22,6 +22,7 @@ pub struct Server {
     pub heartbeats: u16,
     pub stats: u16,
     pub connection_timeout: u16,
+    pub max_out_message_size: usize
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

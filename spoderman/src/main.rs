@@ -22,6 +22,11 @@ use websocket_handler::handler as ws_handler;
 
 #[actix_web::main]
 async fn main() -> std::result::Result<(), Box<dyn Error>> {
+    logger::LogMessage::now("-", logger::Data::Event {
+        data: logger::Event::Startup {
+            message: "startup",
+        },
+    });
     let args = args::ClapArgumentLoader::load()?;
     match args.command {
         | args::Command::Serve { config } => {
@@ -63,6 +68,7 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
             .data(redis.clone())
             .service(s_handler)
             .data(server.clone())
+            .data(config.clone())
     })
     .bind(&bind)?
     .disable_signals()
