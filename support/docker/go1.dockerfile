@@ -1,4 +1,4 @@
-FROM golang:1.17 as build-env
+FROM golang:1.18.0 as build-env
 ARG service
 WORKDIR /app
 COPY ${service}/go.mod .
