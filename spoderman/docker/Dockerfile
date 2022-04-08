@@ -1,4 +1,4 @@
-FROM rust:1.58.1 as build-env
+FROM rust:1.60.0 as build-env
 RUN rustup default nightly
 
 WORKDIR /app
