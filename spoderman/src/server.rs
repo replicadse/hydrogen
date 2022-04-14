@@ -32,7 +32,7 @@ impl Server {
         let sess_arc = std::sync::Arc::new(std::sync::RwLock::new(HashMap::<uuid::Uuid, Socket>::new()));
         let t_sess_arc = sess_arc.clone();
         let t2_sess_arc = sess_arc.clone();
-        let stats_interval: u64 = config.server.stats.into();
+        let stats_interval: u64 = config.server.stats_interval_sec.into();
 
         std::thread::spawn(move || loop {
             crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {

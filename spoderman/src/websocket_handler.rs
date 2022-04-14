@@ -60,8 +60,8 @@ pub async fn handler(
 
     let ws = WsConn::new(
         srv.get_ref().clone(),
-        std::time::Duration::from_secs(config.server.heartbeats.into()),
-        std::time::Duration::from_secs(config.server.connection_timeout.into()),
+        std::time::Duration::from_secs(config.server.heartbeat_interval_sec.into()),
+        std::time::Duration::from_secs(config.server.connection_timeout_sec.into()),
     );
     match safecall_auth(&ws.connection, &config.routes.authorizer) {
         | Ok(_) => {

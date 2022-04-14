@@ -1,0 +1,12 @@
+apiVersion: v2
+name: spoderman
+description: none
+
+type: application
+version: 0.1.0
+appVersion: "latest"
+
+dependencies:
+- name: redis
+  version: "16.8.0"
+  repository: "https://charts.bitnami.com/bitnami"

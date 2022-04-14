@@ -1,0 +1,49 @@
+---
+doctype: article
+title: architecture
+weight: 1
+---
+:toc:
+
+== Architecture
+
+`spoderman` makes use of the link:https://github.com/arc42[arc42] style of documentation.
+
+=== 1: Introduction & Goals
+
+`spoderman` is a websocket API gateway that splits single messages from a consistent connection down into multiple HTTP requests. It was developed as a kubernetes native alternative to the AWS Websocket API gateway. +
+In order to achieve this, `spoderman` will mimic the behaviour of the AWS gateway but replace the lambda integrations (and the custom rules config) with HTTP integrations of downstream services. +
+In order to do that reliably, `spoderman` will make multiple synchronous HTTP calls to the configured downstream dependencies or, on a server to client message scenario, route the message the the correct server instance via redis. This behaviour will lead to a higher latency per message which is accepted in favour of the benefits of abstraction and decoupling.
+
+The goals of spoderman are:
+
+* Decoupling websocket client connection handling from business logic implementing services
+* Have an easy to configure message forwarding behaviour that is not based on a custom rules configuration but as a HTTP dowstream dependency
+* Delegate pre-connect client authentication and authorization to an authorizer dowstream dependency if configured
+* Handle audit logging
+* Assign IDs per message for tracing
+* Be horizontally scalable, which has a high impact on server to client message handling
+
+// When a client connects, the server will forward that request to an authorizer (if one is specified). If the authorizer returns `200 (Ok)`, the connection will be established. +
+// When a client sends a message, that message will be passed to the `rules engine` which needs to be configured in the server config. The then invoked service should return `200 (Ok)`, together with the destination address of the message and any headers. The message is then forwarded to that destination. +
+// When a message shall be sent to a client connection, you can send the message (which also contains the connection ID the message shall be sent to) to any `spoderman` instance. Internally, it will then lookup the matching `spoderman` instance ID and post the message to the configured redis server in a pub/sub channel. Every `spoderman` instance listens to it's related redis channel. On message receive, this message is then posted to it's persisting connection.
+
+=== 2: Constraints
+
+* Must be horizontally scalable
+* Can not use another custom configuration syntax
+* Must delegate other's responsibilities (such as authorization & rules engine) as downstream HTTP dependencies
+
+=== 3: Context & Scope
+=== 4: Solution strategy
+=== 5: Building block view
+=== 6: Runtime view
+
+image:/runtime_view.png[]
+
+=== 7: Deployment view
+=== 8: Crosscutting & concepts
+=== 9: Architectural decisions
+=== 10: Quality requirements
+=== 11: Risks & technical debt
+=== 12: Glossary

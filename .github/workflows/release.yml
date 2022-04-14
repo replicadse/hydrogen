@@ -28,4 +28,6 @@ jobs:
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
           docker tag voidpointergroup/spoderman:${{ github.event.inputs.version }} docker.pkg.github.com/voidpointergroup/spoderman/spoderman:${{ github.event.inputs.version }}
+          docker tag voidpointergroup/spoderman:${{ github.event.inputs.version }} docker.pkg.github.com/voidpointergroup/spoderman/spoderman:latest
           docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman:${{ github.event.inputs.version }}
+          docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman:latest

@@ -31,7 +31,7 @@ impl ClapArgumentLoader {
         let command = clap::App::new("spoderman")
             .version(env!("CARGO_PKG_VERSION"))
             .about("spoderman")
-            .author("Weber, Alexander <aw@voidpointergroup.com>")
+            .author("replicadse <aw@voidpointergroup.com>")
             .arg(
                 clap::Arg::new("experimental")
                     .short('e')

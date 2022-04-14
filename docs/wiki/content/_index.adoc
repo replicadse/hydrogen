@@ -27,5 +27,3 @@ It's primary feature is the handling and abstraction of websocket connections to
 * Portable as container (no AWS lock in)
 * Rules engine implemented as downstream service, not via a template language
 * HTTP integration instead of Lambda integration
-
-=== Architecture

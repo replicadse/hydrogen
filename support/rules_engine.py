@@ -7,7 +7,7 @@ serverPort = 8080
 
 class MyServer(BaseHTTPRequestHandler):
     def do_POST(self):
-        if self.headers.get('Authorization') != 'sugarhowyougetsofly':
+        if self.headers.get('Authorization') != 'some-key':
             self.send_response(500)
             self.end_headers()
             return
@@ -20,7 +20,7 @@ class MyServer(BaseHTTPRequestHandler):
         body = {
             "endpoint": "http://defaultroute:8080",
             "headers": {
-                "Authorization": "sugarhowyougetsofly"
+                "Authorization": "some-key"
             }
         }
         self.wfile.write(bytes(JSONEncoder().encode(body), "utf-8"))
