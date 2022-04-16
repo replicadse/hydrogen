@@ -48,6 +48,13 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
             message: &format!("redis client opened @ {}", &config.redis.endpoint),
         },
     });
+    if let Err(..) = redis.get_connection() {
+        let e = &format!("could not connect to {}", &config.redis.endpoint);
+        logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
+            data: logger::Event::Error { err: e},
+        });
+        return Err(Box::new(error::StartupError::new(e)));
+    }
 
     let bind = config.server.address.clone();
     logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
