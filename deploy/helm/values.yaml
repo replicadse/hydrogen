@@ -1,7 +1,7 @@
 apps:
   spoderman:
     deployment:
-      image: "docker.pkg.github.com/voidpointergroup/spoderman/spoderman:nightly"
+      image: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman:nightly"
     hpa:
       min: 1
       max: 3
@@ -15,15 +15,6 @@ redis:
   auth:
     enabled: false
   master:
-    persistence:
-      enabled: true
-      storageClass: ""
-      accessModes:
-        - ReadWriteOnce
-      size: 2Gi
-      existingClaim: ""
-  replica:
-    replicaCount: 1
     persistence:
       enabled: true
       storageClass: ""
