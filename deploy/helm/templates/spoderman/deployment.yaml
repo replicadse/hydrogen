@@ -11,10 +11,13 @@ spec:
       labels:
         app: spoderman
     spec:
+      strategy:
+        type: Recreate
+      revisionHistoryLimit: 0
       containers:
         - name: spoderman
           image: {{ .Values.apps.spoderman.deployment.image }}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           volumeMounts:
             - mountPath: "/app/config"
               name: config

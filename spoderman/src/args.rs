@@ -67,7 +67,7 @@ impl ClapArgumentLoader {
                 )));
             };
             Command::Serve {
-                config: serde_yaml::from_str(&config_content).unwrap(),
+                config: serde_yaml::from_str(&config_content)?,
             }
         } else {
             return Err(Box::new(UnknownCommandError::new("unknown command")));
