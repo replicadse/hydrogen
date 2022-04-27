@@ -11,9 +11,6 @@ spec:
       labels:
         app: spoderman
     spec:
-      strategy:
-        type: Recreate
-      revisionHistoryLimit: 0
       containers:
         - name: spoderman
           image: {{ .Values.apps.spoderman.deployment.image }}
@@ -30,7 +27,7 @@ spec:
               cpu: 0.5
             limits:
               memory: 512Mi
-              cpu: 2
+              cpu: 1
       volumes:
         - name: config
           secret:

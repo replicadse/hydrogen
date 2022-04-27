@@ -7,7 +7,7 @@ apps:
       max: 3
       threshhold:
         cpu: 0.75
-        ram: 768Mi
+        ram: 256Mi
 
 redis:
   enabled: true
