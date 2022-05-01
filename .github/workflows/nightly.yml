@@ -61,7 +61,6 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-
   publish-harbor:
     name: publish to harbor (nightly)
     needs: build
