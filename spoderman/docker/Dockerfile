@@ -4,8 +4,8 @@
 # WORKDIR /app
 # COPY Cargo.toml .
 # COPY Cargo.lock .
-# RUN mkdir -p src
-# RUN printf "fn main() {}" > src/main.rs
+# RUN mkdir -p ./src
+# RUN printf "fn main() {}" > ./src/main.rs
 # RUN cargo +nightly build --release
 # RUN rm -rf ./src
 # COPY . .
@@ -43,12 +43,12 @@ RUN rustup-init -y
 RUN rustup default nightly
 
 WORKDIR /app
-COPY Cargo.toml .
-COPY Cargo.lock .
-RUN mkdir -p src
-RUN printf "fn main() {}" > src/main.rs
-RUN cargo +nightly build --release
-RUN rm -rf ./src
+# COPY Cargo.toml .
+# COPY Cargo.lock .
+# RUN mkdir -p ./src
+# RUN printf "fn main() {}" > ./src/main.rs
+# RUN cargo +nightly build --release
+# RUN rm -rf ./src
 COPY . .
 RUN cargo +nightly build --release
 
