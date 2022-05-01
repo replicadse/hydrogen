@@ -6,6 +6,9 @@ spec:
   selector:
     matchLabels:
       app: spoderman
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
   template:
     metadata:
       labels:
