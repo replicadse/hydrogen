@@ -2,13 +2,13 @@ FROM rust:1.58.1 as build-env
 RUN rustup default nightly
 
 WORKDIR /app
-COPY Cargo.toml .
-COPY Cargo.lock .
+# COPY Cargo.toml .
+# COPY Cargo.lock .
 # RUN mkdir -p ./src
 # RUN printf "fn main() {}" > ./src/main.rs
 # RUN cargo +nightly build --release
 # RUN rm -rf ./src ./target/release/spoderman*
-# COPY . .
+COPY . .
 RUN cargo +nightly build --release
 
 FROM gcr.io/distroless/cc
