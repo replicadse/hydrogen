@@ -1,3 +1,0 @@
-= spoderman
-
-`spoderman` is a very much WIP websocket API gateway, inspired by the Amazon AWS API Gateway.
