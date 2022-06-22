@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: default-route
+spec:
+  selector:
+    matchLabels:
+      app: default-route
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  template:
+    metadata:
+      labels:
+        app: default-route
+    spec:
+      containers:
+        - name: default-route
+          image: python:3.10-buster
+          imagePullPolicy: IfNotPresent
+          command: ["python", "/app/code/code.py"]
+          volumeMounts:
+            - mountPath: "/app/code"
+              name: code
+              readOnly: true
+          ports:
+            - containerPort: 8080
+      volumes:
+        - name: code
+          configMap:
+            name: default-route-code
+            optional: false
+            items:
+              - key: code
+                path: code.py
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: default-route-code
+data:
+  code: |-
+    # Python 3 server example
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from json import JSONDecoder, JSONEncoder
+
+    hostName = "0.0.0.0"
+    serverPort = 8080
+
+    class Server(BaseHTTPRequestHandler):
+        def do_POST(self):
+            if self.headers.get('Authorization') != 'some-other-key':
+                self.send_response(500)
+                self.end_headers()
+                return
+
+            body = JSONDecoder().decode(self.rfile.read(int(self.headers['Content-Length'])).decode('UTF-8'))
+            print(body, flush=True)
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+
+    if __name__ == "__main__":
+        webServer = HTTPServer((hostName, serverPort), Server)
+        print("Server started http://%s:%s" % (hostName, serverPort), flush=True)
+
+        try:
+            webServer.serve_forever()
+        except KeyboardInterrupt:
+            pass
+
+        webServer.server_close()
+        print("Server stopped.", flush=True)
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: default-route
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: default-route
