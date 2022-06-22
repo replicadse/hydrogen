@@ -2,6 +2,9 @@ apps:
   spoderman:
     deployment:
       image: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman:nightly"
+  support:
+    dummysetup:
+      enabled: true
 
 redis:
   enabled: true
