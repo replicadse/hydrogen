@@ -36,7 +36,7 @@ impl Server {
 
         std::thread::spawn(move || loop {
             if stats_interval <= 0 {
-                return
+                return;
             }
             crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {
                 stats: crate::logger::Stats::ConnectedClients {
