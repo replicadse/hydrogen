@@ -7,6 +7,6 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
 
 USER gitpod
 USER root
-RUN usermod -aG wheel gitpod
+RUN echo "gitpod ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER gitpod
