@@ -35,6 +35,9 @@ impl Server {
         let stats_interval: u64 = config.server.stats_interval_sec.into();
 
         std::thread::spawn(move || loop {
+            if stats_interval <= 0 {
+                return
+            }
             crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {
                 stats: crate::logger::Stats::ConnectedClients {
                     count: t2_sess_arc.read().unwrap().len(),

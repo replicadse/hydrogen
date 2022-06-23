@@ -1,9 +1,13 @@
 FROM rust:1.58.1 as build-env
-RUN rustup default nightly
+ARG toolchain
+ARG version
+RUN rustup default $toolchain
 
 WORKDIR /app
 COPY . .
-RUN cargo +nightly build --release
+RUN sed 's/version = "0.0.0"/version = "'$version'"/g' Cargo.toml > Cargo.toml.tmp
+RUN mv Cargo.toml.tmp Cargo.toml
+RUN cargo build --release
 
 FROM gcr.io/distroless/cc
 WORKDIR /app

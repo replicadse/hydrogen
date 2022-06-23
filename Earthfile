@@ -1,41 +1,46 @@
 VERSION 0.6
 
 rust:
-  FROM alpine:3.16
+  FROM debian:bullseye
   ARG toolchain
   RUN [ ! -z "$toolchain" ] || exit 1
-  RUN apk update && apk upgrade
-  RUN apk add bash coreutils make git curl ca-certificates build-base libc-dev musl-dev alpine-sdk gcc rustup
+  RUN apt update && apt upgrade
+  RUN apt install gcc make build-essential curl -y
+  RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $toolchain
   ENV PATH=/root/.cargo/bin:"$PATH"
-  RUN rustup-init -y
-  RUN rustup default $toolchain
+
+spoderman:
+  FROM +rust
+  WORKDIR /app
+  COPY ./spoderman .
 
 retype:
   FROM node:18-buster
   RUN npm i -g retypeapp
 
-code:
-  FROM +rust
-  WORKDIR /app
-  COPY ./spoderman .
-
-release:
-  FROM +code
-  RUN cargo build -Zunstable-options --locked --out-dir=./out
-  SAVE ARTIFACT ./out/spoderman AS LOCAL ./.artifacts/spoderman
+image:
+  ARG toolchain
+  ARG version
+  ARG tag
+  FROM DOCKERFILE \
+    -f ./spoderman/docker/Dockerfile \
+    --build-arg toolchain=$toolchain \
+    --build-arg version=$version \
+    ./spoderman
+  SAVE IMAGE $tag
 
 fmt:
-  FROM +code
+  FROM +spoderman
   RUN cargo fmt --all -- --check
 
 test:
-  FROM +code
+  FROM +spoderman
   ARG features
   RUN cargo test $features
 
 docs:
-  FROM +code
-  RUN cargo doc --no-deps --document-private-items --all-features
+  FROM +spoderman
+  RUN cargo doc --document-private-items --all-features
   SAVE ARTIFACT ./target/doc AS LOCAL ./.artifacts/docs
 
 wiki:
