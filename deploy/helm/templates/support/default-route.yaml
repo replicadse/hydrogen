@@ -19,7 +19,7 @@ spec:
         - name: default-route
           image: python:3.10-buster
           imagePullPolicy: IfNotPresent
-          command: ["python", "/app/code/code.py"]
+          command: ["/bin/bash", "-c", "pip install requests && python /app/code/code.py"]
           volumeMounts:
             - mountPath: "/app/code"
               name: code
@@ -44,6 +44,7 @@ data:
     # Python 3 server example
     from http.server import BaseHTTPRequestHandler, HTTPServer
     from json import JSONDecoder, JSONEncoder
+    import requests
 
     hostName = "0.0.0.0"
     serverPort = 8080
@@ -57,6 +58,10 @@ data:
 
             body = JSONDecoder().decode(self.rfile.read(int(self.headers['Content-Length'])).decode('UTF-8'))
             print(body, flush=True)
+
+            r = requests.post(f'http://spoderman:8080/connections/{body["connection_id"]}/_send', data=body['message'])
+            print(r.text)
+
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
             self.end_headers()

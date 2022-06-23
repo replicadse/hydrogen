@@ -13,7 +13,7 @@ use futures::StreamExt;
 
 use crate::server::Server;
 
-#[post("/send/{connection_id}")]
+#[post("/connections/{connection_id}/_send")]
 pub async fn handler(
     _req: HttpRequest,
     mut stream: Payload,
