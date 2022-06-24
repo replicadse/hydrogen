@@ -9,24 +9,24 @@
     <meta name="generator" content="Retype 2.3.0">
 
     <!-- Primary Meta Tags -->
-    <title>Architecture</title>
-    <meta name="title" content="Architecture">
-    <meta name="description" content="Work in progress here, come back later." />
+    <title>Endpoints</title>
+    <meta name="title" content="Endpoints">
+    <meta name="description" content="This is the primary socket endpoint clients need connect to." />
 
     <!-- Canonical -->
-    <link rel="canonical" href="/architecture/" />
+    <link rel="canonical" href="/endpoints/" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="/architecture/">
-    <meta property="og:title" content="Architecture">
-    <meta property="og:description" content="Work in progress here, come back later.">
+    <meta property="og:url" content="/endpoints/">
+    <meta property="og:title" content="Endpoints">
+    <meta property="og:description" content="This is the primary socket endpoint clients need connect to.">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="/architecture/">
-    <meta property="twitter:title" content="Architecture">
-    <meta property="twitter:description" content="Work in progress here, come back later.">
+    <meta property="twitter:url" content="/endpoints/">
+    <meta property="twitter:title" content="Endpoints">
+    <meta property="twitter:description" content="This is the primary socket endpoint clients need connect to.">
 
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
@@ -166,13 +166,35 @@
                                 <div id="docs-sidebar-right-toggle"></div>
                 
                                 <!-- Page content  -->
-<doc-anchor-target id="architecture" class="break-words">
+<doc-anchor-target id="endpoints" class="break-words">
     <h1>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#architecture">#</doc-anchor-trigger>
-        <span>Architecture</span>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#endpoints">#</doc-anchor-trigger>
+        <span>Endpoints</span>
     </h1>
 </doc-anchor-target>
-<p>Work in progress here, come back later.</p>
+<doc-anchor-target id="wss--ws">
+    <h2>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#wss--ws">#</doc-anchor-trigger>
+        <span><code v-pre>WSS @ /ws</code></span>
+    </h2>
+</doc-anchor-target>
+<p>This is the primary socket endpoint clients need connect to. It will trigger the connection pipeline before and during connect and trigger a disconnect event on client disconnect. <br />
+Messages are sent through the open connections to this endpoint both from client to server and vice versa. <br />
+When connecting, every established connection gets a unique <code v-pre>connection_id</code> assigned that is also transported to every downstream service which is invoked at any point except for the authorizer (since the connection was not permitted yet at that point in time). Keep in mind that this id is given per connection and one client could have more than one connection open.</p>
+<doc-anchor-target id="httpget--health">
+    <h2>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#httpget--health">#</doc-anchor-trigger>
+        <span><code v-pre>HTTP/GET @ /health</code></span>
+    </h2>
+</doc-anchor-target>
+<p>A basic health check endpoint. Will return <code v-pre>code 200</code> and a static JSON formatted response body.</p>
+<doc-anchor-target id="httppost--connectionsconnection_id_send">
+    <h2>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#httppost--connectionsconnection_id_send">#</doc-anchor-trigger>
+        <span><code v-pre>HTTP/POST @ /connections/$connection_id/_send</code></span>
+    </h2>
+</doc-anchor-target>
+<p>This endpoint is used in order to have a message sent from the backend to a connected client. The request body will be transmitted as text.</p>
 
                                 
                                 <!-- Required only on API pages -->
@@ -182,23 +204,16 @@
                             
                                 <nav class="flex mt-14">
                                     <div class="w-1/2">
-                                        <a class="px-5 py-4 h-full flex items-center break-normal font-medium text-blue-500 dark:text-blue-400 border border-gray-300 hover:border-gray-400 dark:border-dark-650 dark:hover:border-dark-450 rounded-l-lg transition-colors duration-150 relative hover:z-5" href="../">
+                                        <a class="px-5 py-4 h-full flex items-center break-normal font-medium text-blue-500 dark:text-blue-400 border border-gray-300 hover:border-gray-400 dark:border-dark-650 dark:hover:border-dark-450 rounded-r rounded-l-lg transition-colors duration-150 relative hover:z-5" href="../architecture/">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="mr-3" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" overflow="visible"><path d="M19 11H7.41l5.29-5.29a.996.996 0 10-1.41-1.41l-7 7a1 1 0 000 1.42l7 7a1.024 1.024 0 001.42-.01.996.996 0 000-1.41L7.41 13H19c.55 0 1-.45 1-1s-.45-1-1-1z" /><path fill="none" d="M0 0h24v24H0z" /></svg>
                                             <span>
                                                 <span class="block text-xs font-normal text-gray-400 dark:text-dark-400">Previous</span>
-                                                <span class="block mt-1">spoderman</span>
+                                                <span class="block mt-1">Architecture</span>
                                             </span>
                                         </a>
                                     </div>
                             
                                     <div class="w-1/2">
-                                        <a class="px-5 py-4 -mx-px h-full flex items-center justify-end break-normal font-medium text-blue-500 dark:text-blue-400 border border-gray-300 hover:border-gray-400 dark:border-dark-650 dark:hover:border-dark-450 rounded-r-lg transition-colors duration-150 relative hover:z-5" href="../endpoints/">
-                                            <span>
-                                                <span class="block text-xs font-normal text-right text-gray-400 dark:text-dark-400">Next</span>
-                                                <span class="block mt-1">Endpoints</span>
-                                            </span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-3" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" overflow="visible"><path d="M19.92 12.38a1 1 0 00-.22-1.09l-7-7a.996.996 0 10-1.41 1.41l5.3 5.3H5c-.55 0-1 .45-1 1s.45 1 1 1h11.59l-5.29 5.29a.996.996 0 000 1.41c.19.2.44.3.7.3s.51-.1.71-.29l7-7c.09-.09.16-.21.21-.33z" /><path fill="none" d="M0 0h24v24H0z" /></svg>
-                                        </a>
                                     </div>
                                 </nav>
                             </footer>
@@ -239,6 +254,6 @@
 
     <div id="docs-overlay-target"></div>
 
-    <script>window.__DOCS__ = { "title": "Architecture", level: 1, icon: "file", hasPrism: false, hasMermaid: false, hasMath: false }</script>
+    <script>window.__DOCS__ = { "title": "Endpoints", level: 1, icon: "file", hasPrism: false, hasMermaid: false, hasMath: false }</script>
 </body>
 </html>
