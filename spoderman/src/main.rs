@@ -9,6 +9,7 @@ mod server;
 mod websocket_handler;
 mod ws;
 
+use actix_web::web::Data;
 use std::error::Error;
 
 use actix::Actor;
@@ -67,16 +68,16 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
     HttpServer::new(move || {
         App::new()
             .service(ws_handler)
-            .data(server.clone())
-            .data(instance.clone())
-            .data(config.clone())
-            .data(redis.clone())
+            .app_data(Data::new(server.clone()))
+            .app_data(Data::new(instance.clone()))
+            .app_data(Data::new(config.clone()))
+            .app_data(Data::new(redis.clone()))
             .service(s_handler)
-            .data(server.clone())
-            .data(config.clone())
+            .app_data(Data::new(server.clone()))
+            .app_data(Data::new(config.clone()))
     })
     .bind(&bind)?
-    .disable_signals()
+    // .disable_signals()
     .run()
     .await?;
     Ok(())

@@ -1,10 +1,10 @@
+use actix::ActorFutureExt;
 use std::time::Instant;
 
 use actix::{
     fut,
     Actor,
     ActorContext,
-    ActorFuture,
     Addr,
     AsyncContext,
     ContextFutureSpawner,
@@ -139,7 +139,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
             | Ok(ws::Message::Nop) => (),
             | Ok(Text(s)) => self.address.do_send(ClientMessage {
                 connection: self.connection,
-                msg: s,
+                msg: s.to_string(),
             }),
             | Err(e) => panic!("{}", e),
         }

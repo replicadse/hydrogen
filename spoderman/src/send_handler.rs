@@ -17,7 +17,7 @@ use crate::server::Server;
 pub async fn handler(
     _req: HttpRequest,
     mut stream: Payload,
-    actix_web::web::Path(connection_id): actix_web::web::Path<uuid::Uuid>,
+    path: actix_web::web::Path<uuid::Uuid>,
     srv: Data<Addr<Server>>,
     config: Data<crate::config::Config>,
 ) -> Result<HttpResponse, Error> {
@@ -31,7 +31,7 @@ pub async fn handler(
         body.extend_from_slice(&chunk);
     }
     srv.do_send(crate::messages::ServerMessage {
-        connection: connection_id,
+        connection: path.into_inner(),
         msg: String::from_utf8(body.to_vec()).unwrap(),
     });
     Ok(actix_web::HttpResponse::Ok().body(""))

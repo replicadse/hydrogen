@@ -64,7 +64,7 @@ impl Server {
                     });
                     match t_sess_arc.read()?.get(&payload.connection) {
                         | Some(s) => {
-                            s.do_send(crate::messages::WsMessage(payload.msg))?;
+                            s.do_send(crate::messages::WsMessage(payload.msg));
                             Ok(())
                         },
                         | None => Err(Box::new(crate::error::ConnectionNotFoundError::new(
