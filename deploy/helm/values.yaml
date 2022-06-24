@@ -1,7 +1,8 @@
 apps:
   spoderman:
     deployment:
-      image: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman:nightly"
+      image:
+        tag: nightly
   support:
     dummysetup:
       enabled: true
