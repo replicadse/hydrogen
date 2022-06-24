@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="2.3.0.709395943424">
+    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="2.3.0.709420219896">
 
     <!-- See retype.com -->
     <meta name="generator" content="Retype 2.3.0">
@@ -30,11 +30,11 @@
 
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
-    <link href="resources/css/retype.css?v=2.3.0.709395943424" rel="stylesheet" />
+    <link href="resources/css/retype.css?v=2.3.0.709420219896" rel="stylesheet" />
 
-    <script type="text/javascript" src="resources/js/config.js?v=2.3.0.709395943424" data-turbo-eval="false" defer></script>
+    <script type="text/javascript" src="resources/js/config.js?v=2.3.0.709420219896" data-turbo-eval="false" defer></script>
     <script type="text/javascript" src="resources/js/retype.js?v=2.3.0" data-turbo-eval="false" defer></script>
-    <script id="lunr-js" type="text/javascript" src="resources/js/lunr.js?v=2.3.0.709395943424" data-turbo-eval="false" defer></script>
+    <script id="lunr-js" type="text/javascript" src="resources/js/lunr.js?v=2.3.0.709420219896" data-turbo-eval="false" defer></script>
 </head>
 <body>
     <div id="docs-app" class="relative text-base antialiased text-gray-700 bg-white font-body dark:bg-dark-850 dark:text-dark-300">
@@ -173,10 +173,27 @@
     </h1>
 </doc-anchor-target>
 <p><code v-pre>spoderman</code> is a kubernetes native API gateway for websocket connections that indirects messages into HTTP requests.</p>
-<doc-anchor-target id="features">
+<doc-anchor-target id="release-schemes--cycles">
     <h2>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#features">#</doc-anchor-trigger>
-        <span>Features</span>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#release-schemes--cycles">#</doc-anchor-trigger>
+        <span>Release schemes &amp; cycles</span>
+    </h2>
+</doc-anchor-target>
+<p>As <code v-pre>spoderman</code> now gets more complete in it&#x27;s feature set, there are final preparations to be made before releasing a v1.</p>
+<p>There will be <code v-pre>1.0.0-alpha.x</code> releases first with the first coming up end of June 2022. These are meant to be for testing purposes only and will primarily serve for identifying which things are still missing that have not come up yet. <br />
+Following the alpha releases, there will be a beta phase. The feature set for v1.0 will be complete upon entering the beta phase and there will only be fixes made to the existing features. At this point in time, the documentation about the software will also be much more in depth and detailed although it might not be 100% complete. <br />
+Following the beta phase with release candidates, v1.0 will be published. Following the v1.0 release, <code v-pre>spoderman</code> will strictly adhere to the <code v-pre>semver v3</code> versioning scheme.</p>
+<doc-anchor-target id="roadmap-to-v1">
+    <h2>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#roadmap-to-v1">#</doc-anchor-trigger>
+        <span>Roadmap to v1</span>
+    </h2>
+</doc-anchor-target>
+<p>All work, features and generally everything that will be included in / done before the v1.0 release will be bundled in <a href="https://github.com/voidpointergroup/spoderman/milestone/1">this milestone</a>.</p>
+<doc-anchor-target id="v10-features">
+    <h2>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#v10-features">#</doc-anchor-trigger>
+        <span>v1.0 features</span>
     </h2>
 </doc-anchor-target>
 <ul>
@@ -194,27 +211,6 @@ Structured log messages for events and, if configured, interval reporting about 
 <li>Easy installs via HELM charts</li>
 <li>Multi language / framework support <br />
 By deciding against a DSL or other language/framework lock-ins for routing etc., you can implement authorization, connect, message routing, message handling and disconnect in your own favorite language. The only implementations required are the routing service and at least one destination for messages it points to.</li>
-</ul>
-<doc-anchor-target id="roadmap-to-v1">
-    <h2>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#roadmap-to-v1">#</doc-anchor-trigger>
-        <span>Roadmap to v1</span>
-    </h2>
-</doc-anchor-target>
-<ul>
-<li>Prometheus metrics support</li>
-<li>Documentation / Wiki / Manual</li>
-</ul>
-<doc-anchor-target id="post-v1">
-    <h2>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#post-v1">#</doc-anchor-trigger>
-        <span>Post v1</span>
-    </h2>
-</doc-anchor-target>
-<ul>
-<li>UI &amp; Dashboard</li>
-<li>Administration UI</li>
-<li>Redis channel alternatives (?)</li>
 </ul>
 
                                 
