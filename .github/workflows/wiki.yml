@@ -10,20 +10,14 @@ jobs:
     name: website
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-      - name: install
-        run: |
-            sudo apt install hugo
-            npm i -g asciidoctor
+      - uses: actions/checkout@v3
+      - name: install earthly
+        run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.6.14/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
       - name: prepare
         run: |
-          cd docs/wiki
-          hugo
+          earthly +wiki
       - name: deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/wiki/public
-          publish_branch: docs/wiki
+          publish_dir: ./.artifacts/wiki/
