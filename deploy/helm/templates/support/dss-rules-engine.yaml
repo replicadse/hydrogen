@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rules-engine
+  name: dss-rules-engine
 spec:
   selector:
     matchLabels:
-      app: rules-engine
+      app: dss-rules-engine
   strategy:
     type: Recreate
   revisionHistoryLimit: 0
   template:
     metadata:
       labels:
-        app: rules-engine
+        app: dss-rules-engine
     spec:
       containers:
-        - name: rules-engine
+        - name: dss-rules-engine
           image: python:3.10-buster
           imagePullPolicy: IfNotPresent
           command: ["python", "/app/code/code.py"]
@@ -29,7 +29,7 @@ spec:
       volumes:
         - name: code
           configMap:
-            name: rules-engine-code
+            name: dss-rules-engine-code
             optional: false
             items:
               - key: code
@@ -38,7 +38,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: rules-engine-code
+  name: dss-rules-engine-code
 data:
   code: |-
     # Python 3 server example
@@ -50,7 +50,7 @@ data:
 
     class Server(BaseHTTPRequestHandler):
         def do_POST(self):
-            if self.headers.get('Authorization') != 'some-key':
+            if self.headers.get('Authorization') != 'dss-rules-engine-key':
                 self.send_response(500)
                 self.end_headers()
                 return
@@ -61,9 +61,9 @@ data:
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             body = {
-                "endpoint": "http://default-route:8080",
+                "endpoint": "http://dss-sink-a:8080",
                 "headers": {
-                    "Authorization": "some-other-key"
+                    "Authorization": "dss-sink-a-key"
                 }
             }
             self.wfile.write(bytes(JSONEncoder().encode(body), "utf-8"))
@@ -83,7 +83,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: rules-engine
+  name: dss-rules-engine
 spec:
   type: ClusterIP
   ports:
@@ -91,5 +91,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: rules-engine
+    app: dss-rules-engine
 {{ end }}

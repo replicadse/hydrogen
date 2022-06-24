@@ -2,24 +2,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: default-route
+  name: dss-disconnect
 spec:
   selector:
     matchLabels:
-      app: default-route
+      app: dss-disconnect
   strategy:
     type: Recreate
   revisionHistoryLimit: 0
   template:
     metadata:
       labels:
-        app: default-route
+        app: dss-disconnect
     spec:
       containers:
-        - name: default-route
+        - name: dss-disconnect
           image: python:3.10-buster
           imagePullPolicy: IfNotPresent
-          command: ["/bin/bash", "-c", "pip install requests && python /app/code/code.py"]
+          command: ["python", "/app/code/code.py"]
           volumeMounts:
             - mountPath: "/app/code"
               name: code
@@ -29,7 +29,7 @@ spec:
       volumes:
         - name: code
           configMap:
-            name: default-route-code
+            name: dss-disconnect-code
             optional: false
             items:
               - key: code
@@ -38,32 +38,24 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: default-route-code
+  name: dss-disconnect-code
 data:
   code: |-
     # Python 3 server example
     from http.server import BaseHTTPRequestHandler, HTTPServer
     from json import JSONDecoder, JSONEncoder
-    import requests
 
     hostName = "0.0.0.0"
     serverPort = 8080
 
     class Server(BaseHTTPRequestHandler):
         def do_POST(self):
-            if self.headers.get('Authorization') != 'some-other-key':
+            if self.headers.get('Authorization') != 'dss-disconnect-key':
                 self.send_response(500)
                 self.end_headers()
                 return
 
-            body = JSONDecoder().decode(self.rfile.read(int(self.headers['Content-Length'])).decode('UTF-8'))
-            print(body, flush=True)
-
-            r = requests.post(f'http://spoderman:8080/connections/{body["connection_id"]}/_send', data=body['message'])
-            print(r.text)
-
             self.send_response(200)
-            self.send_header("Content-type", "text/plain")
             self.end_headers()
 
     if __name__ == "__main__":
@@ -77,12 +69,11 @@ data:
 
         webServer.server_close()
         print("Server stopped.", flush=True)
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: default-route
+  name: dss-disconnect
 spec:
   type: ClusterIP
   ports:
@@ -90,5 +81,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: default-route
+    app: dss-disconnect
 {{ end }}
