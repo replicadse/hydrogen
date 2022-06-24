@@ -4,10 +4,13 @@ mod error;
 mod logger;
 mod messages;
 mod routes;
-mod send_handler;
 mod server;
-mod websocket_handler;
 mod ws;
+mod handlers {
+    pub mod connection_send;
+    pub mod health;
+    pub mod websocket;
+}
 
 use std::error::Error;
 
@@ -17,9 +20,7 @@ use actix_web::{
     App,
     HttpServer,
 };
-use send_handler::handler as s_handler;
 use server::Server;
-use websocket_handler::handler as ws_handler;
 
 #[actix_web::main]
 async fn main() -> std::result::Result<(), Box<dyn Error>> {
@@ -67,14 +68,15 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
     let server = Server::new(config.clone(), instance, redis.clone()).start();
     HttpServer::new(move || {
         App::new()
-            .service(ws_handler)
+            .service(crate::handlers::websocket::handler)
             .app_data(Data::new(server.clone()))
             .app_data(Data::new(instance.clone()))
             .app_data(Data::new(config.clone()))
             .app_data(Data::new(redis.clone()))
-            .service(s_handler)
+            .service(crate::handlers::connection_send::handler)
             .app_data(Data::new(server.clone()))
             .app_data(Data::new(config.clone()))
+            .service(crate::handlers::health::handler)
     })
     .bind(&bind)?
     // .disable_signals()
