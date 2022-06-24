@@ -1,0 +1,76 @@
+name: nightly
+on:
+  workflow_dispatch:
+  schedule: [{cron: "0 0 * * *"}]
+  push:
+
+jobs:
+  build:
+    name: build image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: install earthly
+        run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.6.14/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
+      - name: fmt
+        run: earthly +fmt --toolchain=nightly
+      - name: fmt
+        run: earthly +image --toolchain=nightly --version=0.1.0 --tag="voidpointergroup/spoderman:nightly"
+      - name: save image
+        working-directory: ./spoderman
+        run: docker save voidpointergroup/spoderman:nightly | gzip > docker/spoderman.tar.gz
+      - name: cache image
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v2
+        with:
+          name: spoderman.tar.gz
+          path: ./spoderman/docker/spoderman.tar.gz
+
+  publish-ghcr:
+    name: publish to ghcr (nightly)
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: download image
+        uses: actions/download-artifact@v2
+        with:
+          name: spoderman.tar.gz
+          path: ./artifacts
+      - name: import image
+        run: docker load --input ./artifacts/spoderman.tar.gz
+      - name: publish
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+          docker tag voidpointergroup/spoderman:nightly docker.pkg.github.com/voidpointergroup/spoderman/spoderman:nightly
+          docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman:nightly
+      - name: run trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.pkg.github.com/voidpointergroup/spoderman/spoderman:nightly'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+      - name: upload trivy results
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  publish-harbor:
+    name: publish to harbor (nightly)
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: download image
+        uses: actions/download-artifact@v2
+        with:
+          name: spoderman.tar.gz
+          path: ./artifacts
+      - name: import image
+        run: docker load --input ./artifacts/spoderman.tar.gz
+      - name: publish
+        run: |
+          echo ${{ secrets.HARBOR_PASS }} | docker login harbor.chinook.k8s.voidpointergroup.com -u ${{ secrets.HARBOR_USER }} --password-stdin
+          docker tag voidpointergroup/spoderman:nightly harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman:nightly
+          docker push harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman:nightly

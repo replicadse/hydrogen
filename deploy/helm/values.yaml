@@ -1,0 +1,21 @@
+apps:
+  spoderman:
+    deployment:
+      image: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman:nightly"
+  support:
+    dummysetup:
+      enabled: true
+
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      storageClass: ""
+      accessModes:
+        - ReadWriteOnce
+      size: 2Gi
+      existingClaim: ""
