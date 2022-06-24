@@ -1,10 +1,10 @@
-use actix::ActorFutureExt;
 use std::time::Instant;
 
 use actix::{
     fut,
     Actor,
     ActorContext,
+    ActorFutureExt,
     Addr,
     AsyncContext,
     ContextFutureSpawner,

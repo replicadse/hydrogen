@@ -9,11 +9,11 @@ mod server;
 mod websocket_handler;
 mod ws;
 
-use actix_web::web::Data;
 use std::error::Error;
 
 use actix::Actor;
 use actix_web::{
+    web::Data,
     App,
     HttpServer,
 };
