@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dss-rules-engine
+  name: {{ .Release.Name }}-dss-rules-engine
 spec:
   selector:
     matchLabels:
-      app: dss-rules-engine
+      app: {{ .Release.Name }}-dss-rules-engine
   strategy:
     type: Recreate
   revisionHistoryLimit: 0
   template:
     metadata:
       labels:
-        app: dss-rules-engine
+        app: {{ .Release.Name }}-dss-rules-engine
     spec:
       containers:
         - name: dss-rules-engine
@@ -29,7 +29,7 @@ spec:
       volumes:
         - name: code
           configMap:
-            name: dss-rules-engine-code
+            name: {{ .Release.Name }}-dss-rules-engine-code
             optional: false
             items:
               - key: code
@@ -38,7 +38,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: dss-rules-engine-code
+  name: {{ .Release.Name }}-dss-rules-engine-code
 data:
   code: |-
     # Python 3 server example
@@ -61,7 +61,7 @@ data:
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             body = {
-                "endpoint": "http://dss-sink-a:8080",
+                "endpoint": "http://{{ tpl .Release.Name . }}-dss-sink-a:8080",
                 "headers": {
                     "Authorization": "dss-sink-a-key"
                 }
@@ -83,7 +83,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dss-rules-engine
+  name: {{ .Release.Name }}-dss-rules-engine
 spec:
   type: ClusterIP
   ports:
@@ -91,5 +91,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: dss-rules-engine
+    app: {{ .Release.Name }}-dss-rules-engine
 {{ end }}

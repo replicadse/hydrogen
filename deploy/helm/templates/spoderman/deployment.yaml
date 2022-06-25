@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: spoderman
+  name: {{ .Release.Name }}-spoderman
 spec:
   selector:
     matchLabels:
-      app: spoderman
+      app: {{ .Release.Name }}-spoderman
   strategy:
-    type: Recreate
-  revisionHistoryLimit: 0
+    {{- toYaml .Values.apps.spoderman.deployment.strategy | nindent 4 }}
+  revisionHistoryLimit: {{ .Values.apps.spoderman.deployment.revisions }}
   template:
     metadata:
       labels:
-        app: spoderman
+        app: {{ .Release.Name }}-spoderman
     spec:
       containers:
         - name: spoderman
-          image: {{ .Values.apps.spoderman.deployment.image }}
-          imagePullPolicy: Always
+          image: {{ .Values.apps.spoderman.deployment.image.ref }}
+          imagePullPolicy: {{ .Values.apps.spoderman.deployment.image.pullpolicy }}
           volumeMounts:
             - mountPath: "/app/config"
               name: config
@@ -27,7 +27,7 @@ spec:
       volumes:
         - name: config
           secret:
-            secretName: config
+            secretName: {{ .Release.Name }}-config
             optional: false
             items:
               - key: config

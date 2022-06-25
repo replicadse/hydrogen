@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dss-sink-a
+  name: {{ .Release.Name }}-dss-sink-a
 spec:
   selector:
     matchLabels:
-      app: dss-sink-a
+      app: {{ .Release.Name }}-dss-sink-a
   strategy:
     type: Recreate
   revisionHistoryLimit: 0
   template:
     metadata:
       labels:
-        app: dss-sink-a
+        app: {{ .Release.Name }}-dss-sink-a
     spec:
       containers:
         - name: dss-sink-a
@@ -29,7 +29,7 @@ spec:
       volumes:
         - name: code
           configMap:
-            name: dss-sink-a-code
+            name: {{ .Release.Name }}-dss-sink-a-code
             optional: false
             items:
               - key: code
@@ -38,7 +38,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: dss-sink-a-code
+  name: {{ .Release.Name }}-dss-sink-a-code
 data:
   code: |-
     # Python 3 server example
@@ -59,7 +59,7 @@ data:
             body = JSONDecoder().decode(self.rfile.read(int(self.headers['Content-Length'])).decode('UTF-8'))
             print(body, flush=True)
 
-            r = requests.post(f'http://spoderman:8080/connections/{body["connection_id"]}/_send', data=body['message'])
+            r = requests.post(f'http://{{ tpl .Release.Name . }}-spoderman:8080/connections/{body["connection_id"]}/_send', data=body['message'])
             print(r.text)
 
             self.send_response(200)
@@ -82,7 +82,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dss-sink-a
+  name: {{ .Release.Name }}-dss-sink-a
 spec:
   type: ClusterIP
   ports:
@@ -90,5 +90,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: dss-sink-a
+    app: {{ .Release.Name }}-dss-sink-a
 {{ end }}

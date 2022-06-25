@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dss-authorizer
+  name: {{ .Release.Name }}-dss-authorizer
 spec:
   selector:
     matchLabels:
-      app: dss-authorizer
+      app: {{ .Release.Name }}-dss-authorizer
   strategy:
     type: Recreate
   revisionHistoryLimit: 0
   template:
     metadata:
       labels:
-        app: dss-authorizer
+        app: {{ .Release.Name }}-dss-authorizer
     spec:
       containers:
         - name: dss-authorizer
@@ -29,7 +29,7 @@ spec:
       volumes:
         - name: code
           configMap:
-            name: dss-authorizer-code
+            name: {{ .Release.Name }}-dss-authorizer-code
             optional: false
             items:
               - key: code
@@ -38,7 +38,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: dss-authorizer-code
+  name: {{ .Release.Name }}-dss-authorizer-code
 data:
   code: |-
     # Python 3 server example
@@ -73,7 +73,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dss-authorizer
+  name: {{ .Release.Name }}-dss-authorizer
 spec:
   type: ClusterIP
   ports:
@@ -81,5 +81,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: dss-authorizer
+    app: {{ .Release.Name }}-dss-authorizer
 {{ end }}

@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dss-disconnect
+  name: {{ .Release.Name }}-dss-disconnect
 spec:
   selector:
     matchLabels:
-      app: dss-disconnect
+      app: {{ .Release.Name }}-dss-disconnect
   strategy:
     type: Recreate
   revisionHistoryLimit: 0
   template:
     metadata:
       labels:
-        app: dss-disconnect
+        app: {{ .Release.Name }}-dss-disconnect
     spec:
       containers:
         - name: dss-disconnect
@@ -29,7 +29,7 @@ spec:
       volumes:
         - name: code
           configMap:
-            name: dss-disconnect-code
+            name: {{ .Release.Name }}-dss-disconnect-code
             optional: false
             items:
               - key: code
@@ -38,7 +38,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: dss-disconnect-code
+  name: {{ .Release.Name }}-dss-disconnect-code
 data:
   code: |-
     # Python 3 server example
@@ -73,7 +73,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dss-disconnect
+  name: {{ .Release.Name }}-dss-disconnect
 spec:
   type: ClusterIP
   ports:
@@ -81,5 +81,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: dss-disconnect
+    app: {{ .Release.Name }}-dss-disconnect
 {{ end }}

@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dss-connect
+  name: {{ .Release.Name }}-dss-connect
 spec:
   selector:
     matchLabels:
-      app: dss-connect
+      app: {{ .Release.Name }}-dss-connect
   strategy:
     type: Recreate
   revisionHistoryLimit: 0
   template:
     metadata:
       labels:
-        app: dss-connect
+        app: {{ .Release.Name }}-dss-connect
     spec:
       containers:
         - name: dss-connect
@@ -29,7 +29,7 @@ spec:
       volumes:
         - name: code
           configMap:
-            name: dss-connect-code
+            name: {{ .Release.Name }}-dss-connect-code
             optional: false
             items:
               - key: code
@@ -38,7 +38,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: dss-connect-code
+  name: {{ .Release.Name }}-dss-connect-code
 data:
   code: |-
     # Python 3 server example
@@ -73,7 +73,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dss-connect
+  name: {{ .Release.Name }}-dss-connect
 spec:
   type: ClusterIP
   ports:
@@ -81,5 +81,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: dss-connect
+    app: {{ .Release.Name }}-dss-connect
 {{ end }}
