@@ -32,17 +32,22 @@ impl Server {
         let sess_arc = std::sync::Arc::new(std::sync::RwLock::new(HashMap::<uuid::Uuid, Socket>::new()));
         let t_sess_arc = sess_arc.clone();
         let t2_sess_arc = sess_arc.clone();
-        let stats_interval: u64 = config.server.stats_interval_sec.into();
 
-        std::thread::spawn(move || loop {
-            crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {
-                stats: crate::logger::Stats::ConnectedClients {
-                    count: t2_sess_arc.read().unwrap().len(),
-                    clients: t2_sess_arc.read().unwrap().keys().into_iter().collect(),
-                },
-            });
-            std::thread::sleep(std::time::Duration::from_secs(stats_interval));
-        });
+        match config.server.stats_interval_sec {
+            Some(v) => {
+                let stats_interval: u64 = v.into();
+                std::thread::spawn(move || loop {
+                    crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {
+                        stats: crate::logger::Stats::ConnectedClients {
+                            count: t2_sess_arc.read().unwrap().len(),
+                            clients: t2_sess_arc.read().unwrap().keys().into_iter().collect(),
+                        },
+                    });
+                    std::thread::sleep(std::time::Duration::from_secs(stats_interval));
+                });
+            },
+            None => {}
+        }
 
         std::thread::spawn(move || {
             let mut conn = t_rc_arc.get_connection().unwrap();

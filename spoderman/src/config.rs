@@ -20,7 +20,7 @@ pub struct Routes {
 pub struct Server {
     pub address: String,
     pub heartbeat_interval_sec: u16,
-    pub stats_interval_sec: u16,
+    pub stats_interval_sec: std::option::Option<u16>,
     pub connection_timeout_sec: u16,
     pub max_out_message_size: usize,
 }
