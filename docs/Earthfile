@@ -7,7 +7,6 @@ retype:
 wiki:
   FROM +retype
   WORKDIR /app
-  COPY ./docs/* .
-  RUN ls -alghR
+  COPY ./wiki .
   RUN retype build
   SAVE ARTIFACT .retype AS LOCAL ./.artifacts/wiki
