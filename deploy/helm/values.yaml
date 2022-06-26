@@ -59,3 +59,18 @@ redis:
         - ReadWriteOnce
       size: 2Gi
       existingClaim: ""
+
+nats:
+  enabled: true
+  nats:
+    jetstream:
+      enabled: true
+      memStorage:
+        enabled: true
+        size: 1Gi
+      fileStorage:
+        enabled: true
+        size: 4Gi
+  cluster:
+    enabled: false
+    replicas: 3

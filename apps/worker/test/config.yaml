@@ -1,0 +1,6 @@
+version: 0.1.0
+
+queue:
+  nats:
+    connection: nats://localhost:10010
+    stream_name: client

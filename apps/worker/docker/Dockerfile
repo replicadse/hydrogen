@@ -11,6 +11,6 @@ RUN cargo build --release
 
 FROM gcr.io/distroless/cc
 WORKDIR /app
-COPY --from=build-env /app/target/release/spoderman .
+COPY --from=build-env /app/target/release/spoderman-worker .
 USER 1000
-CMD ["./spoderman", "serve", "-c", "./config/config.yaml"]
+CMD ["./spoderman-worker", "work", "-c", "./config/config.yaml"]

@@ -9,28 +9,28 @@ rust:
   RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $toolchain
   ENV PATH=/root/.cargo/bin:"$PATH"
 
-spoderman:
+application:
   FROM +rust
   WORKDIR /app
-  COPY ./spoderman .
+  COPY . .
 
 image:
   ARG toolchain
   ARG version
   ARG tag
   FROM DOCKERFILE \
-    -f ./spoderman/docker/Dockerfile \
+    -f ./docker/Dockerfile \
     --build-arg toolchain=$toolchain \
     --build-arg version=$version \
-    ./spoderman
+    .
   SAVE IMAGE $tag
 
 fmt:
-  FROM +spoderman
+  FROM +application
   RUN cargo fmt --all -- --check
 
 test:
-  FROM +spoderman
+  FROM +application
   ARG features
   RUN cargo test $features
 
