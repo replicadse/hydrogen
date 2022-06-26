@@ -14,16 +14,24 @@ jobs:
     name: publish to ghcr (${{ github.event.inputs.version }})
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - app: "gateway"
+        - app: "worker"
+    defaults:
+      run:
+        working-directory: ./apps/${{ matrix.app }}
     steps:
       - uses: actions/checkout@v3
       - name: install earthly
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.6.14/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
       - name: fmt
-        run: earthly +image --toolchain=nightly --version="${{ github.event.inputs.version }}" --tag="voidpointergroup/spoderman:${{ github.event.inputs.tag }}"
+        run: earthly +image --toolchain=nightly --version="${{ github.event.inputs.version }}" --tag="voidpointergroup/spoderman-${{ matrix.app }}:${{ github.event.inputs.tag }}"
       - name: publish
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
-          docker tag voidpointergroup/spoderman:${{ github.event.inputs.tag }} docker.pkg.github.com/voidpointergroup/spoderman/spoderman:${{ github.event.inputs.tag }}
-          docker tag voidpointergroup/spoderman:${{ github.event.inputs.tag }} docker.pkg.github.com/voidpointergroup/spoderman/spoderman:latest
-          docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman:${{ github.event.inputs.tag }}
-          docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman:latest
+          docker tag voidpointergroup/spoderman-${{ matrix.app }}:${{ github.event.inputs.tag }} docker.pkg.github.com/voidpointergroup/spoderman/spoderman-${{ matrix.app }}:${{ github.event.inputs.tag }}
+          docker tag voidpointergroup/spoderman-${{ matrix.app }}:${{ github.event.inputs.tag }} docker.pkg.github.com/voidpointergroup/spoderman/spoderman-${{ matrix.app }}:latest
+          docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman-${{ matrix.app }}:${{ github.event.inputs.tag }}
+          docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman-${{ matrix.app }}:latest

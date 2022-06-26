@@ -10,3 +10,6 @@ dependencies:
 - name: redis
   version: "16.8.0"
   repository: "https://charts.bitnami.com/bitnami"
+- name: nats
+  version: "0.17.1"
+  repository: "https://nats-io.github.io/k8s/helm/charts/"

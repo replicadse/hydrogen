@@ -1,0 +1,12 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Release.Name }}-spoderman-worker
+spec:
+  maxReplicas: {{ .Values.apps.worker.hpa.max }}
+  minReplicas: {{ .Values.apps.worker.hpa.max }}
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Release.Name }}-spoderman-worker
+  targetCPUUtilizationPercentage: {{ .Values.apps.worker.hpa.cpu_percentage }}

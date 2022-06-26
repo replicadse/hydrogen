@@ -1,5 +1,5 @@
 apps:
-  spoderman:
+  gateway:
     service:
       type: ClusterIP
       port: 8080
@@ -8,8 +8,12 @@ apps:
       strategy:
         type: Recreate
       image:
-        ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman:nightly"
-        pullpolicy: Always
+        ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-gateway:nightly"
+        pull_policy: Always
+    hpa:
+      min: 2
+      max: 4
+      cpu_percentage: 50
     secrets:
       config:
         config: |-
@@ -22,14 +26,13 @@ apps:
             stats_interval_sec: 10
             max_out_message_size: 262144 # 256kb
 
+          nats:
+            endpoint: "nats://spoderman-nats:4222"
+            stream: client
           redis:
             endpoint: "redis://spoderman-redis-master:6379"
 
           routes:
-            rules_engine:
-              endpoint: "http://spoderman-dss-rules-engine:8080"
-              headers:
-                Authorization: dss-rules-engine-key
             authorizer:
               endpoint: "http://spoderman-dss-authorizer:8080"
               headers:
@@ -42,6 +45,33 @@ apps:
               endpoint: "http://spoderman-dss-disconnect:8080"
               headers:
                 Authorization: dss-disconnect-key
+  worker:
+    deployment:
+      revisions: 0
+      strategy:
+        type: Recreate
+      image:
+        ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-worker:nightly"
+        pull_policy: Always
+    hpa:
+      min: 3
+      max: 6
+      cpu_percentage: 50
+    secrets:
+      config:
+        config: |-
+          version: 0.1.0
+
+          queue:
+            nats:
+              endpoint: "nats://spoderman-nats:4222"
+              stream: client
+
+          routes:
+            rules_engine:
+              endpoint: "http://spoderman-dss-rules-engine:8080"
+              headers:
+                Authorization: dss-rules-engine-key
   support:
     dummysetup:
       enabled: true
@@ -59,3 +89,18 @@ redis:
         - ReadWriteOnce
       size: 2Gi
       existingClaim: ""
+
+nats:
+  enabled: true
+  nats:
+    jetstream:
+      enabled: true
+      memStorage:
+        enabled: true
+        size: 1Gi
+      fileStorage:
+        enabled: true
+        size: 4Gi
+  cluster:
+    enabled: false
+    replicas: 3
