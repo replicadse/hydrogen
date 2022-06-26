@@ -21,9 +21,12 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
     match args.command {
         | args::Command::Work { config } => {
             match &config.queue {
-                config::Queue::Nats { connection, stream_name: topic } => {
+                | config::Queue::Nats {
+                    connection,
+                    stream_name: topic,
+                } => {
                     nats(&instance.to_string(), &config, &connection, &topic).await?;
-                }
+                },
             }
             Ok(())
         },
@@ -31,25 +34,36 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
 }
 
 /// BLOCKING_MAX_THREADS = 16
-async fn nats(instance: &str, config: &crate::config::Config, connection: &str, stream_name: &str) -> std::result::Result<(), Box<dyn Error>> {
+async fn nats(
+    instance: &str,
+    config: &crate::config::Config,
+    connection: &str,
+    stream_name: &str,
+) -> std::result::Result<(), Box<dyn Error>> {
     let nc = async_nats::connect(connection).await?;
     let nc2 = async_nats::jetstream::new(nc);
-    let stream = nc2.get_or_create_stream(async_nats::jetstream::stream::Config{
-        name: stream_name.to_owned(),
-        max_messages: 4096,
-        max_messages_per_subject: 1024,
-        discard: async_nats::jetstream::stream::DiscardPolicy::Old,
-        retention: async_nats::jetstream::stream::RetentionPolicy::WorkQueue,
-        max_message_size: 1024 * 256,
-        ..Default::default()
-    }).await.unwrap();
-    let consumer = stream.get_or_create_consumer("worker", async_nats::jetstream::consumer::pull::Config {
-        durable_name: Some("worker".to_owned()),
-        deliver_policy: async_nats::jetstream::consumer::DeliverPolicy::All,
-        max_deliver: 1,
-        max_ack_pending: 256,
-        ..Default::default()
-    }).await.unwrap();
+    let stream = nc2
+        .get_or_create_stream(async_nats::jetstream::stream::Config {
+            name: stream_name.to_owned(),
+            max_messages: 4096,
+            max_messages_per_subject: 1024,
+            discard: async_nats::jetstream::stream::DiscardPolicy::Old,
+            retention: async_nats::jetstream::stream::RetentionPolicy::WorkQueue,
+            max_message_size: 1024 * 256,
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+    let consumer = stream
+        .get_or_create_consumer("worker", async_nats::jetstream::consumer::pull::Config {
+            durable_name: Some("worker".to_owned()),
+            deliver_policy: async_nats::jetstream::consumer::DeliverPolicy::All,
+            max_deliver: 1,
+            max_ack_pending: 256,
+            ..Default::default()
+        })
+        .await
+        .unwrap();
 
     let mut messages = consumer.stream().unwrap();
     while let Some(Ok(message)) = messages.next().await {
@@ -57,21 +71,23 @@ async fn nats(instance: &str, config: &crate::config::Config, connection: &str, 
         let msg_str = String::from_utf8(message.payload.to_vec())?;
         let msg_typed: crate::bus::nats::ClientMessage = serde_json::from_str(&msg_str)?;
         match handle_message(instance, config, &msg_typed) {
-            Ok(..) => (),
-            Err(e) => {
-                crate::logger::LogMessage::now(instance, crate::logger::Data::Event{
-                    data: crate::logger::Event::Error {
-                        message: &format!("error on message: {:?}, details: {}", msg_typed, e.to_string()),
-                    }
-                })
-            }
+            | Ok(..) => (),
+            | Err(e) => crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
+                data: crate::logger::Event::Error {
+                    message: &format!("error on message: {:?}, details: {}", msg_typed, e.to_string()),
+                },
+            }),
         }
         message.ack().await.unwrap();
-    };
+    }
     Ok(())
 }
 
-fn handle_message(instance: &str, config: &crate::config::Config, msg: &crate::bus::nats::ClientMessage) -> std::result::Result<(), Box<dyn std::error::Error>> {
+fn handle_message(
+    instance: &str,
+    config: &crate::config::Config,
+    msg: &crate::bus::nats::ClientMessage,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut re_req = ureq::post(&config.routes.rules_engine.endpoint);
     for (k, v) in config.routes.rules_engine.headers.iter() {
         re_req = re_req.set(k, v);
@@ -96,8 +112,7 @@ fn handle_message(instance: &str, config: &crate::config::Config, msg: &crate::b
             re_response.status()
         ))));
     }
-    let re_response_parsed =
-        serde_json::from_str::<crate::routes::RulesEngineResponse>(&re_response.into_string()?)?;
+    let re_response_parsed = serde_json::from_str::<crate::routes::RulesEngineResponse>(&re_response.into_string()?)?;
 
     let mut forwerd_req = ureq::post(&re_response_parsed.endpoint);
     for h in re_response_parsed.headers.iter() {
@@ -123,5 +138,5 @@ fn handle_message(instance: &str, config: &crate::config::Config, msg: &crate::b
             "forward route error code {}",
             forward_resp.status()
         )))),
-    }  
+    }
 }

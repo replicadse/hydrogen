@@ -25,7 +25,12 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(config: crate::config::Config, instance: uuid::Uuid, redis: redis::Client, nats: nats::jetstream::JetStream) -> Self {
+    pub fn new(
+        config: crate::config::Config,
+        instance: uuid::Uuid,
+        redis: redis::Client,
+        nats: nats::jetstream::JetStream,
+    ) -> Self {
         let rc_arc = std::sync::Arc::new(redis);
         let t_rc_arc = rc_arc.clone();
         let t_instance_id = instance.to_string();
@@ -35,7 +40,7 @@ impl Server {
         let t2_sess_arc = sess_arc.clone();
 
         match config.server.stats_interval_sec {
-            Some(v) => {
+            | Some(v) => {
                 let stats_interval: u64 = v.into();
                 std::thread::spawn(move || loop {
                     crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {
@@ -47,7 +52,7 @@ impl Server {
                     std::thread::sleep(std::time::Duration::from_secs(stats_interval));
                 });
             },
-            None => {}
+            | None => {},
         }
 
         std::thread::spawn(move || {
@@ -318,11 +323,15 @@ impl Handler<ClientMessage> for Server {
                 },
             });
 
-            self.nats.publish("client", serde_json::json!(crate::bus::nats::ClientMessage{
-                instance_id: &self.instance.to_string(),
-                connection_id: &msg.connection.to_string(),
-                message: &msg.message,
-            }).to_string())?;
+            self.nats.publish(
+                "client",
+                serde_json::json!(crate::bus::nats::ClientMessage {
+                    instance_id: &self.instance.to_string(),
+                    connection_id: &msg.connection.to_string(),
+                    message: &msg.message,
+                })
+                .to_string(),
+            )?;
             Ok(())
         };
         match safecall() {

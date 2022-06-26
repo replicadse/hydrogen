@@ -53,7 +53,7 @@ impl ClapArgumentLoader {
                         .multiple_values(false)
                         .required(false)
                         .takes_value(true),
-                )
+                ),
             )
             .get_matches();
 

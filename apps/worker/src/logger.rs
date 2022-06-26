@@ -39,4 +39,3 @@ pub enum Event<'a> {
     RulesEngineRouteResponse { connection: &'a str, response: u16 },
     ForwardRouteResponse { connection: &'a str, response: u16 },
 }
-
