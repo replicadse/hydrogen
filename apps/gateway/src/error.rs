@@ -30,8 +30,6 @@ make_error!(MissingArgumentError);
 make_error!(StartupError);
 
 make_error!(ConnectRouteError);
-make_error!(RulesEngineRouteError);
-make_error!(ForwardRouteError);
 make_error!(DisconnectRouteError);
 
 make_error!(ConnectionNotFoundError);

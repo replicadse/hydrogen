@@ -19,7 +19,7 @@ impl CallArgs {
 #[derive(Debug)]
 /// The (sub-)command representation for the call args.
 pub enum Command {
-    Work { config: crate::config::Config, publish: bool },
+    Work { config: crate::config::Config },
 }
 
 /// The type that parses the arguments to the program.
@@ -53,14 +53,7 @@ impl ClapArgumentLoader {
                         .multiple_values(false)
                         .required(false)
                         .takes_value(true),
-                ).arg(
-                    clap::Arg::new("publish")
-                        .short('p')
-                        .long("publish")
-                        .value_name("PUBLISH")
-                        .required(false)
-                        .takes_value(false),
-                ),
+                )
             )
             .get_matches();
 
@@ -75,7 +68,6 @@ impl ClapArgumentLoader {
             };
             Command::Work {
                 config: serde_yaml::from_str(&config_content)?,
-                publish: x.is_present("publish")
             }
         } else {
             return Err(Box::new(UnknownCommandError::new("unknown command")));

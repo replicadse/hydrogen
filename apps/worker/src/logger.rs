@@ -2,15 +2,15 @@
 #[serde(rename_all = "snake_case")]
 pub struct LogMessage<'a> {
     time: String,
-    instance: &'a str,
+    worker_instance: &'a str,
     data: Data<'a>,
 }
 
 impl<'a> LogMessage<'a> {
-    pub fn now(instance: &'a str, data: Data<'a>) -> () {
+    pub fn now(worker_instance: &'a str, data: Data<'a>) -> () {
         Self {
             time: chrono::Utc::now().to_rfc3339(),
-            instance,
+            worker_instance,
             data,
         }
         .log()
@@ -33,6 +33,10 @@ pub enum Data<'a> {
 #[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Event<'a> {
+    Error { message: &'a str },
     Startup { message: &'a str },
+
+    RulesEngineRouteResponse { connection: &'a str, response: u16 },
+    ForwardRouteResponse { connection: &'a str, response: u16 },
 }
 

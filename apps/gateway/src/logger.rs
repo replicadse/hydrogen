@@ -46,8 +46,6 @@ pub enum Event<'a> {
 
     AuthRouteResponse { connection: &'a str, response: u16 },
     ConnectRouteResponse { connection: &'a str, response: u16 },
-    RulesEngineRouteResponse { connection: &'a str, response: u16 },
-    ForwardRouteResponse { connection: &'a str, response: u16 },
     DisconnectRouteResponse { connection: &'a str, response: u16 },
 }
 

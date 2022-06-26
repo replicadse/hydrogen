@@ -27,3 +27,5 @@ macro_rules! make_error {
 
 make_error!(UnknownCommandError);
 make_error!(MissingArgumentError);
+make_error!(RulesEngineRouteError);
+make_error!(ForwardRouteError);

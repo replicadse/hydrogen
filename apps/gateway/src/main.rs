@@ -11,6 +11,9 @@ mod handlers {
     pub mod health;
     pub mod websocket;
 }
+mod bus {
+    pub mod nats;
+}
 
 use std::error::Error;
 
@@ -65,7 +68,10 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
         },
     });
 
-    let server = Server::new(config.clone(), instance, redis.clone()).start();
+    let nc = nats::connect(&config.nats.endpoint)?;
+    let nc2 = nats::jetstream::new(nc);
+
+    let server = Server::new(config.clone(), instance, redis.clone(), nc2.clone()).start();
     HttpServer::new(move || {
         App::new()
             .service(crate::handlers::websocket::handler)

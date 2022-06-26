@@ -2,7 +2,10 @@ mod args;
 mod config;
 mod error;
 mod logger;
-mod messages;
+mod routes;
+mod bus {
+    pub mod nats;
+}
 
 use std::error::Error;
 
@@ -13,12 +16,13 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
     logger::LogMessage::now("-", logger::Data::Event {
         data: logger::Event::Startup { message: "startup" },
     });
+    let instance = uuid::Uuid::new_v4();
     let args = args::ClapArgumentLoader::load()?;
     match args.command {
-        | args::Command::Work { config, publish } => {
-            match config.queue {
+        | args::Command::Work { config } => {
+            match &config.queue {
                 config::Queue::Nats { connection, stream_name: topic } => {
-                    nats(publish, &connection, &topic).await?;
+                    nats(&instance.to_string(), &config, &connection, &topic).await?;
                 }
             }
             Ok(())
@@ -27,7 +31,7 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
 }
 
 /// BLOCKING_MAX_THREADS = 16
-async fn nats(publish: bool, connection: &str, stream_name: &str) -> std::result::Result<(), Box<dyn Error>> {
+async fn nats(instance: &str, config: &crate::config::Config, connection: &str, stream_name: &str) -> std::result::Result<(), Box<dyn Error>> {
     let nc = async_nats::connect(connection).await?;
     let nc2 = async_nats::jetstream::new(nc);
     let stream = nc2.get_or_create_stream(async_nats::jetstream::stream::Config{
@@ -47,17 +51,77 @@ async fn nats(publish: bool, connection: &str, stream_name: &str) -> std::result
         ..Default::default()
     }).await.unwrap();
 
-    if publish {
-        loop {
-            nc2.publish("client".to_owned(), "MESSAGE 1".into()).await.unwrap();
+    let mut messages = consumer.stream().unwrap();
+    while let Some(Ok(message)) = messages.next().await {
+        println!("{:?}", message);
+        let msg_str = String::from_utf8(message.payload.to_vec())?;
+        let msg_typed: crate::bus::nats::ClientMessage = serde_json::from_str(&msg_str)?;
+        match handle_message(instance, config, &msg_typed) {
+            Ok(..) => (),
+            Err(e) => {
+                crate::logger::LogMessage::now(instance, crate::logger::Data::Event{
+                    data: crate::logger::Event::Error {
+                        message: &format!("error on message: {:?}, details: {}", msg_typed, e.to_string()),
+                    }
+                })
+            }
         }
-    } else {
-        let mut messages = consumer.stream().unwrap();
-        while let Some(Ok(message)) = messages.next().await {
-            println!("{:?}", message);
-            message.ack().await.unwrap();
-        };
+        message.ack().await.unwrap();
+    };
+    Ok(())
+}
+
+fn handle_message(instance: &str, config: &crate::config::Config, msg: &crate::bus::nats::ClientMessage) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    let mut re_req = ureq::post(&config.routes.rules_engine.endpoint);
+    for (k, v) in config.routes.rules_engine.headers.iter() {
+        re_req = re_req.set(k, v);
     }
 
-    Ok(())
+    let re_response = re_req.send_string(&serde_json::to_string(&crate::routes::RulesEngineRequest {
+        instance_id: &msg.instance_id.to_string(),
+        connection_id: &msg.connection_id.to_string(),
+        message: &msg.message,
+    })?)?;
+
+    crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
+        data: crate::logger::Event::RulesEngineRouteResponse {
+            connection: &msg.connection_id.to_string(),
+            response: re_response.status(),
+        },
+    });
+
+    if re_response.status() != 200 {
+        return Err(Box::new(crate::error::RulesEngineRouteError::new(&format!(
+            "rules engine route error code {}",
+            re_response.status()
+        ))));
+    }
+    let re_response_parsed =
+        serde_json::from_str::<crate::routes::RulesEngineResponse>(&re_response.into_string()?)?;
+
+    let mut forwerd_req = ureq::post(&re_response_parsed.endpoint);
+    for h in re_response_parsed.headers.iter() {
+        forwerd_req = forwerd_req.set(h.0, h.1);
+    }
+
+    let forward_resp = forwerd_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
+        instance_id: &msg.instance_id.to_string(),
+        connection_id: &msg.connection_id.to_string(),
+        message: &msg.message,
+    })?)?;
+
+    crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
+        data: crate::logger::Event::ForwardRouteResponse {
+            connection: &msg.connection_id.to_string(),
+            response: forward_resp.status(),
+        },
+    });
+
+    match forward_resp.status() {
+        | 200 => Ok(()),
+        | _ => Err(Box::new(crate::error::ForwardRouteError::new(&format!(
+            "forward route error code {}",
+            forward_resp.status()
+        )))),
+    }  
 }

@@ -4,3 +4,8 @@ queue:
   nats:
     connection: nats://localhost:10010
     stream_name: client
+routes:
+  rules_engine:
+    endpoint: "http://localhost:10100"
+    headers:
+      Authorization: dss-rules-engine-key

@@ -21,10 +21,11 @@ pub struct Server {
     instance: uuid::Uuid,
     sessions: std::sync::Arc<std::sync::RwLock<HashMap<uuid::Uuid, Socket>>>,
     redis: std::sync::Arc<redis::Client>,
+    nats: std::sync::Arc<nats::jetstream::JetStream>,
 }
 
 impl Server {
-    pub fn new(config: crate::config::Config, instance: uuid::Uuid, redis: redis::Client) -> Self {
+    pub fn new(config: crate::config::Config, instance: uuid::Uuid, redis: redis::Client, nats: nats::jetstream::JetStream) -> Self {
         let rc_arc = std::sync::Arc::new(redis);
         let t_rc_arc = rc_arc.clone();
         let t_instance_id = instance.to_string();
@@ -89,6 +90,7 @@ impl Server {
             instance,
             sessions: sess_arc,
             redis: rc_arc,
+            nats: std::sync::Arc::new(nats),
         }
     }
 
@@ -316,58 +318,12 @@ impl Handler<ClientMessage> for Server {
                 },
             });
 
-            let mut re_req = ureq::post(&self.config.routes.rules_engine.endpoint);
-            for (k, v) in self.config.routes.rules_engine.headers.iter() {
-                re_req = re_req.set(k, v);
-            }
-
-            let re_response = re_req.send_string(&serde_json::to_string(&crate::routes::RulesEngineRequest {
+            self.nats.publish("client", serde_json::json!(crate::bus::nats::ClientMessage{
                 instance_id: &self.instance.to_string(),
                 connection_id: &msg.connection.to_string(),
                 message: &msg.message,
-            })?)?;
-
-            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
-                data: crate::logger::Event::RulesEngineRouteResponse {
-                    connection: &msg.connection.to_string(),
-                    response: re_response.status(),
-                },
-            });
-
-            if re_response.status() != 200 {
-                return Err(Box::new(crate::error::RulesEngineRouteError::new(&format!(
-                    "rules engine route error code {}",
-                    re_response.status()
-                ))));
-            }
-            let re_response_parsed =
-                serde_json::from_str::<crate::routes::RulesEngineResponse>(&re_response.into_string()?)?;
-
-            let mut forwerd_req = ureq::post(&re_response_parsed.endpoint);
-            for h in re_response_parsed.headers.iter() {
-                forwerd_req = forwerd_req.set(h.0, h.1);
-            }
-
-            let forward_resp = forwerd_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
-                instance_id: &self.instance.to_string(),
-                connection_id: &msg.connection.to_string(),
-                message: &msg.message,
-            })?)?;
-
-            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
-                data: crate::logger::Event::ForwardRouteResponse {
-                    connection: &msg.connection.to_string(),
-                    response: forward_resp.status(),
-                },
-            });
-
-            match forward_resp.status() {
-                | 200 => Ok(()),
-                | _ => Err(Box::new(crate::error::ForwardRouteError::new(&format!(
-                    "forward route error code {}",
-                    forward_resp.status()
-                )))),
-            }
+            }).to_string())?;
+            Ok(())
         };
         match safecall() {
             | Ok(_) => Ok(()),
