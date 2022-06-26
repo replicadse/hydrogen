@@ -12,6 +12,7 @@ pub struct WsMessage(pub String);
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct Connect {
     pub connection: Uuid,
+    pub time: String,
     pub addr: Recipient<WsMessage>,
 }
 
@@ -19,18 +20,21 @@ pub struct Connect {
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct Disconnect {
     pub connection: Uuid,
+    pub time: String,
 }
 
 #[derive(Message)]
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct Heartbeat {
     pub connection: Uuid,
+    pub time: String,
 }
 
 #[derive(Debug, Message, serde::Serialize, serde::Deserialize)]
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct ClientMessage {
     pub connection: Uuid,
+    pub time: String,
     pub message: String,
 }
 
@@ -38,5 +42,6 @@ pub struct ClientMessage {
 #[rtype(result = "()")]
 pub struct ServerMessage {
     pub connection: Uuid,
+    pub time: String,
     pub message: String,
 }

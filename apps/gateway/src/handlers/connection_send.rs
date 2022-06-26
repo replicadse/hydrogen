@@ -32,6 +32,7 @@ pub async fn handler(
     }
     srv.do_send(crate::messages::ServerMessage {
         connection: path.into_inner(),
+        time: chrono::Utc::now().to_rfc3339(),
         message: String::from_utf8(body.to_vec()).unwrap(),
     });
     Ok(actix_web::HttpResponse::Ok().body(""))

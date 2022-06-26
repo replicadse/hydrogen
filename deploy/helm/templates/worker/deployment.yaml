@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-spoderman
+  name: {{ .Release.Name }}-spoderman-worker
 spec:
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-spoderman
+      app: {{ .Release.Name }}-spoderman-worker
   strategy:
     {{- toYaml .Values.apps.worker.deployment.strategy | nindent 4 }}
   revisionHistoryLimit: {{ .Values.apps.worker.deployment.revisions }}
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-spoderman
+        app: {{ .Release.Name }}-spoderman-worker
     spec:
       containers:
-        - name: spoderman
+        - name: spoderman-worker
           image: {{ .Values.apps.worker.deployment.image.ref }}
-          imagePullPolicy: {{ .Values.apps.worker.deployment.image.pullpolicy }}
+          imagePullPolicy: {{ .Values.apps.worker.deployment.image.pull_policy }}
           volumeMounts:
             - mountPath: "/app/config"
               name: config
@@ -27,7 +27,7 @@ spec:
       volumes:
         - name: config
           secret:
-            secretName: {{ .Release.Name }}-config
+            secretName: {{ .Release.Name }}-spoderman-worker-config
             optional: false
             items:
               - key: config

@@ -9,7 +9,7 @@ pub struct Config {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Queue {
-    Nats { connection: String, stream_name: String },
+    Nats { endpoint: String, stream: String },
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

@@ -22,10 +22,10 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
         | args::Command::Work { config } => {
             match &config.queue {
                 | config::Queue::Nats {
-                    connection,
-                    stream_name: topic,
+                    endpoint,
+                    stream: topic,
                 } => {
-                    nats(&instance.to_string(), &config, &connection, &topic).await?;
+                    nats(&instance.to_string(), &config, &endpoint, &topic).await?;
                 },
             }
             Ok(())
@@ -33,18 +33,17 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
     }
 }
 
-/// BLOCKING_MAX_THREADS = 16
 async fn nats(
     instance: &str,
     config: &crate::config::Config,
-    connection: &str,
-    stream_name: &str,
+    nats_endpoint: &str,
+    stream: &str,
 ) -> std::result::Result<(), Box<dyn Error>> {
-    let nc = async_nats::connect(connection).await?;
+    let nc = async_nats::connect(nats_endpoint).await?;
     let nc2 = async_nats::jetstream::new(nc);
     let stream = nc2
         .get_or_create_stream(async_nats::jetstream::stream::Config {
-            name: stream_name.to_owned(),
+            name: stream.to_owned(),
             max_messages: 4096,
             max_messages_per_subject: 1024,
             discard: async_nats::jetstream::stream::DiscardPolicy::Old,
@@ -71,14 +70,15 @@ async fn nats(
         let msg_str = String::from_utf8(message.payload.to_vec())?;
         let msg_typed: crate::bus::nats::ClientMessage = serde_json::from_str(&msg_str)?;
         match handle_message(instance, config, &msg_typed) {
-            | Ok(..) => (),
+            | Ok(..) => {
+                message.ack().await.unwrap();
+            },
             | Err(e) => crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
                 data: crate::logger::Event::Error {
                     message: &format!("error on message: {:?}, details: {}", msg_typed, e.to_string()),
                 },
             }),
         }
-        message.ack().await.unwrap();
     }
     Ok(())
 }
@@ -96,6 +96,7 @@ fn handle_message(
     let re_response = re_req.send_string(&serde_json::to_string(&crate::routes::RulesEngineRequest {
         instance_id: &msg.instance_id.to_string(),
         connection_id: &msg.connection_id.to_string(),
+        time: msg.time,
         message: &msg.message,
     })?)?;
 
@@ -122,6 +123,7 @@ fn handle_message(
     let forward_resp = forwerd_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
         instance_id: &msg.instance_id.to_string(),
         connection_id: &msg.connection_id.to_string(),
+        time: msg.time,
         message: &msg.message,
     })?)?;
 

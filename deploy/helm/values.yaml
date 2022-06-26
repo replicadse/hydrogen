@@ -9,7 +9,11 @@ apps:
         type: Recreate
       image:
         ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-gateway:nightly"
-        pullpolicy: Always
+        pull_policy: Always
+    hpa:
+      min: 2
+      max: 4
+      cpu_percentage: 50
     secrets:
       config:
         config: |-
@@ -23,7 +27,8 @@ apps:
             max_out_message_size: 262144 # 256kb
 
           nats:
-            endpoint: "redis://spoderman-nats:4222"
+            endpoint: "nats://spoderman-nats:4222"
+            stream: client
           redis:
             endpoint: "redis://spoderman-redis-master:6379"
 
@@ -47,20 +52,26 @@ apps:
         type: Recreate
       image:
         ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-worker:nightly"
-        pullpolicy: Always
+        pull_policy: Always
+    hpa:
+      min: 3
+      max: 6
+      cpu_percentage: 50
     secrets:
       config:
         config: |-
           version: 0.1.0
 
-          nats:
-            endpoint: "redis://spoderman-nats:4222"
+          queue:
+            nats:
+              endpoint: "nats://spoderman-nats:4222"
+              stream: client
 
           routes:
             rules_engine:
-              endpoint: "http://spoderman-dss-rules_engine:8080"
+              endpoint: "http://spoderman-dss-rules-engine:8080"
               headers:
-                Authorization: dss-authorizer-key
+                Authorization: dss-rules-engine-key
   support:
     dummysetup:
       enabled: true

@@ -2,6 +2,7 @@
 pub struct RulesEngineRequest<'a> {
     pub instance_id: &'a str,
     pub connection_id: &'a str,
+    pub time: &'a str,
     pub message: &'a str,
 }
 
@@ -15,5 +16,6 @@ pub struct RulesEngineResponse {
 pub struct ForwardRequest<'a> {
     pub instance_id: &'a str,
     pub connection_id: &'a str,
+    pub time: &'a str,
     pub message: &'a str,
 }

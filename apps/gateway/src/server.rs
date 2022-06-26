@@ -136,6 +136,7 @@ impl Handler<Connect> for Server {
                     let resp = req.send_string(&serde_json::to_string(&crate::routes::ConnectRequest {
                         instance_id: self.instance.to_string(),
                         connection_id: &msg.connection.to_string(),
+                        time: &msg.time,
                     })?)?;
 
                     crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -221,6 +222,7 @@ impl Handler<Disconnect> for Server {
                     let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
                         instance_id: &self.instance.to_string(),
                         connection_id: &msg.connection.to_string(),
+                        time: &msg.time,
                     })?)?;
 
                     crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -324,10 +326,11 @@ impl Handler<ClientMessage> for Server {
             });
 
             self.nats.publish(
-                "client",
+                &self.config.nats.stream,
                 serde_json::json!(crate::bus::nats::ClientMessage {
                     instance_id: &self.instance.to_string(),
                     connection_id: &msg.connection.to_string(),
+                    time: &msg.time,
                     message: &msg.message,
                 })
                 .to_string(),

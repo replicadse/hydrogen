@@ -22,21 +22,21 @@ jobs:
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.6.14/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
       - name: fmt
         run: earthly +fmt --toolchain=nightly
-      - name: fmt
+      - name: build image
         run: earthly +image --toolchain=nightly --version=0.1.0 --tag="voidpointergroup/spoderman-${{ matrix.app }}:nightly"
       - name: save image
-        run: docker save voidpointergroup/spoderman-${{ matrix.app }}:nightly | gzip > docker/spoderman-${{ matrix.app }}.tar.gz
+        run: docker save voidpointergroup/spoderman-${{ matrix.app }}:nightly | gzip > ./docker/spoderman-${{ matrix.app }}.tar.gz
       - name: cache image
         if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v2
         with:
           name: spoderman-${{ matrix.app }}.tar.gz
-          path: ./spoderman/docker/spoderman-${{ matrix.app }}.tar.gz
+          path: ./apps/${{ matrix.app }}/docker/spoderman-${{ matrix.app }}.tar.gz
 
   publish-ghcr:
     name: publish to ghcr (nightly)
     needs: build
-    # if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -51,9 +51,9 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: spoderman-${{ matrix.app }}.tar.gz
-          path: ./artifacts
+          path: ./apps/${{ matrix.app }}/.artifacts
       - name: import image
-        run: docker load --input ./artifacts/spoderman-${{ matrix.app }}.tar.gz
+        run: docker load --input ./.artifacts/spoderman-${{ matrix.app }}.tar.gz
       - name: publish
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
@@ -74,7 +74,7 @@ jobs:
   publish-harbor:
     name: publish to harbor (nightly)
     needs: build
-    # if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -88,10 +88,10 @@ jobs:
       - name: download image
         uses: actions/download-artifact@v2
         with:
-          name: spoderman.tar.gz
-          path: ./artifacts
+          name: spoderman-${{ matrix.app }}.tar.gz
+          path: ./apps/${{ matrix.app }}/.artifacts
       - name: import image
-        run: docker load --input ./artifacts/spoderman.tar.gz
+        run: docker load --input ./.artifacts/spoderman-${{ matrix.app }}.tar.gz
       - name: publish
         run: |
           echo ${{ secrets.HARBOR_PASS }} | docker login harbor.chinook.k8s.voidpointergroup.com -u ${{ secrets.HARBOR_USER }} --password-stdin

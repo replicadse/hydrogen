@@ -30,3 +30,5 @@ All work, features and generally everything that will be included in / done befo
 * Easy installs via HELM charts
 * Multi language / framework support \
   By deciding against a DSL or other language/framework lock-ins for routing etc., you can implement authorization, connect, message routing, message handling and disconnect in your own favorite language. The only implementations required are the routing service and at least one destination for messages it points to.
+* Message persistence and retries
+  Messages are sent to a NATS/Jetstream stream which will buffer messages and only release if they are acknowledged. This will guarantee a at-least-once delivery for client->server messages.

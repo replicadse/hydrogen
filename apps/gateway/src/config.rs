@@ -37,6 +37,7 @@ pub struct Redis {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Nats {
     pub endpoint: String,
+    pub stream: String,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

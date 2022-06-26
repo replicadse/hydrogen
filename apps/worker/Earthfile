@@ -4,7 +4,7 @@ rust:
   FROM debian:bullseye
   ARG toolchain
   RUN [ ! -z "$toolchain" ] || exit 1
-  RUN apt update && apt upgrade
+  RUN apt update -y && apt upgrade -y
   RUN apt install gcc make build-essential curl -y
   RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $toolchain
   ENV PATH=/root/.cargo/bin:"$PATH"

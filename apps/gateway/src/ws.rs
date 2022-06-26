@@ -64,6 +64,7 @@ impl Actor for WsConn {
         self.address
             .send(Connect {
                 addr: addr.recipient(),
+                time: chrono::Utc::now().to_rfc3339(),
                 connection: self.connection,
             })
             .into_actor(self)
@@ -87,6 +88,7 @@ impl Actor for WsConn {
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         self.address.do_send(Disconnect {
             connection: self.connection,
+            time: chrono::Utc::now().to_rfc3339(),
         });
         Running::Stop
     }
@@ -103,6 +105,7 @@ impl WsConn {
             if Instant::now().duration_since(act.heartbeat) > timeout {
                 act.address.do_send(Disconnect {
                     connection: act.connection,
+                    time: chrono::Utc::now().to_rfc3339(),
                 });
                 ctx.stop();
                 return;
@@ -119,6 +122,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
                 self.heartbeat = Instant::now();
                 self.address.do_send(Heartbeat {
                     connection: self.connection,
+                    time: chrono::Utc::now().to_rfc3339(),
                 });
                 ctx.pong(&msg);
             },
@@ -126,6 +130,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
                 self.heartbeat = Instant::now();
                 self.address.do_send(Heartbeat {
                     connection: self.connection,
+                    time: chrono::Utc::now().to_rfc3339(),
                 });
             },
             | Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
@@ -139,6 +144,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
             | Ok(ws::Message::Nop) => (),
             | Ok(Text(s)) => self.address.do_send(ClientMessage {
                 connection: self.connection,
+                time: chrono::Utc::now().to_rfc3339(),
                 message: s.to_string(),
             }),
             | Err(e) => panic!("{}", e),

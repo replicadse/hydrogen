@@ -36,6 +36,7 @@ pub async fn handler(
                 let resp = auth_req.send_string(&serde_json::to_string(&crate::routes::AuthorizerRequest {
                     instance_id: &instance.to_string(),
                     connection_id: &conn_id.to_string(),
+                    time: &chrono::Utc::now().to_rfc3339(),
                     headers: c.headers.iter().map(|v| (v.0.to_owned(), v.1.to_owned())).collect(),
                 })?)?;
 
