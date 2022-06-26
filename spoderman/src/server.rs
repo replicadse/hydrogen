@@ -35,9 +35,6 @@ impl Server {
         let stats_interval: u64 = config.server.stats_interval_sec.into();
 
         std::thread::spawn(move || loop {
-            if stats_interval <= 0 {
-                return;
-            }
             crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {
                 stats: crate::logger::Stats::ConnectedClients {
                     count: t2_sess_arc.read().unwrap().len(),
@@ -64,7 +61,7 @@ impl Server {
                     });
                     match t_sess_arc.read()?.get(&payload.connection) {
                         | Some(s) => {
-                            s.do_send(crate::messages::WsMessage(payload.msg));
+                            s.do_send(crate::messages::WsMessage(payload.message));
                             Ok(())
                         },
                         | None => Err(Box::new(crate::error::ConnectionNotFoundError::new(
@@ -322,7 +319,7 @@ impl Handler<ClientMessage> for Server {
             let re_response = re_req.send_string(&serde_json::to_string(&crate::routes::RulesEngineRequest {
                 instance_id: &self.instance.to_string(),
                 connection_id: &msg.connection.to_string(),
-                msg: &msg.msg,
+                message: &msg.message,
             })?)?;
 
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -349,7 +346,7 @@ impl Handler<ClientMessage> for Server {
             let forward_resp = forwerd_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
                 instance_id: &self.instance.to_string(),
                 connection_id: &msg.connection.to_string(),
-                message: &msg.msg,
+                message: &msg.message,
             })?)?;
 
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {

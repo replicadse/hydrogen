@@ -15,7 +15,7 @@ pub struct ConnectRequest<'a> {
 pub struct RulesEngineRequest<'a> {
     pub instance_id: &'a str,
     pub connection_id: &'a str,
-    pub msg: &'a str,
+    pub message: &'a str,
 }
 
 #[derive(Debug, serde::Deserialize)]

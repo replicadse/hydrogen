@@ -31,12 +31,12 @@ pub struct Heartbeat {
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct ClientMessage {
     pub connection: Uuid,
-    pub msg: String,
+    pub message: String,
 }
 
 #[derive(Debug, Message, serde::Serialize, serde::Deserialize)]
 #[rtype(result = "()")]
 pub struct ServerMessage {
     pub connection: Uuid,
-    pub msg: String,
+    pub message: String,
 }

@@ -2,24 +2,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-dss-rules-engine
+  name: {{ .Release.Name }}-dss-sink-b
 spec:
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-dss-rules-engine
+      app: {{ .Release.Name }}-dss-sink-b
   strategy:
     type: Recreate
   revisionHistoryLimit: 0
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-dss-rules-engine
+        app: {{ .Release.Name }}-dss-sink-b
     spec:
       containers:
-        - name: dss-rules-engine
+        - name: dss-sink-b
           image: python:3.10-buster
           imagePullPolicy: IfNotPresent
-          command: ["python", "/app/code/code.py"]
+          command: ["/bin/bash", "-c", "pip install requests && python /app/code/code.py"]
           volumeMounts:
             - mountPath: "/app/code"
               name: code
@@ -29,7 +29,7 @@ spec:
       volumes:
         - name: code
           configMap:
-            name: {{ .Release.Name }}-dss-rules-engine-code
+            name: {{ .Release.Name }}-dss-sink-b-code
             optional: false
             items:
               - key: code
@@ -38,43 +38,33 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-dss-rules-engine-code
+  name: {{ .Release.Name }}-dss-sink-b-code
 data:
   code: |-
     # Python 3 server example
     from http.server import BaseHTTPRequestHandler, HTTPServer
     from json import JSONDecoder, JSONEncoder
+    import requests
 
     hostName = "0.0.0.0"
     serverPort = 8080
 
     class Server(BaseHTTPRequestHandler):
         def do_POST(self):
-            if self.headers.get('Authorization') != 'dss-rules-engine-key':
+            if self.headers.get('Authorization') != 'dss-sink-b-key':
                 self.send_response(500)
                 self.end_headers()
                 return
 
             body = JSONDecoder().decode(self.rfile.read(int(self.headers['Content-Length'])).decode('UTF-8'))
             print(body, flush=True)
+
+            r = requests.post(f'http://{{ tpl .Release.Name . }}-spoderman:8080/connections/{body["connection_id"]}/_send', data=f'command: {body["message"]} not found')
+            print(r.text)
+
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
-            if body['message'].startswith('!'):
-                body = {
-                    "endpoint": "http://{{ tpl .Release.Name . }}-dss-sink-b:8080",
-                    "headers": {
-                        "Authorization": "dss-sink-b-key"
-                    }
-                }
-            else:
-                body = {
-                    "endpoint": "http://{{ tpl .Release.Name . }}-dss-sink-a:8080",
-                    "headers": {
-                        "Authorization": "dss-sink-a-key"
-                    }
-                }
-            self.wfile.write(bytes(JSONEncoder().encode(body), "utf-8"))
 
     if __name__ == "__main__":
         webServer = HTTPServer((hostName, serverPort), Server)
@@ -87,11 +77,12 @@ data:
 
         webServer.server_close()
         print("Server stopped.", flush=True)
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-dss-rules-engine
+  name: {{ .Release.Name }}-dss-sink-b
 spec:
   type: ClusterIP
   ports:
@@ -99,5 +90,5 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: {{ .Release.Name }}-dss-rules-engine
+    app: {{ .Release.Name }}-dss-sink-b
 {{ end }}
