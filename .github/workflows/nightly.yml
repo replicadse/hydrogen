@@ -8,6 +8,14 @@ jobs:
   build:
     name: build image
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - app: "gateway"
+        - app: "worker"
+    defaults:
+      run:
+        working-directory: ./apps/${{ matrix.app }}
     steps:
       - uses: actions/checkout@v3
       - name: install earthly
@@ -15,39 +23,46 @@ jobs:
       - name: fmt
         run: earthly +fmt --toolchain=nightly
       - name: fmt
-        run: earthly +image --toolchain=nightly --version=0.1.0 --tag="voidpointergroup/spoderman:nightly"
+        run: earthly +image --toolchain=nightly --version=0.1.0 --tag="voidpointergroup/spoderman-${{ matrix.app }}:nightly"
       - name: save image
-        working-directory: ./spoderman
-        run: docker save voidpointergroup/spoderman:nightly | gzip > docker/spoderman.tar.gz
+        run: docker save voidpointergroup/spoderman-${{ matrix.app }}:nightly | gzip > docker/spoderman-${{ matrix.app }}.tar.gz
       - name: cache image
         if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v2
         with:
-          name: spoderman.tar.gz
-          path: ./spoderman/docker/spoderman.tar.gz
+          name: spoderman-${{ matrix.app }}.tar.gz
+          path: ./spoderman/docker/spoderman-${{ matrix.app }}.tar.gz
 
   publish-ghcr:
     name: publish to ghcr (nightly)
     needs: build
-    if: github.ref == 'refs/heads/master'
+    # if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - app: "gateway"
+        - app: "worker"
+    defaults:
+      run:
+        working-directory: ./apps/${{ matrix.app }}
     steps:
       - name: download image
         uses: actions/download-artifact@v2
         with:
-          name: spoderman.tar.gz
+          name: spoderman-${{ matrix.app }}.tar.gz
           path: ./artifacts
       - name: import image
-        run: docker load --input ./artifacts/spoderman.tar.gz
+        run: docker load --input ./artifacts/spoderman-${{ matrix.app }}.tar.gz
       - name: publish
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
-          docker tag voidpointergroup/spoderman:nightly docker.pkg.github.com/voidpointergroup/spoderman/spoderman:nightly
-          docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman:nightly
+          docker tag voidpointergroup/spoderman-${{ matrix.app }}:nightly docker.pkg.github.com/voidpointergroup/spoderman/spoderman-${{ matrix.app }}:nightly
+          docker push docker.pkg.github.com/voidpointergroup/spoderman/spoderman-${{ matrix.app }}:nightly
       - name: run trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'docker.pkg.github.com/voidpointergroup/spoderman/spoderman:nightly'
+          image-ref: 'docker.pkg.github.com/voidpointergroup/spoderman/spoderman-${{ matrix.app }}:nightly'
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
@@ -59,8 +74,16 @@ jobs:
   publish-harbor:
     name: publish to harbor (nightly)
     needs: build
-    if: github.ref == 'refs/heads/master'
+    # if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - app: "gateway"
+        - app: "worker"
+    defaults:
+      run:
+        working-directory: ./apps/${{ matrix.app }}
     steps:
       - name: download image
         uses: actions/download-artifact@v2
@@ -72,5 +95,5 @@ jobs:
       - name: publish
         run: |
           echo ${{ secrets.HARBOR_PASS }} | docker login harbor.chinook.k8s.voidpointergroup.com -u ${{ secrets.HARBOR_USER }} --password-stdin
-          docker tag voidpointergroup/spoderman:nightly harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman:nightly
-          docker push harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman:nightly
+          docker tag voidpointergroup/spoderman-${{ matrix.app }}:nightly harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-${{ matrix.app }}:nightly
+          docker push harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-${{ matrix.app }}:nightly

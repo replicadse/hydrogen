@@ -7,8 +7,8 @@ spec:
     matchLabels:
       app: {{ .Release.Name }}-spoderman
   strategy:
-    {{- toYaml .Values.apps.spoderman.deployment.strategy | nindent 4 }}
-  revisionHistoryLimit: {{ .Values.apps.spoderman.deployment.revisions }}
+    {{- toYaml .Values.apps.gateway.deployment.strategy | nindent 4 }}
+  revisionHistoryLimit: {{ .Values.apps.gateway.deployment.revisions }}
   template:
     metadata:
       labels:
@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: spoderman
-          image: {{ .Values.apps.spoderman.deployment.image.ref }}
-          imagePullPolicy: {{ .Values.apps.spoderman.deployment.image.pullpolicy }}
+          image: {{ .Values.apps.gateway.deployment.image.ref }}
+          imagePullPolicy: {{ .Values.apps.gateway.deployment.image.pullpolicy }}
           volumeMounts:
             - mountPath: "/app/config"
               name: config

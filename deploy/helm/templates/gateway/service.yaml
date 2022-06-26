@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}-spoderman
 spec:
-  type: {{ .Values.apps.spoderman.service.type }}
+  type: {{ .Values.apps.gateway.service.type }}
   ports:
-  - port: {{ .Values.apps.spoderman.service.port }}
+  - port: {{ .Values.apps.gateway.service.port }}
     protocol: TCP
-    targetPort: {{ .Values.apps.spoderman.service.port }}
+    targetPort: {{ .Values.apps.gateway.service.port }}
   selector:
     app: {{ .Release.Name }}-spoderman

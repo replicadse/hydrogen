@@ -1,5 +1,5 @@
 apps:
-  spoderman:
+  gateway:
     service:
       type: ClusterIP
       port: 8080
@@ -8,7 +8,7 @@ apps:
       strategy:
         type: Recreate
       image:
-        ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman:nightly"
+        ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-gateway:nightly"
         pullpolicy: Always
     secrets:
       config:
@@ -22,6 +22,8 @@ apps:
             stats_interval_sec: 10
             max_out_message_size: 262144 # 256kb
 
+          nats:
+            endpoint: "redis://spoderman-nats:4222"
           redis:
             endpoint: "redis://spoderman-redis-master:6379"
 
@@ -38,6 +40,27 @@ apps:
               endpoint: "http://spoderman-dss-disconnect:8080"
               headers:
                 Authorization: dss-disconnect-key
+  worker:
+    deployment:
+      revisions: 0
+      strategy:
+        type: Recreate
+      image:
+        ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-worker:nightly"
+        pullpolicy: Always
+    secrets:
+      config:
+        config: |-
+          version: 0.1.0
+
+          nats:
+            endpoint: "redis://spoderman-nats:4222"
+
+          routes:
+            rules_engine:
+              endpoint: "http://spoderman-dss-rules_engine:8080"
+              headers:
+                Authorization: dss-authorizer-key
   support:
     dummysetup:
       enabled: true
