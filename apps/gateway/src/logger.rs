@@ -39,6 +39,7 @@ pub enum Event<'a> {
 
     Connect { connection: &'a str },
     Disconnect { connection: &'a str },
+    ServerDisconnect { connection: &'a str, reason: &'a str },
 
     ClientMessage { connection: &'a str },
     ServerMessageEnqueue { connection: &'a str },
@@ -52,5 +53,5 @@ pub enum Event<'a> {
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Stats<'a> {
-    ConnectedClients { count: usize, clients: Vec<&'a uuid::Uuid> },
+    ConnectedClients { count: usize, clients: Vec<&'a String> },
 }

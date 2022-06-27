@@ -7,12 +7,13 @@ mod routes;
 mod server;
 mod ws;
 mod handlers {
-    pub mod connection_send;
+    pub mod connection;
     pub mod health;
     pub mod websocket;
 }
 mod bus {
     pub mod nats;
+    pub mod redis;
 }
 
 use std::error::Error;
@@ -40,7 +41,7 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
 }
 
 async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn Error>> {
-    let instance = uuid::Uuid::new_v4();
+    let instance = uuid::Uuid::new_v4().to_string();
     logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
         data: logger::Event::Startup {
             message: &format!("new instance {}", &instance),
@@ -50,7 +51,7 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
     let redis = redis::Client::open(config.redis.endpoint.clone())?;
     logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
         data: logger::Event::Startup {
-            message: &format!("redis client opened @ {}", &config.redis.endpoint),
+            message: &format!("redis client opening @ {}", &config.redis.endpoint),
         },
     });
     if let Err(e) = redis.get_connection() {
@@ -61,6 +62,22 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
         return Err(Box::new(error::StartupError::new(e)));
     }
 
+    logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
+        data: logger::Event::Startup {
+            message: &format!("nats client opening @ {}", &config.nats.endpoint),
+        },
+    });
+    let nc = match nats::connect(&config.nats.endpoint) {
+        | Ok(v) => v,
+        | Err(e) => {
+            logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
+                data: logger::Event::Error { err: &e.to_string() },
+            });
+            return Err(Box::new(error::StartupError::new(&e.to_string())));
+        },
+    };
+    let nc2 = nats::jetstream::new(nc);
+
     let bind = config.server.address.clone();
     logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
         data: logger::Event::Startup {
@@ -68,10 +85,7 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
         },
     });
 
-    let nc = nats::connect(&config.nats.endpoint)?;
-    let nc2 = nats::jetstream::new(nc);
-
-    let server = Server::new(config.clone(), instance, redis.clone(), nc2.clone()).start();
+    let server = Server::new(config.clone(), instance.clone(), redis.clone(), nc2.clone()).start();
     HttpServer::new(move || {
         App::new()
             .service(crate::handlers::websocket::handler)
@@ -79,7 +93,10 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
             .app_data(Data::new(instance.clone()))
             .app_data(Data::new(config.clone()))
             .app_data(Data::new(redis.clone()))
-            .service(crate::handlers::connection_send::handler)
+            .service(crate::handlers::connection::handle_message)
+            .app_data(Data::new(server.clone()))
+            .app_data(Data::new(config.clone()))
+            .service(crate::handlers::connection::handle_disconnect)
             .app_data(Data::new(server.clone()))
             .app_data(Data::new(config.clone()))
             .service(crate::handlers::health::handler)

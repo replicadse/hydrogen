@@ -66,7 +66,6 @@ async fn nats(
 
     let mut messages = consumer.stream().unwrap();
     while let Some(Ok(message)) = messages.next().await {
-        println!("{:?}", message);
         let msg_str = String::from_utf8(message.payload.to_vec())?;
         let msg_typed: crate::bus::nats::ClientMessage = serde_json::from_str(&msg_str)?;
         match handle_message(instance, config, &msg_typed) {
@@ -88,6 +87,12 @@ fn handle_message(
     config: &crate::config::Config,
     msg: &crate::bus::nats::ClientMessage,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
+        data: crate::logger::Event::Message {
+            connection: &msg.connection_id.to_string(),
+        },
+    });
+
     let mut re_req = ureq::post(&config.routes.rules_engine.endpoint);
     for (k, v) in config.routes.rules_engine.headers.iter() {
         re_req = re_req.set(k, v);

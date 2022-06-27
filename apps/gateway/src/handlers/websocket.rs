@@ -21,10 +21,10 @@ pub async fn handler(
     req: HttpRequest,
     stream: Payload,
     srv: Data<Addr<Server>>,
-    instance: Data<uuid::Uuid>,
+    instance: Data<String>,
     config: Data<crate::config::Config>,
 ) -> Result<HttpResponse, Error> {
-    let safecall_auth = |conn_id: &uuid::Uuid,
+    let safecall_auth = |conn_id: &str,
                          auth_route: &std::option::Option<crate::config::Authorizer>|
      -> Result<(), Box<dyn std::error::Error>> {
         match auth_route {

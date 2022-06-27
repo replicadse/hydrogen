@@ -17,6 +17,7 @@ use actix::{
 use actix_web_actors::{
     ws,
     ws::{
+        CloseReason,
         Message::Text,
         WebsocketContext,
     },
@@ -37,7 +38,7 @@ use crate::{
 pub struct WsConn {
     address: Addr<Server>,
     heartbeat: Instant,
-    pub connection: Uuid,
+    pub connection: String,
     heartbeat_int: std::time::Duration,
     timeout: std::time::Duration,
 }
@@ -45,7 +46,7 @@ pub struct WsConn {
 impl WsConn {
     pub fn new(server: Addr<Server>, heartbeat_int: std::time::Duration, timeout: std::time::Duration) -> WsConn {
         WsConn {
-            connection: Uuid::new_v4(),
+            connection: Uuid::new_v4().to_string(),
             heartbeat: Instant::now(),
             address: server,
             heartbeat_int,
@@ -65,7 +66,7 @@ impl Actor for WsConn {
             .send(Connect {
                 addr: addr.recipient(),
                 time: chrono::Utc::now().to_rfc3339(),
-                connection: self.connection,
+                connection: self.connection.clone(),
             })
             .into_actor(self)
             .then(
@@ -87,7 +88,7 @@ impl Actor for WsConn {
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         self.address.do_send(Disconnect {
-            connection: self.connection,
+            connection: self.connection.clone(),
             time: chrono::Utc::now().to_rfc3339(),
         });
         Running::Stop
@@ -104,7 +105,7 @@ impl WsConn {
         ctx.run_interval(interval, move |act, ctx| {
             if Instant::now().duration_since(act.heartbeat) > timeout {
                 act.address.do_send(Disconnect {
-                    connection: act.connection,
+                    connection: act.connection.clone(),
                     time: chrono::Utc::now().to_rfc3339(),
                 });
                 ctx.stop();
@@ -121,7 +122,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
             | Ok(ws::Message::Ping(msg)) => {
                 self.heartbeat = Instant::now();
                 self.address.do_send(Heartbeat {
-                    connection: self.connection,
+                    connection: self.connection.clone(),
                     time: chrono::Utc::now().to_rfc3339(),
                 });
                 ctx.pong(&msg);
@@ -129,7 +130,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
             | Ok(ws::Message::Pong(_)) => {
                 self.heartbeat = Instant::now();
                 self.address.do_send(Heartbeat {
-                    connection: self.connection,
+                    connection: self.connection.clone(),
                     time: chrono::Utc::now().to_rfc3339(),
                 });
             },
@@ -143,7 +144,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
             },
             | Ok(ws::Message::Nop) => (),
             | Ok(Text(s)) => self.address.do_send(ClientMessage {
-                connection: self.connection,
+                connection: self.connection.clone(),
                 time: chrono::Utc::now().to_rfc3339(),
                 message: s.to_string(),
             }),
@@ -156,6 +157,17 @@ impl Handler<WsMessage> for WsConn {
     type Result = ();
 
     fn handle(&mut self, msg: WsMessage, ctx: &mut Self::Context) {
-        ctx.text(msg.0);
+        match msg {
+            | WsMessage::Message(v) => {
+                ctx.text(v);
+            },
+            | WsMessage::Disconnect(v) => {
+                ctx.close(Some(CloseReason {
+                    code: ws::CloseCode::Policy,
+                    description: Some(v),
+                }));
+                ctx.stop();
+            },
+        }
     }
 }

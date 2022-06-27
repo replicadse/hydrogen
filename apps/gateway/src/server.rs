@@ -11,6 +11,7 @@ use crate::messages::{
     Connect,
     Disconnect,
     Heartbeat,
+    ServerDisconnect,
     ServerMessage,
 };
 
@@ -18,8 +19,8 @@ type Socket = actix::prelude::Recipient<crate::messages::WsMessage>;
 
 pub struct Server {
     config: crate::config::Config,
-    instance: uuid::Uuid,
-    sessions: std::sync::Arc<std::sync::RwLock<HashMap<uuid::Uuid, Socket>>>,
+    instance: String,
+    sessions: std::sync::Arc<std::sync::RwLock<HashMap<String, Socket>>>,
     redis: std::sync::Arc<redis::Client>,
     nats: std::sync::Arc<nats::jetstream::JetStream>,
 }
@@ -27,15 +28,15 @@ pub struct Server {
 impl Server {
     pub fn new(
         config: crate::config::Config,
-        instance: uuid::Uuid,
+        instance: String,
         redis: redis::Client,
         nats: nats::jetstream::JetStream,
     ) -> Self {
         let rc_arc = std::sync::Arc::new(redis);
         let t_rc_arc = rc_arc.clone();
-        let t_instance_id = instance.to_string();
-        let t2_instance_id = instance.to_string();
-        let sess_arc = std::sync::Arc::new(std::sync::RwLock::new(HashMap::<uuid::Uuid, Socket>::new()));
+        let t_instance_id = instance.clone();
+        let t2_instance_id = instance.clone();
+        let sess_arc = std::sync::Arc::new(std::sync::RwLock::new(HashMap::<String, Socket>::new()));
         let t_sess_arc = sess_arc.clone();
         let t2_sess_arc = sess_arc.clone();
 
@@ -64,26 +65,55 @@ impl Server {
                 let mut safecall = || -> Result<(), Box<dyn std::error::Error>> {
                     let msg = ps.get_message()?;
                     let pl: String = msg.get_payload()?;
-                    let payload: ServerMessage = serde_json::from_str::<crate::messages::ServerMessage>(&pl)?;
-                    crate::logger::LogMessage::now(&t_instance_id, crate::logger::Data::Event {
-                        data: crate::logger::Event::ServerMessagePost {
-                            connection: &payload.connection.to_string(),
+                    let payload: crate::bus::redis::Message = serde_json::from_str(&pl)?;
+                    match payload {
+                        | crate::bus::redis::Message::Message {
+                            connection,
+                            time: _,
+                            message,
+                        } => {
+                            crate::logger::LogMessage::now(&t_instance_id, crate::logger::Data::Event {
+                                data: crate::logger::Event::ServerMessagePost {
+                                    connection: &connection,
+                                },
+                            });
+                            match t_sess_arc.read()?.get(&connection) {
+                                | Some(s) => {
+                                    s.do_send(crate::messages::WsMessage::Message(message));
+                                    Ok(())
+                                },
+                                | None => Err(Box::new(crate::error::ConnectionNotFoundError::new(
+                                    &connection.to_string(),
+                                ))),
+                            }
                         },
-                    });
-                    match t_sess_arc.read()?.get(&payload.connection) {
-                        | Some(s) => {
-                            s.do_send(crate::messages::WsMessage(payload.message));
-                            Ok(())
+                        | crate::bus::redis::Message::Disconnect {
+                            connection,
+                            time: _,
+                            reason,
+                        } => {
+                            crate::logger::LogMessage::now(&t_instance_id, crate::logger::Data::Event {
+                                data: crate::logger::Event::ServerDisconnect {
+                                    connection: &connection,
+                                    reason: &reason,
+                                },
+                            });
+                            match t_sess_arc.read()?.get(&connection) {
+                                | Some(s) => {
+                                    s.do_send(crate::messages::WsMessage::Disconnect(reason));
+                                    Ok(())
+                                },
+                                | None => Err(Box::new(crate::error::ConnectionNotFoundError::new(
+                                    &connection.to_string(),
+                                ))),
+                            }
                         },
-                        | None => Err(Box::new(crate::error::ConnectionNotFoundError::new(
-                            &payload.connection.to_string(),
-                        ))),
                     }
                 };
                 match safecall() {
                     | Ok(_) => {},
                     | Err(e) => {
-                        crate::logger::LogMessage::now(&instance.to_string(), crate::logger::Data::Event {
+                        crate::logger::LogMessage::now(&t_instance_id, crate::logger::Data::Event {
                             data: crate::logger::Event::Error { err: &e.to_string() },
                         });
                     },
@@ -99,12 +129,12 @@ impl Server {
         }
     }
 
-    pub fn make_key(&self, connection: uuid::Uuid) -> String {
-        format!("i2c:{}:{}", self.instance.to_string(), connection.to_string())
+    pub fn make_key(&self, connection: &str) -> String {
+        format!("i2c:{}:{}", self.instance, connection.to_string())
     }
 
-    pub fn make_reverse_key(&self, connection: uuid::Uuid) -> String {
-        format!("c2i:{}", connection.to_string())
+    pub fn make_reverse_key(&self, connection: &str) -> String {
+        format!("c2i:{}", connection)
     }
 }
 
@@ -157,8 +187,8 @@ impl Handler<Connect> for Server {
                 | None => Ok(()),
             }?;
 
-            let key = self.make_key(msg.connection);
-            let rkey = self.make_reverse_key(msg.connection);
+            let key = self.make_key(&msg.connection);
+            let rkey = self.make_reverse_key(&msg.connection);
 
             redis::pipe()
                 .cmd("SET")
@@ -201,8 +231,8 @@ impl Handler<Disconnect> for Server {
                 },
             });
 
-            let key = self.make_key(msg.connection);
-            let rkey = self.make_reverse_key(msg.connection);
+            let key = self.make_key(&msg.connection);
+            let rkey = self.make_reverse_key(&msg.connection);
             redis::pipe()
                 .cmd("DEL")
                 .arg(&key)
@@ -260,8 +290,8 @@ impl Handler<Heartbeat> for Server {
 
     fn handle(&mut self, msg: Heartbeat, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
-            let key = self.make_key(msg.connection);
-            let rkey = self.make_reverse_key(msg.connection);
+            let key = self.make_key(&msg.connection);
+            let rkey = self.make_reverse_key(&msg.connection);
             redis::pipe()
                 .cmd("EXPIRE")
                 .arg(&key)
@@ -295,11 +325,48 @@ impl Handler<ServerMessage> for Server {
                 },
             });
 
+            let conn = msg.connection.clone();
+            let redis_message: crate::bus::redis::Message = msg.into();
+
             let target_instance = redis::cmd("GET")
-                .arg(&self.make_reverse_key(msg.connection))
+                .arg(&self.make_reverse_key(&conn))
                 .query::<String>(&mut self.redis.get_connection()?)?;
             redis::pipe()
-                .publish(target_instance, serde_json::to_string(&msg)?)
+                .publish(target_instance, serde_json::to_string(&redis_message)?)
+                .query::<()>(&mut self.redis.get_connection()?)?;
+            Ok(())
+        };
+        match safecall() {
+            | Ok(_) => {},
+            | Err(e) => {
+                crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
+                    data: crate::logger::Event::Error { err: &e.to_string() },
+                });
+            },
+        }
+    }
+}
+
+impl Handler<ServerDisconnect> for Server {
+    type Result = ();
+
+    fn handle(&mut self, msg: ServerDisconnect, _ctx: &mut Context<Self>) -> Self::Result {
+        let safecall = || -> Result<(), Box<dyn std::error::Error>> {
+            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
+                data: crate::logger::Event::ServerDisconnect {
+                    connection: &msg.connection.to_string(),
+                    reason: &msg.reason,
+                },
+            });
+
+            let conn = msg.connection.clone();
+            let redis_message: crate::bus::redis::Message = msg.into();
+
+            let target_instance = redis::cmd("GET")
+                .arg(&self.make_reverse_key(&conn))
+                .query::<String>(&mut self.redis.get_connection()?)?;
+            redis::pipe()
+                .publish(target_instance, serde_json::to_string(&redis_message)?)
                 .query::<()>(&mut self.redis.get_connection()?)?;
             Ok(())
         };

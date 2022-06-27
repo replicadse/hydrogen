@@ -13,3 +13,8 @@ A basic health check endpoint. Will return `code 200` and a static JSON formatte
 ## `HTTP/POST @ /connections/$connection_id/_send`
 
 This endpoint is used in order to have a message sent from the backend to a connected client. The request body will be transmitted as text.
+
+## `HTTP/POST @ /connections/$connection_id/_disconnect`
+
+Forces a disconnect for the given connection.
+
