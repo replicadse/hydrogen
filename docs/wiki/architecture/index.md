@@ -1,3 +1,3 @@
 # Architecture
 
-Work in progress here, come back later.
+<img src="./system.drawio.png" alt="Message flow" />
