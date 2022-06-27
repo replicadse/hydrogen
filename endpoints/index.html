@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="2.3.0.709660748610">
+    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="2.3.0.709660911886">
 
     <!-- See retype.com -->
     <meta name="generator" content="Retype 2.3.0">
@@ -30,11 +30,11 @@
 
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
-    <link href="../resources/css/retype.css?v=2.3.0.709660748610" rel="stylesheet" />
+    <link href="../resources/css/retype.css?v=2.3.0.709660911886" rel="stylesheet" />
 
-    <script type="text/javascript" src="../resources/js/config.js?v=2.3.0.709660748610" data-turbo-eval="false" defer></script>
+    <script type="text/javascript" src="../resources/js/config.js?v=2.3.0.709660911886" data-turbo-eval="false" defer></script>
     <script type="text/javascript" src="../resources/js/retype.js?v=2.3.0" data-turbo-eval="false" defer></script>
-    <script id="lunr-js" type="text/javascript" src="../resources/js/lunr.js?v=2.3.0.709660748610" data-turbo-eval="false" defer></script>
+    <script id="lunr-js" type="text/javascript" src="../resources/js/lunr.js?v=2.3.0.709660911886" data-turbo-eval="false" defer></script>
 </head>
 <body>
     <div id="docs-app" class="relative text-base antialiased text-gray-700 bg-white font-body dark:bg-dark-850 dark:text-dark-300">
@@ -195,6 +195,13 @@ When connecting, every established connection gets a unique <code v-pre>connecti
     </h2>
 </doc-anchor-target>
 <p>This endpoint is used in order to have a message sent from the backend to a connected client. The request body will be transmitted as text.</p>
+<doc-anchor-target id="httppost--connectionsconnection_id_disconnect">
+    <h2>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#httppost--connectionsconnection_id_disconnect">#</doc-anchor-trigger>
+        <span><code v-pre>HTTP/POST @ /connections/$connection_id/_disconnect</code></span>
+    </h2>
+</doc-anchor-target>
+<p>Forces a disconnect for the given connection.</p>
 
                                 
                                 <!-- Required only on API pages -->
