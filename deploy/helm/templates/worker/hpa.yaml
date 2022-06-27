@@ -1,3 +1,4 @@
+{{- if .Values.apps.worker.enabled }}
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
@@ -10,3 +11,4 @@ spec:
     kind: Deployment
     name: {{ .Release.Name }}-spoderman-worker
   targetCPUUtilizationPercentage: {{ .Values.apps.worker.hpa.cpu_percentage }}
+{{ end }}

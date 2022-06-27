@@ -1,3 +1,4 @@
+{{- if .Values.apps.gateway.enabled }}
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
@@ -10,3 +11,4 @@ spec:
     kind: Deployment
     name: {{ .Release.Name }}-spoderman-gateway
   targetCPUUtilizationPercentage: {{ .Values.apps.gateway.hpa.cpu_percentage }}
+{{ end }}
