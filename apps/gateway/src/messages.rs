@@ -32,11 +32,19 @@ pub struct Heartbeat {
     pub time: String,
 }
 
+pub type ConnectionContextMap = std::collections::HashMap<String, serde_json::Value>;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ConnectionContext {
+    pub authorizer: std::option::Option<ConnectionContextMap>,
+}
+
 #[derive(Debug, Message, serde::Serialize, serde::Deserialize)]
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct ClientMessage {
     pub connection: String,
     pub time: String,
+    pub context: ConnectionContext,
     pub message: String,
 }
 
@@ -56,9 +64,9 @@ pub struct ServerDisconnect {
     pub reason: String,
 }
 
-impl Into<crate::bus::redis::Message> for ServerMessage {
-    fn into(self) -> crate::bus::redis::Message {
-        crate::bus::redis::Message::Message {
+impl Into<spoderman_bus::redis::Message> for ServerMessage {
+    fn into(self) -> spoderman_bus::redis::Message {
+        spoderman_bus::redis::Message::S2CMessage {
             connection: self.connection.to_string(),
             time: self.time,
             message: self.message,
@@ -66,12 +74,20 @@ impl Into<crate::bus::redis::Message> for ServerMessage {
     }
 }
 
-impl Into<crate::bus::redis::Message> for ServerDisconnect {
-    fn into(self) -> crate::bus::redis::Message {
-        crate::bus::redis::Message::Disconnect {
+impl Into<spoderman_bus::redis::Message> for ServerDisconnect {
+    fn into(self) -> spoderman_bus::redis::Message {
+        spoderman_bus::redis::Message::SDisconnect {
             connection: self.connection.to_string(),
             time: self.time,
             reason: self.reason,
+        }
+    }
+}
+
+impl Into<spoderman_bus::nats::ConnectionContext> for ConnectionContext {
+    fn into(self) -> spoderman_bus::nats::ConnectionContext {
+        spoderman_bus::nats::ConnectionContext {
+            authorizer: self.authorizer,
         }
     }
 }

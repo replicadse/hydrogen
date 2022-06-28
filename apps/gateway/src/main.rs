@@ -11,10 +11,6 @@ mod handlers {
     pub mod health;
     pub mod websocket;
 }
-mod bus {
-    pub mod nats;
-    pub mod redis;
-}
 
 use std::error::Error;
 
@@ -59,7 +55,7 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
         logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
             data: logger::Event::Error { err: e },
         });
-        return Err(Box::new(error::StartupError::new(e)));
+        return Err(Box::new(crate::error::StartupError::new(e)));
     }
 
     logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
@@ -73,7 +69,7 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
             logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
                 data: logger::Event::Error { err: &e.to_string() },
             });
-            return Err(Box::new(error::StartupError::new(&e.to_string())));
+            return Err(Box::new(crate::error::StartupError::new(&e.to_string())));
         },
     };
     let nc2 = nats::jetstream::new(nc);

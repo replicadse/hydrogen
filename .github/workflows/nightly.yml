@@ -5,6 +5,23 @@ on:
   push:
 
 jobs:
+  check:
+    name: check code
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - dir: "apps/gateway"
+        - dir: "apps/worker"
+        - dir: "libs/bus"
+        - dir: "libs/error"
+    steps:
+      - uses: actions/checkout@v3
+      - name: install earthly
+        run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.6.14/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
+      - name: fmt
+        run: earthly +fmt --toolchain=nightly --sub=${{ matrix.dir }}
+
   build:
     name: build image
     runs-on: ubuntu-latest
@@ -13,25 +30,22 @@ jobs:
         include:
         - app: "gateway"
         - app: "worker"
-    defaults:
-      run:
-        working-directory: ./apps/${{ matrix.app }}
     steps:
       - uses: actions/checkout@v3
       - name: install earthly
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.6.14/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
-      - name: fmt
-        run: earthly +fmt --toolchain=nightly
       - name: build image
-        run: earthly +image --toolchain=nightly --version=0.1.0 --tag="voidpointergroup/spoderman-${{ matrix.app }}:nightly"
+        run: earthly +image --toolchain=nightly --sub=./apps/${{ matrix.app }} --version=0.1.0 --tag="voidpointergroup/spoderman-${{ matrix.app }}:nightly"
       - name: save image
-        run: docker save voidpointergroup/spoderman-${{ matrix.app }}:nightly | gzip > ./docker/spoderman-${{ matrix.app }}.tar.gz
+        run: |-
+          mkdir ./.artifacts
+          docker save voidpointergroup/spoderman-${{ matrix.app }}:nightly | gzip > ./.artifacts/spoderman-${{ matrix.app }}.tar.gz
       - name: cache image
         if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v2
         with:
           name: spoderman-${{ matrix.app }}.tar.gz
-          path: ./apps/${{ matrix.app }}/docker/spoderman-${{ matrix.app }}.tar.gz
+          path: ./.artifacts/spoderman-${{ matrix.app }}.tar.gz
 
   publish-ghcr:
     name: publish to ghcr (nightly)
@@ -43,15 +57,12 @@ jobs:
         include:
         - app: "gateway"
         - app: "worker"
-    defaults:
-      run:
-        working-directory: ./apps/${{ matrix.app }}
     steps:
       - name: download image
         uses: actions/download-artifact@v2
         with:
           name: spoderman-${{ matrix.app }}.tar.gz
-          path: ./apps/${{ matrix.app }}/.artifacts
+          path: .artifacts
       - name: import image
         run: docker load --input ./.artifacts/spoderman-${{ matrix.app }}.tar.gz
       - name: publish
@@ -81,15 +92,12 @@ jobs:
         include:
         - app: "gateway"
         - app: "worker"
-    defaults:
-      run:
-        working-directory: ./apps/${{ matrix.app }}
     steps:
       - name: download image
         uses: actions/download-artifact@v2
         with:
           name: spoderman-${{ matrix.app }}.tar.gz
-          path: ./apps/${{ matrix.app }}/.artifacts
+          path: .artifacts
       - name: import image
         run: docker load --input ./.artifacts/spoderman-${{ matrix.app }}.tar.gz
       - name: publish

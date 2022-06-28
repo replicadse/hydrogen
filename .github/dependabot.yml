@@ -6,12 +6,34 @@
 version: 2
 updates:
   - package-ecosystem: cargo
-    directory: "./spoderman/"
+    directory: "./apps/gateway"
     schedule:
       interval: daily
       time: "04:00"
   - package-ecosystem: docker
-    directory: "./spoderman/docker"
+    directory: "./apps/gateway/docker"
+    schedule:
+      interval: daily
+      time: "04:00"
+
+  - package-ecosystem: cargo
+    directory: "./apps/worker"
+    schedule:
+      interval: daily
+      time: "04:00"
+  - package-ecosystem: docker
+    directory: "./apps/worker/docker"
+    schedule:
+      interval: daily
+      time: "04:00"
+
+  - package-ecosystem: cargo
+    directory: "./libs/bus"
+    schedule:
+      interval: daily
+      time: "04:00"
+  - package-ecosystem: cargo
+    directory: "./libs/error"
     schedule:
       interval: daily
       time: "04:00"

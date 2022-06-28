@@ -3,9 +3,6 @@ mod config;
 mod error;
 mod logger;
 mod routes;
-mod bus {
-    pub mod nats;
-}
 
 use std::error::Error;
 
@@ -67,7 +64,7 @@ async fn nats(
     let mut messages = consumer.stream().unwrap();
     while let Some(Ok(message)) = messages.next().await {
         let msg_str = String::from_utf8(message.payload.to_vec())?;
-        let msg_typed: crate::bus::nats::ClientMessage = serde_json::from_str(&msg_str)?;
+        let msg_typed: spoderman_bus::nats::ClientMessage = serde_json::from_str(&msg_str)?;
         match handle_message(instance, config, &msg_typed) {
             | Ok(..) => {
                 message.ack().await.unwrap();
@@ -85,7 +82,7 @@ async fn nats(
 fn handle_message(
     instance: &str,
     config: &crate::config::Config,
-    msg: &crate::bus::nats::ClientMessage,
+    msg: &spoderman_bus::nats::ClientMessage,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
         data: crate::logger::Event::Message {
@@ -99,10 +96,13 @@ fn handle_message(
     }
 
     let re_response = re_req.send_string(&serde_json::to_string(&crate::routes::RulesEngineRequest {
-        instance_id: &msg.instance_id.to_string(),
-        connection_id: &msg.connection_id.to_string(),
-        time: msg.time,
-        message: &msg.message,
+        instance_id: msg.instance_id.clone(),
+        connection_id: msg.connection_id.clone(),
+        time: msg.time.clone(),
+        context: crate::routes::MessageContext {
+            authorizer: msg.context.authorizer.clone(),
+        },
+        message: msg.message.clone(),
     })?)?;
 
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
@@ -126,10 +126,13 @@ fn handle_message(
     }
 
     let forward_resp = forwerd_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
-        instance_id: &msg.instance_id.to_string(),
-        connection_id: &msg.connection_id.to_string(),
-        time: msg.time,
-        message: &msg.message,
+        instance_id: msg.instance_id.clone(),
+        connection_id: msg.connection_id.clone(),
+        time: msg.time.clone(),
+        context: crate::routes::MessageContext {
+            authorizer: msg.context.authorizer.clone(),
+        },
+        message: msg.message.clone(),
     })?)?;
 
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {

@@ -53,5 +53,5 @@ pub enum Event<'a> {
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Stats<'a> {
-    ConnectedClients { count: usize, clients: Vec<&'a String> },
+    Connections { count: usize, connections: Vec<&'a String> },
 }

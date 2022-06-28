@@ -5,6 +5,9 @@ authors = ["alexander weber <aw@voidpointergroup.com>"]
 edition = "2018"
 
 [dependencies]
+spoderman-bus = { path = "../../libs/bus" }
+spoderman-error = { path = "../../libs/error" }
+
 ureq = "^2.4"
 clap = "^3.2"
 chrono = "0.4.19"

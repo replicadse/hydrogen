@@ -45,9 +45,9 @@ impl Server {
                 let stats_interval: u64 = v.into();
                 std::thread::spawn(move || loop {
                     crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {
-                        stats: crate::logger::Stats::ConnectedClients {
+                        stats: crate::logger::Stats::Connections {
                             count: t2_sess_arc.read().unwrap().len(),
-                            clients: t2_sess_arc.read().unwrap().keys().into_iter().collect(),
+                            connections: t2_sess_arc.read().unwrap().keys().into_iter().collect(),
                         },
                     });
                     std::thread::sleep(std::time::Duration::from_secs(stats_interval));
@@ -65,9 +65,9 @@ impl Server {
                 let mut safecall = || -> Result<(), Box<dyn std::error::Error>> {
                     let msg = ps.get_message()?;
                     let pl: String = msg.get_payload()?;
-                    let payload: crate::bus::redis::Message = serde_json::from_str(&pl)?;
+                    let payload: spoderman_bus::redis::Message = serde_json::from_str(&pl)?;
                     match payload {
-                        | crate::bus::redis::Message::Message {
+                        | spoderman_bus::redis::Message::S2CMessage {
                             connection,
                             time: _,
                             message,
@@ -87,7 +87,7 @@ impl Server {
                                 ))),
                             }
                         },
-                        | crate::bus::redis::Message::Disconnect {
+                        | spoderman_bus::redis::Message::SDisconnect {
                             connection,
                             time: _,
                             reason,
@@ -116,6 +116,7 @@ impl Server {
                         crate::logger::LogMessage::now(&t_instance_id, crate::logger::Data::Event {
                             data: crate::logger::Event::Error { err: &e.to_string() },
                         });
+                        std::thread::sleep(std::time::Duration::from_secs(5));
                     },
                 }
             }
@@ -164,14 +165,14 @@ impl Handler<Connect> for Server {
                     }
 
                     let resp = req.send_string(&serde_json::to_string(&crate::routes::ConnectRequest {
-                        instance_id: self.instance.to_string(),
-                        connection_id: &msg.connection.to_string(),
-                        time: &msg.time,
+                        instance_id: self.instance.clone(),
+                        connection_id: msg.connection.clone(),
+                        time: msg.time.clone(),
                     })?)?;
 
                     crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                         data: crate::logger::Event::ConnectRouteResponse {
-                            connection: &msg.connection.to_string(),
+                            connection: &msg.connection,
                             response: resp.status(),
                         },
                     });
@@ -250,9 +251,9 @@ impl Handler<Disconnect> for Server {
                     }
 
                     let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
-                        instance_id: &self.instance.to_string(),
-                        connection_id: &msg.connection.to_string(),
-                        time: &msg.time,
+                        instance_id: self.instance.clone(),
+                        connection_id: msg.connection.clone(),
+                        time: msg.time.clone(),
                     })?)?;
 
                     crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -326,7 +327,7 @@ impl Handler<ServerMessage> for Server {
             });
 
             let conn = msg.connection.clone();
-            let redis_message: crate::bus::redis::Message = msg.into();
+            let redis_message: spoderman_bus::redis::Message = msg.into();
 
             let target_instance = redis::cmd("GET")
                 .arg(&self.make_reverse_key(&conn))
@@ -360,7 +361,7 @@ impl Handler<ServerDisconnect> for Server {
             });
 
             let conn = msg.connection.clone();
-            let redis_message: crate::bus::redis::Message = msg.into();
+            let redis_message: spoderman_bus::redis::Message = msg.into();
 
             let target_instance = redis::cmd("GET")
                 .arg(&self.make_reverse_key(&conn))
@@ -394,11 +395,12 @@ impl Handler<ClientMessage> for Server {
 
             self.nats.publish(
                 &self.config.nats.stream,
-                serde_json::json!(crate::bus::nats::ClientMessage {
-                    instance_id: &self.instance.to_string(),
-                    connection_id: &msg.connection.to_string(),
-                    time: &msg.time,
-                    message: &msg.message,
+                serde_json::json!(spoderman_bus::nats::ClientMessage {
+                    instance_id: self.instance.clone(),
+                    connection_id: msg.connection,
+                    context: msg.context.into(),
+                    time: msg.time,
+                    message: msg.message,
                 })
                 .to_string(),
             )?;
