@@ -32,11 +32,19 @@ pub struct Heartbeat {
     pub time: String,
 }
 
+pub type MessageContextMap = std::collections::HashMap<String, serde_json::Value>;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MessageContext {
+    pub authorizer: std::option::Option<MessageContextMap>,
+}
+
 #[derive(Debug, Message, serde::Serialize, serde::Deserialize)]
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct ClientMessage {
     pub connection: String,
     pub time: String,
+    pub context: MessageContext,
     pub message: String,
 }
 
@@ -58,7 +66,7 @@ pub struct ServerDisconnect {
 
 impl Into<crate::bus::redis::Message> for ServerMessage {
     fn into(self) -> crate::bus::redis::Message {
-        crate::bus::redis::Message::Message {
+        crate::bus::redis::Message::ServerMessage {
             connection: self.connection.to_string(),
             time: self.time,
             message: self.message,
@@ -68,7 +76,7 @@ impl Into<crate::bus::redis::Message> for ServerMessage {
 
 impl Into<crate::bus::redis::Message> for ServerDisconnect {
     fn into(self) -> crate::bus::redis::Message {
-        crate::bus::redis::Message::Disconnect {
+        crate::bus::redis::Message::ServerDisconnect {
             connection: self.connection.to_string(),
             time: self.time,
             reason: self.reason,

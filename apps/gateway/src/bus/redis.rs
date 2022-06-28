@@ -1,11 +1,11 @@
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Message {
-    Message {
+    ServerMessage {
         connection: String,
         time: String,
         message: String,
     },
-    Disconnect {
+    ServerDisconnect {
         connection: String,
         time: String,
         reason: String,

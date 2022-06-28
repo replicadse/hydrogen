@@ -1,9 +1,17 @@
+pub type MessageContextMap = std::collections::HashMap<String, serde_json::Value>;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MessageContext {
+    pub authorizer: std::option::Option<MessageContextMap>,
+}
+
 #[derive(Debug, serde::Serialize)]
-pub struct RulesEngineRequest<'a> {
-    pub instance_id: &'a str,
-    pub connection_id: &'a str,
-    pub time: &'a str,
-    pub message: &'a str,
+pub struct RulesEngineRequest {
+    pub instance_id: String,
+    pub connection_id: String,
+    pub time: String,
+    pub context: MessageContext,
+    pub message: String,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -13,9 +21,10 @@ pub struct RulesEngineResponse {
 }
 
 #[derive(Debug, serde::Serialize)]
-pub struct ForwardRequest<'a> {
-    pub instance_id: &'a str,
-    pub connection_id: &'a str,
-    pub time: &'a str,
-    pub message: &'a str,
+pub struct ForwardRequest {
+    pub instance_id: String,
+    pub connection_id: String,
+    pub time: String,
+    pub context: MessageContext,
+    pub message: String,
 }

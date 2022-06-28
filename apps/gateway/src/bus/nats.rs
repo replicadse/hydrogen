@@ -1,7 +1,8 @@
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct ClientMessage<'a> {
-    pub instance_id: &'a str,
-    pub connection_id: &'a str,
-    pub time: &'a str,
-    pub message: &'a str,
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ClientMessage {
+    pub instance_id: String,
+    pub connection_id: String,
+    pub context: crate::messages::MessageContext,
+    pub time: String,
+    pub message: String,
 }

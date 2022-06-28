@@ -99,10 +99,13 @@ fn handle_message(
     }
 
     let re_response = re_req.send_string(&serde_json::to_string(&crate::routes::RulesEngineRequest {
-        instance_id: &msg.instance_id.to_string(),
-        connection_id: &msg.connection_id.to_string(),
-        time: msg.time,
-        message: &msg.message,
+        instance_id: msg.instance_id.clone(),
+        connection_id: msg.connection_id.clone(),
+        time: msg.time.clone(),
+        context: crate::routes::MessageContext {
+            authorizer: msg.context.authorizer.clone(),
+        },
+        message: msg.message.clone(),
     })?)?;
 
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
@@ -126,10 +129,13 @@ fn handle_message(
     }
 
     let forward_resp = forwerd_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
-        instance_id: &msg.instance_id.to_string(),
-        connection_id: &msg.connection_id.to_string(),
-        time: msg.time,
-        message: &msg.message,
+        instance_id: msg.instance_id.clone(),
+        connection_id: msg.connection_id.clone(),
+        time: msg.time.clone(),
+        context: crate::routes::MessageContext {
+            authorizer: msg.context.authorizer.clone(),
+        },
+        message: msg.message.clone(),
     })?)?;
 
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {

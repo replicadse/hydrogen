@@ -29,6 +29,7 @@ make_error!(UnknownCommandError);
 make_error!(MissingArgumentError);
 make_error!(StartupError);
 
+make_error!(AuthorizerRouteError);
 make_error!(ConnectRouteError);
 make_error!(DisconnectRouteError);
 

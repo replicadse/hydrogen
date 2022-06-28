@@ -35,20 +35,38 @@ use crate::{
     server::Server,
 };
 
+pub type WsConnContextMap = std::collections::HashMap<String, serde_json::Value>;
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct WsConnContext {
+    pub authorizer: std::option::Option<WsConnContextMap>,
+}
+
 pub struct WsConn {
     address: Addr<Server>,
     heartbeat: Instant,
     pub connection: String,
+    pub context: WsConnContext,
     heartbeat_int: std::time::Duration,
     timeout: std::time::Duration,
 }
 
 impl WsConn {
-    pub fn new(server: Addr<Server>, heartbeat_int: std::time::Duration, timeout: std::time::Duration) -> WsConn {
+    pub fn claim_id() -> String {
+        Uuid::new_v4().to_string()
+    }
+
+    pub fn new(
+        connection: String,
+        server: Addr<Server>,
+        context: WsConnContext,
+        heartbeat_int: std::time::Duration,
+        timeout: std::time::Duration,
+    ) -> WsConn {
         WsConn {
-            connection: Uuid::new_v4().to_string(),
-            heartbeat: Instant::now(),
+            connection,
             address: server,
+            heartbeat: Instant::now(),
+            context,
             heartbeat_int,
             timeout,
         }
@@ -146,6 +164,9 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
             | Ok(Text(s)) => self.address.do_send(ClientMessage {
                 connection: self.connection.clone(),
                 time: chrono::Utc::now().to_rfc3339(),
+                context: crate::messages::MessageContext {
+                    authorizer: self.context.authorizer.clone(),
+                },
                 message: s.to_string(),
             }),
             | Err(e) => panic!("{}", e),

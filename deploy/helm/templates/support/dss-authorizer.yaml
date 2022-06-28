@@ -57,6 +57,14 @@ data:
 
             self.send_response(200)
             self.end_headers()
+            
+            body = {
+                "context": {
+                    "ID": "some-id",
+                    "some-other-field": "some-other-value",
+                },
+            }
+            self.wfile.write(bytes(JSONEncoder().encode(body), "utf-8"))
 
     if __name__ == "__main__":
         webServer = HTTPServer((hostName, serverPort), Server)

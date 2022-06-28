@@ -1,7 +1,15 @@
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct ClientMessage<'a> {
-    pub instance_id: &'a str,
-    pub connection_id: &'a str,
-    pub time: &'a str,
-    pub message: &'a str,
+pub type MessageContextMap = std::collections::HashMap<String, serde_json::Value>;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MessageContext {
+    pub authorizer: std::option::Option<MessageContextMap>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ClientMessage {
+    pub instance_id: String,
+    pub connection_id: String,
+    pub context: MessageContext,
+    pub time: String,
+    pub message: String,
 }

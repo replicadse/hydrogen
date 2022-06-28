@@ -67,7 +67,7 @@ impl Server {
                     let pl: String = msg.get_payload()?;
                     let payload: crate::bus::redis::Message = serde_json::from_str(&pl)?;
                     match payload {
-                        | crate::bus::redis::Message::Message {
+                        | crate::bus::redis::Message::ServerMessage {
                             connection,
                             time: _,
                             message,
@@ -87,7 +87,7 @@ impl Server {
                                 ))),
                             }
                         },
-                        | crate::bus::redis::Message::Disconnect {
+                        | crate::bus::redis::Message::ServerDisconnect {
                             connection,
                             time: _,
                             reason,
@@ -164,14 +164,14 @@ impl Handler<Connect> for Server {
                     }
 
                     let resp = req.send_string(&serde_json::to_string(&crate::routes::ConnectRequest {
-                        instance_id: self.instance.to_string(),
-                        connection_id: &msg.connection.to_string(),
-                        time: &msg.time,
+                        instance_id: self.instance.clone(),
+                        connection_id: msg.connection.clone(),
+                        time: msg.time.clone(),
                     })?)?;
 
                     crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
                         data: crate::logger::Event::ConnectRouteResponse {
-                            connection: &msg.connection.to_string(),
+                            connection: &msg.connection,
                             response: resp.status(),
                         },
                     });
@@ -250,9 +250,9 @@ impl Handler<Disconnect> for Server {
                     }
 
                     let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
-                        instance_id: &self.instance.to_string(),
-                        connection_id: &msg.connection.to_string(),
-                        time: &msg.time,
+                        instance_id: self.instance.clone(),
+                        connection_id: msg.connection.clone(),
+                        time: msg.time.clone(),
                     })?)?;
 
                     crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -395,10 +395,11 @@ impl Handler<ClientMessage> for Server {
             self.nats.publish(
                 &self.config.nats.stream,
                 serde_json::json!(crate::bus::nats::ClientMessage {
-                    instance_id: &self.instance.to_string(),
-                    connection_id: &msg.connection.to_string(),
-                    time: &msg.time,
-                    message: &msg.message,
+                    instance_id: self.instance.clone(),
+                    connection_id: msg.connection,
+                    context: msg.context,
+                    time: msg.time,
+                    message: msg.message,
                 })
                 .to_string(),
             )?;
