@@ -164,7 +164,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
             | Ok(Text(s)) => self.address.do_send(ClientMessage {
                 connection: self.connection.clone(),
                 time: chrono::Utc::now().to_rfc3339(),
-                context: crate::messages::MessageContext {
+                context: crate::messages::ConnectionContext {
                     authorizer: self.context.authorizer.clone(),
                 },
                 message: s.to_string(),

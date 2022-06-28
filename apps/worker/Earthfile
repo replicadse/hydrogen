@@ -22,7 +22,7 @@ image:
     -f ./docker/Dockerfile \
     --build-arg toolchain=$toolchain \
     --build-arg version=$version \
-    .
+    ../../
   SAVE IMAGE $tag
 
 fmt:
@@ -33,4 +33,3 @@ test:
   FROM +application
   ARG features
   RUN cargo test $features
-

@@ -65,9 +65,9 @@ impl Server {
                 let mut safecall = || -> Result<(), Box<dyn std::error::Error>> {
                     let msg = ps.get_message()?;
                     let pl: String = msg.get_payload()?;
-                    let payload: crate::bus::redis::Message = serde_json::from_str(&pl)?;
+                    let payload: spoderman_bus::redis::Message = serde_json::from_str(&pl)?;
                     match payload {
-                        | crate::bus::redis::Message::ServerMessage {
+                        | spoderman_bus::redis::Message::S2CMessage {
                             connection,
                             time: _,
                             message,
@@ -87,7 +87,7 @@ impl Server {
                                 ))),
                             }
                         },
-                        | crate::bus::redis::Message::ServerDisconnect {
+                        | spoderman_bus::redis::Message::SDisconnect {
                             connection,
                             time: _,
                             reason,
@@ -327,7 +327,7 @@ impl Handler<ServerMessage> for Server {
             });
 
             let conn = msg.connection.clone();
-            let redis_message: crate::bus::redis::Message = msg.into();
+            let redis_message: spoderman_bus::redis::Message = msg.into();
 
             let target_instance = redis::cmd("GET")
                 .arg(&self.make_reverse_key(&conn))
@@ -361,7 +361,7 @@ impl Handler<ServerDisconnect> for Server {
             });
 
             let conn = msg.connection.clone();
-            let redis_message: crate::bus::redis::Message = msg.into();
+            let redis_message: spoderman_bus::redis::Message = msg.into();
 
             let target_instance = redis::cmd("GET")
                 .arg(&self.make_reverse_key(&conn))
@@ -395,10 +395,10 @@ impl Handler<ClientMessage> for Server {
 
             self.nats.publish(
                 &self.config.nats.stream,
-                serde_json::json!(crate::bus::nats::ClientMessage {
+                serde_json::json!(spoderman_bus::nats::ClientMessage {
                     instance_id: self.instance.clone(),
                     connection_id: msg.connection,
-                    context: msg.context,
+                    context: msg.context.into(),
                     time: msg.time,
                     message: msg.message,
                 })

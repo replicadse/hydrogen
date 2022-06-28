@@ -41,13 +41,11 @@ pub async fn handler(
                         headers: c.headers.iter().map(|v| (v.0.to_owned(), v.1.to_owned())).collect(),
                     })?)?;
                     let resp_status = resp.status();
-                    
-                    // TODO(AWE): instrumentation has shown that the following block takes
+
+                    // TODO(AWE): instrumentation has shown that the following statement takes
                     // ~1sec. This should not be the case and needs to be
                     // resolved. Maybe it makes sense to go away from ureq at this point?
-                    crate::macros::debug_instrument!("auth resp into_string start");
                     let respstr = resp.into_string()?;
-                    crate::macros::debug_instrument!("auth resp into_string end");
 
                     let resp_parsed = serde_json::from_str::<crate::routes::AuthorizerResponse>(&respstr)?;
                     crate::logger::LogMessage::now(&instance.to_string(), crate::logger::Data::Event {

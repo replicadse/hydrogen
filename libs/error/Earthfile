@@ -14,17 +14,6 @@ application:
   WORKDIR /app
   COPY . .
 
-image:
-  ARG toolchain
-  ARG version
-  ARG tag
-  FROM DOCKERFILE \
-    -f ./docker/Dockerfile \
-    --build-arg toolchain=$toolchain \
-    --build-arg version=$version \
-    ../../
-  SAVE IMAGE $tag
-
 fmt:
   FROM +application
   RUN cargo fmt --all -- --check

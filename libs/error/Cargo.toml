@@ -1,0 +1,7 @@
+[package]
+name = "spoderman-error"
+version = "0.0.0"
+authors = ["alexander weber <aw@voidpointergroup.com>"]
+edition = "2018"
+
+[dependencies]

@@ -959,6 +959,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "spoderman-bus"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "spoderman-error"
+version = "0.0.0"
+
+[[package]]
 name = "spoderman-worker"
 version = "0.0.0"
 dependencies = [
@@ -970,6 +982,8 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "spoderman-bus",
+ "spoderman-error",
  "tokio",
  "ureq",
  "uuid",

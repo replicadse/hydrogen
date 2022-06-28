@@ -3,8 +3,6 @@ use std::{
     result::Result,
 };
 
-use crate::error::UnknownCommandError;
-
 #[derive(Debug)]
 pub struct CallArgs {
     pub command: Command,
@@ -70,7 +68,7 @@ impl ClapArgumentLoader {
                 config: serde_yaml::from_str(&config_content)?,
             }
         } else {
-            return Err(Box::new(UnknownCommandError::new("unknown command")));
+            return Err(Box::new(crate::error::UnknownCommandError::new("unknown command")));
         };
 
         let callargs = CallArgs { command: cmd };
