@@ -62,6 +62,9 @@ data:
                 "context": {
                     "ID": "some-id",
                     "some-other-field": "some-other-value",
+                    "nested": {
+                        "nested-value": 1,
+                    },
                 },
             }
             self.wfile.write(bytes(JSONEncoder().encode(body), "utf-8"))

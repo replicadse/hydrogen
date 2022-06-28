@@ -6,6 +6,7 @@ mod messages;
 mod routes;
 mod server;
 mod ws;
+mod macros;
 mod handlers {
     pub mod connection;
     pub mod health;
