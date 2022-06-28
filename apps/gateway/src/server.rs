@@ -45,9 +45,9 @@ impl Server {
                 let stats_interval: u64 = v.into();
                 std::thread::spawn(move || loop {
                     crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {
-                        stats: crate::logger::Stats::ConnectedClients {
+                        stats: crate::logger::Stats::Connections {
                             count: t2_sess_arc.read().unwrap().len(),
-                            clients: t2_sess_arc.read().unwrap().keys().into_iter().collect(),
+                            connections: t2_sess_arc.read().unwrap().keys().into_iter().collect(),
                         },
                     });
                     std::thread::sleep(std::time::Duration::from_secs(stats_interval));
@@ -116,6 +116,7 @@ impl Server {
                         crate::logger::LogMessage::now(&t_instance_id, crate::logger::Data::Event {
                             data: crate::logger::Event::Error { err: &e.to_string() },
                         });
+                        std::thread::sleep(std::time::Duration::from_secs(5));
                     },
                 }
             }
