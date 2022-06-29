@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="2.3.0.709845774456">
+    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="2.3.0.709850040008">
 
     <!-- See retype.com -->
     <meta name="generator" content="Retype 2.3.0">
@@ -30,11 +30,11 @@
 
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
-    <link href="../../resources/css/retype.css?v=2.3.0.709845774456" rel="stylesheet" />
+    <link href="../../resources/css/retype.css?v=2.3.0.709850040008" rel="stylesheet" />
 
-    <script type="text/javascript" src="../../resources/js/config.js?v=2.3.0.709845774456" data-turbo-eval="false" defer></script>
+    <script type="text/javascript" src="../../resources/js/config.js?v=2.3.0.709850040008" data-turbo-eval="false" defer></script>
     <script type="text/javascript" src="../../resources/js/retype.js?v=2.3.0" data-turbo-eval="false" defer></script>
-    <script id="lunr-js" type="text/javascript" src="../../resources/js/lunr.js?v=2.3.0.709845774456" data-turbo-eval="false" defer></script>
+    <script id="lunr-js" type="text/javascript" src="../../resources/js/lunr.js?v=2.3.0.709850040008" data-turbo-eval="false" defer></script>
 </head>
 <body>
     <div id="docs-app" class="relative text-base antialiased text-gray-700 bg-white font-body dark:bg-dark-850 dark:text-dark-300">
@@ -186,7 +186,35 @@
     </h3>
 </doc-anchor-target>
 <div class="codeblock-wrapper"><doc-codeblock>
-<pre class="language-none"><code v-pre class="language-none"></code></pre>
+<pre class="language-none"><code v-pre class="language-none">{
+  &quot;$schema&quot;: &quot;http://json-schema.org/draft-04/schema#&quot;,
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;instance_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;connection_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;time&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;message&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;context&quot;: {
+      &quot;type&quot;: &quot;object&quot;,
+      &quot;additionalProperties&quot;: true
+    }
+  },
+  &quot;required&quot;: [
+    &quot;instance_id&quot;,
+    &quot;connection_id&quot;,
+    &quot;time&quot;,
+    &quot;context&quot;,
+    &quot;message&quot;
+  ]
+}</code></pre>
 </doc-codeblock></div>
 <doc-anchor-target id="response">
     <h3>
@@ -196,7 +224,22 @@
 </doc-anchor-target>
 <p>HTTP code 200 for success, other codes will make the message not being consumed.</p>
 <div class="codeblock-wrapper"><doc-codeblock>
-<pre class="language-none"><code v-pre class="language-none"></code></pre>
+<pre class="language-none"><code v-pre class="language-none">{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;endpoint&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;headers&quot;: {
+      &quot;type&quot;: &quot;object&quot;,
+      &quot;additionalProperties&quot;: true
+    }
+  },
+  &quot;required&quot;: [
+    &quot;endpoint&quot;,
+    &quot;headers&quot;
+  ]
+}</code></pre>
 </doc-codeblock></div>
 <doc-anchor-target id="message-destination-given-by-rules-engine">
     <h2>
@@ -211,7 +254,35 @@
     </h3>
 </doc-anchor-target>
 <div class="codeblock-wrapper"><doc-codeblock>
-<pre class="language-none"><code v-pre class="language-none"></code></pre>
+<pre class="language-none"><code v-pre class="language-none">{
+  &quot;$schema&quot;: &quot;http://json-schema.org/draft-04/schema#&quot;,
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;instance_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;connection_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;time&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;message&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;context&quot;: {
+      &quot;type&quot;: &quot;object&quot;,
+      &quot;additionalProperties&quot;: true
+    }
+  },
+  &quot;required&quot;: [
+    &quot;instance_id&quot;,
+    &quot;connection_id&quot;,
+    &quot;time&quot;,
+    &quot;context&quot;,
+    &quot;message&quot;
+  ]
+}</code></pre>
 </doc-codeblock></div>
 <doc-anchor-target id="response-1">
     <h3>
@@ -221,7 +292,7 @@
 </doc-anchor-target>
 <p>HTTP code 200 for success, other codes will make the message not being consumed.</p>
 <div class="codeblock-wrapper"><doc-codeblock>
-<pre class="language-none"><code v-pre class="language-none"></code></pre>
+<pre class="language-none"><code v-pre class="language-none">    *ignored*</code></pre>
 </doc-codeblock></div>
 
                                 
