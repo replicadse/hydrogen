@@ -9,7 +9,6 @@
 
 ```
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
     "instance_id": {
@@ -68,7 +67,6 @@ HTTP code 200 for success, other codes will make the message not being consumed.
 
 ```
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
     "instance_id": {
