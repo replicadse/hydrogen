@@ -17,4 +17,3 @@ This endpoint is used in order to have a message sent from the backend to a conn
 ## `HTTP/POST @ /connections/$connection_id/_disconnect`
 
 Forces a disconnect for the given connection.
-

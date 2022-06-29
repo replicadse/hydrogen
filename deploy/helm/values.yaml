@@ -1,6 +1,6 @@
 apps:
   gateway:
-    enabled: false
+    enabled: true
     service:
       type: ClusterIP
       port: 8080
@@ -47,7 +47,7 @@ apps:
               headers:
                 Authorization: dss-disconnect-key
   worker:
-    enabled: false
+    enabled: true
     deployment:
       revisions: 0
       strategy:

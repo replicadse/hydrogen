@@ -27,8 +27,11 @@ All work, features and generally everything that will be included in / done befo
   These are invoked when a client has connected / disconnected respectively.
 * Monitoring \
   Structured log messages for events and, if configured, interval reporting about the application's state are available.
-* Easy installs via HELM charts
+* Easy installs via HELM charts \
+  It's easy to install the application - just do a helm install with the appropriate chart values and you're ready to go.
 * Multi language / framework support \
   By deciding against a DSL or other language/framework lock-ins for routing etc., you can implement authorization, connect, message routing, message handling and disconnect in your own favorite language. The only implementations required are the routing service and at least one destination for messages it points to.
-* Message persistence and retries
+* Message persistence and retries \
   Messages are sent to a NATS/Jetstream stream which will buffer messages and only release if they are acknowledged. This will guarantee a at-least-once delivery for client->server messages.
+* Connection contexts \
+  The authorizer can return a context object for the connection if it authorizes it. This context will be included in every client to server message and be available for the downstream services to use.
