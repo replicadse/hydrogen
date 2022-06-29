@@ -39,13 +39,16 @@ impl Server {
         nats: nats::jetstream::JetStream,
     ) -> Self {
         let redis_connection_arc = std::sync::Arc::new(redis);
-        let session_map_arc: SharedSessionMap = std::sync::Arc::new(std::sync::RwLock::new(HashMap::<String, Socket>::new()));
+        let session_map_arc: SharedSessionMap =
+            std::sync::Arc::new(std::sync::RwLock::new(HashMap::<String, Socket>::new()));
 
         let rt = Self::start_redis_thread(instance.clone(), redis_connection_arc.clone(), session_map_arc.clone());
-        let srt  = match config.server.stats_interval_sec {
-            | Some(v) => {
-                Some(Self::start_stats_reporting_thread(instance.clone(), v.into(), session_map_arc.clone()))
-            },
+        let srt = match config.server.stats_interval_sec {
+            | Some(v) => Some(Self::start_stats_reporting_thread(
+                instance.clone(),
+                v.into(),
+                session_map_arc.clone(),
+            )),
             | None => None,
         };
 
@@ -68,9 +71,14 @@ impl Server {
         format!("c2i:{}", connection)
     }
 
-    /// Function will start a new thread and return it's JoinHandle. This thread will listen to the redis pub/sub channel that's relevant
+    /// Function will start a new thread and return it's JoinHandle. This thread
+    /// will listen to the redis pub/sub channel that's relevant
     /// for this instance and process it's messages.
-    fn start_redis_thread(instance_id: String, redis_conn: std::sync::Arc<redis::Client>, sessions: SharedSessionMap) -> std::thread::JoinHandle<()> {
+    fn start_redis_thread(
+        instance_id: String,
+        redis_conn: std::sync::Arc<redis::Client>,
+        sessions: SharedSessionMap,
+    ) -> std::thread::JoinHandle<()> {
         std::thread::spawn(move || {
             let mut conn = redis_conn.get_connection().unwrap();
             let mut ps = conn.as_pubsub();
@@ -141,7 +149,11 @@ impl Server {
         })
     }
 
-    fn start_stats_reporting_thread(instance_id: String, interval: u64, sessions: SharedSessionMap) -> std::thread::JoinHandle<()> {
+    fn start_stats_reporting_thread(
+        instance_id: String,
+        interval: u64,
+        sessions: SharedSessionMap,
+    ) -> std::thread::JoinHandle<()> {
         std::thread::spawn(move || loop {
             crate::logger::LogMessage::now(&instance_id, crate::logger::Data::Interval {
                 stats: crate::logger::Stats::Connections {
@@ -153,7 +165,12 @@ impl Server {
         })
     }
 
-    fn invoke_connect_route(&self, endpoint: &str, headers: &std::collections::HashMap<String, String>, message: &crate::messages::Connect) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    fn invoke_connect_route(
+        &self,
+        endpoint: &str,
+        headers: &std::collections::HashMap<String, String>,
+        message: &crate::messages::Connect,
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let mut req = ureq::post(endpoint);
         for (k, v) in headers.iter() {
             req = req.set(k, v);
@@ -181,7 +198,12 @@ impl Server {
         }
     }
 
-    fn invoke_disconnect_route(&self, endpoint: &str, headers: &std::collections::HashMap<String, String>, message: &crate::messages::Disconnect) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    fn invoke_disconnect_route(
+        &self,
+        endpoint: &str,
+        headers: &std::collections::HashMap<String, String>,
+        message: &crate::messages::Disconnect,
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let mut req = ureq::post(endpoint);
         for (k, v) in headers.iter() {
             req = req.set(k, v);
@@ -214,13 +236,14 @@ impl Actor for Server {
     type Context = Context<Self>;
 }
 
-/// Handler for the OnConnect event in which a client has been permitted for a server connection and is now
-/// establishing the connection.
+/// Handler for the OnConnect event in which a client has been permitted for a
+/// server connection and is now establishing the connection.
 impl Handler<Connect> for Server {
     type Result = std::result::Result<(), u16>;
 
-    /// This function will create a client/server map in redis for the connection (id) and this instance (id).
-    /// It will also invoke the connect route if specified.
+    /// This function will create a client/server map in redis for the
+    /// connection (id) and this instance (id). It will also invoke the
+    /// connect route if specified.
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -251,9 +274,7 @@ impl Handler<Connect> for Server {
                 .query::<()>(&mut self.redis.get_connection()?)?;
 
             match &self.config.routes.connect {
-                | Some(c) => {
-                    self.invoke_connect_route(&c.endpoint, &c.headers, &msg)
-                },
+                | Some(c) => self.invoke_connect_route(&c.endpoint, &c.headers, &msg),
                 | None => Ok(()),
             }?;
 
@@ -272,11 +293,13 @@ impl Handler<Connect> for Server {
     }
 }
 
-/// Handler for disconnect events which occurr when a client or the server ends the connection.
+/// Handler for disconnect events which occurr when a client or the server ends
+/// the connection.
 impl Handler<Disconnect> for Server {
     type Result = std::result::Result<(), u16>;
 
-    /// This function will purge the redis client/server mappings invoke the disconnect route if specified.
+    /// This function will purge the redis client/server mappings invoke the
+    /// disconnect route if specified.
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -297,9 +320,7 @@ impl Handler<Disconnect> for Server {
             self.sessions.write().unwrap().remove(&msg.connection); // must never be poisoned
 
             match &self.config.routes.disconnect {
-                | Some(c) => {
-                    self.invoke_disconnect_route(&c.endpoint, &c.headers, &msg)
-                },
+                | Some(c) => self.invoke_disconnect_route(&c.endpoint, &c.headers, &msg),
                 | None => Ok(()),
             }
         };
@@ -315,14 +336,15 @@ impl Handler<Disconnect> for Server {
     }
 }
 
-/// Handler for heartbeat messages on a connection. Heartbeats are used to ping/pong whether a connection is still
-/// established and a client still active. It also helps to prevent timeouts for connections that are established but
-/// do not see any message for a certain perdiod of time.
+/// Handler for heartbeat messages on a connection. Heartbeats are used to
+/// ping/pong whether a connection is still established and a client still
+/// active. It also helps to prevent timeouts for connections that are
+/// established but do not see any message for a certain perdiod of time.
 impl Handler<Heartbeat> for Server {
     type Result = std::result::Result<(), u16>;
 
-    /// This function will update the expiry time on the client-to-server as well as server-to-client mappings in
-    /// redis.
+    /// This function will update the expiry time on the client-to-server as
+    /// well as server-to-client mappings in redis.
     fn handle(&mut self, msg: Heartbeat, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             let key = self.make_key(&msg.connection);
@@ -353,8 +375,9 @@ impl Handler<Heartbeat> for Server {
 impl Handler<ServerMessage> for Server {
     type Result = ();
 
-    /// This function will take the message and the specified connection, lookup the instance of the gateway
-    /// that holds the specified client connection and post the message into the corresponding redis pub/sub
+    /// This function will take the message and the specified connection, lookup
+    /// the instance of the gateway that holds the specified client
+    /// connection and post the message into the corresponding redis pub/sub
     /// channel.
     fn handle(&mut self, msg: ServerMessage, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
@@ -386,12 +409,14 @@ impl Handler<ServerMessage> for Server {
     }
 }
 
-/// Handler for the event in which the server needs to end the connection to any client.
+/// Handler for the event in which the server needs to end the connection to any
+/// client.
 impl Handler<ServerDisconnect> for Server {
     type Result = ();
 
-    /// This function will lookup the mapped instance for the given connection in redis and post
-    /// a disconnect request for the specified instance and the given connection id.
+    /// This function will lookup the mapped instance for the given connection
+    /// in redis and post a disconnect request for the specified instance
+    /// and the given connection id.
     fn handle(&mut self, msg: ServerDisconnect, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -427,7 +452,8 @@ impl Handler<ServerDisconnect> for Server {
 impl Handler<ClientMessage> for Server {
     type Result = std::result::Result<(), u16>;
 
-    /// This function will publish the message towards a message topic in a NATS/Jetstream stream.
+    /// This function will publish the message towards a message topic in a
+    /// NATS/Jetstream stream.
     fn handle(&mut self, msg: ClientMessage, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {

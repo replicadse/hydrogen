@@ -41,8 +41,8 @@ pub struct WsConnContext {
     pub authorizer: std::option::Option<WsConnContextMap>,
 }
 
-/// Type representing all relevant information about an established websocket connection between a client
-/// and the server.
+/// Type representing all relevant information about an established websocket
+/// connection between a client and the server.
 pub struct WsConn {
     address: Addr<Server>,
     heartbeat: Instant,
@@ -78,7 +78,8 @@ impl WsConn {
 impl Actor for WsConn {
     type Context = ws::WebsocketContext<Self>;
 
-    /// Handles the connection initiation for a client to server connection when it has already been established.
+    /// Handles the connection initiation for a client to server connection when
+    /// it has already been established.
     fn started(&mut self, ctx: &mut Self::Context) {
         self.heartbeat(ctx, self.heartbeat_int, self.timeout);
 
@@ -139,10 +140,12 @@ impl WsConn {
     }
 }
 
-/// Main handler for all immediate socker and context related operations on the connection.
+/// Main handler for all immediate socker and context related operations on the
+/// connection.
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
-    /// This function will handle all various events that can occurr in a websocket connection such as
-    /// heartbeats, messages and binary data transfer.
+    /// This function will handle all various events that can occurr in a
+    /// websocket connection such as heartbeats, messages and binary data
+    /// transfer.
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
             | Ok(ws::Message::Ping(msg)) => {
