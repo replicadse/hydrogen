@@ -36,38 +36,7 @@ pub async fn handler(
          -> Result<std::option::Option<crate::routes::AuthorizerResponse>, Box<dyn std::error::Error>> {
             match auth_route {
                 | Some(c) => {
-                    let mut auth_req = ureq::post(&c.endpoint);
-                    for (k, v) in c.headers.iter() {
-                        auth_req = auth_req.set(k, v);
-                    }
-                    let resp = auth_req.send_string(&serde_json::to_string(&crate::routes::AuthorizerRequest {
-                        instance_id: instance.to_string(),
-                        connection_id: conn_id.to_string(),
-                        time: chrono::Utc::now().to_rfc3339(),
-                        headers: c.headers.iter().map(|v| (v.0.to_owned(), v.1.to_owned())).collect(),
-                    })?)?;
-                    let resp_status = resp.status();
-
-                    // TODO(AWE): instrumentation has shown that the following statement takes
-                    // ~1sec. This should not be the case and needs to be
-                    // resolved. Maybe it makes sense to go away from ureq at this point?
-                    let respstr = resp.into_string()?;
-
-                    let resp_parsed = serde_json::from_str::<crate::routes::AuthorizerResponse>(&respstr)?;
-                    crate::logger::LogMessage::now(&instance.to_string(), crate::logger::Data::Event {
-                        data: crate::logger::Event::AuthRouteResponse {
-                            connection: &conn_id.to_string(),
-                            response: resp_status,
-                        },
-                    });
-
-                    match resp_status {
-                        | 200 => Ok(Some(resp_parsed)),
-                        | _ => Err(Box::new(crate::error::AuthorizerRouteError::new(&format!(
-                            "authorizer route error code {}",
-                            resp_status
-                        )))),
-                    }
+                    Ok(Some(invoke_authorizer_route(&instance, &c.endpoint, &c.headers, conn_id)?))
                 },
                 | None => Ok(None),
             }
@@ -97,5 +66,45 @@ pub async fn handler(
             });
             Err(actix_web::error::ErrorUnauthorized(e))
         },
+    }
+}
+
+fn invoke_authorizer_route(
+    instance:  &str,
+    endpoint: &str,
+    headers: &std::collections::HashMap<String, String>,
+    conn_id: &str,
+) -> std::result::Result<crate::routes::AuthorizerResponse, Box<dyn std::error::Error>> {
+    let mut auth_req = ureq::post(endpoint);
+    for (k, v) in headers.iter() {
+        auth_req = auth_req.set(k, v);
+    }
+    let resp = auth_req.send_string(&serde_json::to_string(&crate::routes::AuthorizerRequest {
+        instance_id: instance.to_string(),
+        connection_id: conn_id.to_string(),
+        time: chrono::Utc::now().to_rfc3339(),
+        headers: headers.iter().map(|v| (v.0.to_owned(), v.1.to_owned())).collect(),
+    })?)?;
+    let resp_status = resp.status();
+
+    // TODO(AWE): instrumentation has shown that the following statement takes
+    // ~1sec. This should not be the case and needs to be
+    // resolved. Maybe it makes sense to go away from ureq at this point?
+    let respstr = resp.into_string()?;
+
+    let resp_parsed = serde_json::from_str::<crate::routes::AuthorizerResponse>(&respstr)?;
+    crate::logger::LogMessage::now(&instance.to_string(), crate::logger::Data::Event {
+        data: crate::logger::Event::AuthRouteResponse {
+            connection: &conn_id.to_string(),
+            response: resp_status,
+        },
+    });
+
+    match resp_status {
+        | 200 => Ok(resp_parsed),
+        | _ => Err(Box::new(crate::error::AuthorizerRouteError::new(&format!(
+            "authorizer route error code {}",
+            resp_status
+        )))),
     }
 }

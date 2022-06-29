@@ -55,6 +55,9 @@ data:
                 self.end_headers()
                 return
 
+            body = JSONDecoder().decode(self.rfile.read(int(self.headers['Content-Length'])).decode('UTF-8'))
+            print(body, flush=True)
+            self.send_response(200)
             self.send_response(200)
             self.end_headers()
             

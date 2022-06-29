@@ -8,6 +8,44 @@
 ### Request
 
 ```
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "instance_id": {
+      "type": "string"
+    },
+    "connection_id": {
+      "type": "string"
+    },
+    "time": {
+      "type": "string"
+    },
+    "headers": {
+      "type": "array",
+      "additionalItems": true,
+      "items": [
+        {
+          "type": "array",
+          "items": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "instance_id",
+    "connection_id",
+    "time",
+    "headers"
+  ]
+}
 ```
 
 ### Response
@@ -15,6 +53,15 @@
 HTTP code 200 for success, other codes will make the connection abort due to an authorization error (401).
 
 ```
+{
+  "type": "object",
+  "properties": {
+    "context": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
 ```
 
 ## Connect (optional)
@@ -22,6 +69,25 @@ HTTP code 200 for success, other codes will make the connection abort due to an 
 ### Request
 
 ```
+{
+  "type": "object",
+  "properties": {
+    "instance_id": {
+      "type": "string"
+    },
+    "connection_id": {
+      "type": "string"
+    },
+    "time": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "instance_id",
+    "connection_id",
+    "time"
+  ]
+}
 ```
 
 ### Response
@@ -37,6 +103,25 @@ HTTP code 200 for success, other codes will make the connection abort due to an 
 ### Request
 
 ```
+{
+  "type": "object",
+  "properties": {
+    "instance_id": {
+      "type": "string"
+    },
+    "connection_id": {
+      "type": "string"
+    },
+    "time": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "instance_id",
+    "connection_id",
+    "time"
+  ]
+}
 ```
 
 ### Response
