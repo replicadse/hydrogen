@@ -9,32 +9,32 @@
     <meta name="generator" content="Retype 2.3.0">
 
     <!-- Primary Meta Tags -->
-    <title>spoderman</title>
-    <meta name="title" content="spoderman">
-    <meta name="description" content="spoderman is a kubernetes native API gateway for websocket connections that indirects messages into HTTP requests." />
+    <title>Endpoints</title>
+    <meta name="title" content="Endpoints">
+    <meta name="description" content="This is the primary socket endpoint clients need connect to." />
 
     <!-- Canonical -->
-    <link rel="canonical" href="/" />
+    <link rel="canonical" href="/gateway/endpoints/" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="/">
-    <meta property="og:title" content="spoderman">
-    <meta property="og:description" content="spoderman is a kubernetes native API gateway for websocket connections that indirects messages into HTTP requests.">
+    <meta property="og:url" content="/gateway/endpoints/">
+    <meta property="og:title" content="Endpoints">
+    <meta property="og:description" content="This is the primary socket endpoint clients need connect to.">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="/">
-    <meta property="twitter:title" content="spoderman">
-    <meta property="twitter:description" content="spoderman is a kubernetes native API gateway for websocket connections that indirects messages into HTTP requests.">
+    <meta property="twitter:url" content="/gateway/endpoints/">
+    <meta property="twitter:title" content="Endpoints">
+    <meta property="twitter:description" content="This is the primary socket endpoint clients need connect to.">
 
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
-    <link href="resources/css/retype.css?v=2.3.0.709814104366" rel="stylesheet" />
+    <link href="../../resources/css/retype.css?v=2.3.0.709814104366" rel="stylesheet" />
 
-    <script type="text/javascript" src="resources/js/config.js?v=2.3.0.709814104366" data-turbo-eval="false" defer></script>
-    <script type="text/javascript" src="resources/js/retype.js?v=2.3.0" data-turbo-eval="false" defer></script>
-    <script id="lunr-js" type="text/javascript" src="resources/js/lunr.js?v=2.3.0.709814104366" data-turbo-eval="false" defer></script>
+    <script type="text/javascript" src="../../resources/js/config.js?v=2.3.0.709814104366" data-turbo-eval="false" defer></script>
+    <script type="text/javascript" src="../../resources/js/retype.js?v=2.3.0" data-turbo-eval="false" defer></script>
+    <script id="lunr-js" type="text/javascript" src="../../resources/js/lunr.js?v=2.3.0.709814104366" data-turbo-eval="false" defer></script>
 </head>
 <body>
     <div id="docs-app" class="relative text-base antialiased text-gray-700 bg-white font-body dark:bg-dark-850 dark:text-dark-300">
@@ -49,7 +49,7 @@
                 <!-- Logo -->
                 <div class="flex items-center justify-between h-full py-2 md:w-75">
                     <div class="flex items-center px-2 md:px-6">
-                        <a id="docs-site-logo" href="" class="flex items-center leading-snug text-2xl">
+                        <a id="docs-site-logo" href="../../" class="flex items-center leading-snug text-2xl">
                             <span class="dark:text-white font-semibold line-clamp-1 md:line-clamp-2">spoderman</span>
                         </a><span class="hidden px-2 py-1 ml-4 text-sm font-semibold leading-none text-root-logo-label-text bg-root-logo-label-bg rounded-sm md:inline-block">wiki</span>
                     </div>
@@ -166,57 +166,42 @@
                                 <div id="docs-sidebar-right-toggle"></div>
                 
                                 <!-- Page content  -->
-<doc-anchor-target id="spoderman" class="break-words">
+<doc-anchor-target id="endpoints" class="break-words">
     <h1>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#spoderman">#</doc-anchor-trigger>
-        <span>spoderman</span>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#endpoints">#</doc-anchor-trigger>
+        <span>Endpoints</span>
     </h1>
 </doc-anchor-target>
-<p><code v-pre>spoderman</code> is a kubernetes native API gateway for websocket connections that indirects messages into HTTP requests.</p>
-<doc-anchor-target id="release-schemes--cycles">
+<doc-anchor-target id="wss--ws">
     <h2>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#release-schemes--cycles">#</doc-anchor-trigger>
-        <span>Release schemes &amp; cycles</span>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#wss--ws">#</doc-anchor-trigger>
+        <span><code v-pre>WSS @ /ws</code></span>
     </h2>
 </doc-anchor-target>
-<p>As <code v-pre>spoderman</code> now gets more complete in it&#x27;s feature set, there are final preparations to be made before releasing a v1.</p>
-<p>There will be <code v-pre>1.0.0-alpha.x</code> releases first with the first coming up end of June 2022. These are meant to be for testing purposes only and will primarily serve for identifying which things are still missing that have not come up yet. <br />
-Following the alpha releases, there will be a beta phase. The feature set for v1.0 will be complete upon entering the beta phase and there will only be fixes made to the existing features. At this point in time, the documentation about the software will also be much more in depth and detailed although it might not be 100% complete. <br />
-Following the beta phase with release candidates, v1.0 will be published. Following the v1.0 release, <code v-pre>spoderman</code> will strictly adhere to the <code v-pre>semver v3</code> versioning scheme.</p>
-<doc-anchor-target id="roadmap-to-v1">
+<p>This is the primary socket endpoint clients need connect to. It will trigger the connection pipeline before and during connect and trigger a disconnect event on client disconnect. <br />
+Messages are sent through the open connections to this endpoint both from client to server and vice versa. <br />
+When connecting, every established connection gets a unique <code v-pre>connection_id</code> assigned that is also transported to every downstream service which is invoked at any point (since the connection was not permitted yet at that point in time). Keep in mind that this id is given per connection and one client could have more than one connection open.</p>
+<doc-anchor-target id="httpget--health">
     <h2>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#roadmap-to-v1">#</doc-anchor-trigger>
-        <span>Roadmap to v1</span>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#httpget--health">#</doc-anchor-trigger>
+        <span><code v-pre>HTTP/GET @ /health</code></span>
     </h2>
 </doc-anchor-target>
-<p>All work, features and generally everything that will be included in / done before the v1.0 release will be bundled in <a href="https://github.com/voidpointergroup/spoderman/milestone/1">this milestone</a>.</p>
-<doc-anchor-target id="v10-features">
+<p>A basic health check endpoint. Will return <code v-pre>code 200</code> and a static JSON formatted response body.</p>
+<doc-anchor-target id="httppost--connectionsconnection_id_send">
     <h2>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#v10-features">#</doc-anchor-trigger>
-        <span>v1.0 features</span>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#httppost--connectionsconnection_id_send">#</doc-anchor-trigger>
+        <span><code v-pre>HTTP/POST @ /connections/$connection_id/_send</code></span>
     </h2>
 </doc-anchor-target>
-<ul>
-<li>Bidirectional communication (client &lt;--&gt; server) <br />
-Client messages are sent from the client, server messages are sent towards any running instance of spoderman and forwarded towards the client from the instance that holds it&#x27;s connection. <br />
-Avoiding persistent connections towards your service is crucial to reach a near zero downtime when deploying and an increased consumer satisfaction.</li>
-<li>Routing service <br />
-No fancy DSL or other technique required. For every request, a routing service is invoked which returns the destination for that message including other metadata (like headers).</li>
-<li>Authorization service <br />
-It brings built in authorization that is performed before a persistent connection is established.</li>
-<li>OnConnect/OnDisconnect services <br />
-These are invoked when a client has connected / disconnected respectively.</li>
-<li>Monitoring <br />
-Structured log messages for events and, if configured, interval reporting about the application&#x27;s state are available.</li>
-<li>Easy installs via HELM charts <br />
-It&#x27;s easy to install the application - just do a helm install with the appropriate chart values and you&#x27;re ready to go.</li>
-<li>Multi language / framework support <br />
-By deciding against a DSL or other language/framework lock-ins for routing etc., you can implement authorization, connect, message routing, message handling and disconnect in your own favorite language. The only implementations required are the routing service and at least one destination for messages it points to.</li>
-<li>Message persistence and retries <br />
-Messages are sent to a NATS/Jetstream stream which will buffer messages and only release if they are acknowledged. This will guarantee a at-least-once delivery for client-&gt;server messages.</li>
-<li>Connection contexts <br />
-The authorizer can return a context object for the connection if it authorizes it. This context will be included in every client to server message and be available for the downstream services to use.</li>
-</ul>
+<p>This endpoint is used in order to have a message sent from the backend to a connected client. The request body will be transmitted as text.</p>
+<doc-anchor-target id="httppost--connectionsconnection_id_disconnect">
+    <h2>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#httppost--connectionsconnection_id_disconnect">#</doc-anchor-trigger>
+        <span><code v-pre>HTTP/POST @ /connections/$connection_id/_disconnect</code></span>
+    </h2>
+</doc-anchor-target>
+<p>Forces a disconnect for the given connection.</p>
 
                                 
                                 <!-- Required only on API pages -->
@@ -226,10 +211,17 @@ The authorizer can return a context object for the connection if it authorizes i
                             
                                 <nav class="flex mt-14">
                                     <div class="w-1/2">
+                                        <a class="px-5 py-4 h-full flex items-center break-normal font-medium text-blue-500 dark:text-blue-400 border border-gray-300 hover:border-gray-400 dark:border-dark-650 dark:hover:border-dark-450 rounded-l-lg transition-colors duration-150 relative hover:z-5" href="../../gateway/downstream-services/">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="mr-3" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" overflow="visible"><path d="M19 11H7.41l5.29-5.29a.996.996 0 10-1.41-1.41l-7 7a1 1 0 000 1.42l7 7a1.024 1.024 0 001.42-.01.996.996 0 000-1.41L7.41 13H19c.55 0 1-.45 1-1s-.45-1-1-1z" /><path fill="none" d="M0 0h24v24H0z" /></svg>
+                                            <span>
+                                                <span class="block text-xs font-normal text-gray-400 dark:text-dark-400">Previous</span>
+                                                <span class="block mt-1">Downstream services</span>
+                                            </span>
+                                        </a>
                                     </div>
                             
                                     <div class="w-1/2">
-                                        <a class="px-5 py-4 -mx-px h-full flex items-center justify-end break-normal font-medium text-blue-500 dark:text-blue-400 border border-gray-300 hover:border-gray-400 dark:border-dark-650 dark:hover:border-dark-450 rounded-l rounded-r-lg transition-colors duration-150 relative hover:z-5" href="gateway/configuration/">
+                                        <a class="px-5 py-4 -mx-px h-full flex items-center justify-end break-normal font-medium text-blue-500 dark:text-blue-400 border border-gray-300 hover:border-gray-400 dark:border-dark-650 dark:hover:border-dark-450 rounded-r-lg transition-colors duration-150 relative hover:z-5" href="../../worker/configuration/">
                                             <span>
                                                 <span class="block text-xs font-normal text-right text-gray-400 dark:text-dark-400">Next</span>
                                                 <span class="block mt-1">Configuration</span>
@@ -276,6 +268,6 @@ The authorizer can return a context object for the connection if it authorizes i
 
     <div id="docs-overlay-target"></div>
 
-    <script>window.__DOCS__ = { "title": "spoderman", isRoot: true, level: 0, icon: "file", hasPrism: false, hasMermaid: false, hasMath: false }</script>
+    <script>window.__DOCS__ = { "title": "Endpoints", level: 2, icon: "file", hasPrism: false, hasMermaid: false, hasMath: false }</script>
 </body>
 </html>
