@@ -16,13 +16,19 @@ use crate::messages::{
 };
 
 type Socket = actix::prelude::Recipient<crate::messages::WsMessage>;
+type SharedSessionMap = std::sync::Arc<std::sync::RwLock<HashMap<String, Socket>>>;
 
 pub struct Server {
     config: crate::config::Config,
     instance: String,
-    sessions: std::sync::Arc<std::sync::RwLock<HashMap<String, Socket>>>,
+    sessions: SharedSessionMap,
     redis: std::sync::Arc<redis::Client>,
     nats: std::sync::Arc<nats::jetstream::JetStream>,
+
+    #[allow(dead_code)]
+    redis_thread: std::thread::JoinHandle<()>,
+    #[allow(dead_code)]
+    stats_reporting_thread: std::option::Option<std::thread::JoinHandle<()>>,
 }
 
 impl Server {
@@ -32,34 +38,44 @@ impl Server {
         redis: redis::Client,
         nats: nats::jetstream::JetStream,
     ) -> Self {
-        let rc_arc = std::sync::Arc::new(redis);
-        let t_rc_arc = rc_arc.clone();
-        let t_instance_id = instance.clone();
-        let t2_instance_id = instance.clone();
-        let sess_arc = std::sync::Arc::new(std::sync::RwLock::new(HashMap::<String, Socket>::new()));
-        let t_sess_arc = sess_arc.clone();
-        let t2_sess_arc = sess_arc.clone();
+        let redis_connection_arc = std::sync::Arc::new(redis);
+        let session_map_arc: SharedSessionMap = std::sync::Arc::new(std::sync::RwLock::new(HashMap::<String, Socket>::new()));
 
-        match config.server.stats_interval_sec {
+        let rt = Self::start_redis_thread(instance.clone(), redis_connection_arc.clone(), session_map_arc.clone());
+        let srt  = match config.server.stats_interval_sec {
             | Some(v) => {
-                let stats_interval: u64 = v.into();
-                std::thread::spawn(move || loop {
-                    crate::logger::LogMessage::now(&t2_instance_id, crate::logger::Data::Interval {
-                        stats: crate::logger::Stats::Connections {
-                            count: t2_sess_arc.read().unwrap().len(),
-                            connections: t2_sess_arc.read().unwrap().keys().into_iter().collect(),
-                        },
-                    });
-                    std::thread::sleep(std::time::Duration::from_secs(stats_interval));
-                });
+                Some(Self::start_stats_reporting_thread(instance.clone(), v.into(), session_map_arc.clone()))
             },
-            | None => {},
-        }
+            | None => None,
+        };
 
+        Server {
+            config,
+            instance,
+            sessions: session_map_arc,
+            redis: redis_connection_arc,
+            nats: std::sync::Arc::new(nats),
+            redis_thread: rt,
+            stats_reporting_thread: srt,
+        }
+    }
+
+    pub fn make_key(&self, connection: &str) -> String {
+        format!("i2c:{}:{}", self.instance, connection.to_string())
+    }
+
+    pub fn make_reverse_key(&self, connection: &str) -> String {
+        format!("c2i:{}", connection)
+    }
+
+    /// Function will start a new thread and return it's JoinHandle. This thread will listen to the redis pub/sub channel that's relevant
+    /// for this instance and process it's messages.
+    fn start_redis_thread(instance_id: String, redis_conn: std::sync::Arc<redis::Client>, sessions: SharedSessionMap) -> std::thread::JoinHandle<()> {
         std::thread::spawn(move || {
-            let mut conn = t_rc_arc.get_connection().unwrap();
+            let mut conn = redis_conn.get_connection().unwrap();
             let mut ps = conn.as_pubsub();
-            ps.subscribe(&t_instance_id).unwrap();
+            let thread_instance_id = instance_id.clone();
+            ps.subscribe(instance_id).unwrap();
 
             loop {
                 let mut safecall = || -> Result<(), Box<dyn std::error::Error>> {
@@ -67,17 +83,18 @@ impl Server {
                     let pl: String = msg.get_payload()?;
                     let payload: spoderman_bus::redis::Message = serde_json::from_str(&pl)?;
                     match payload {
+                        // Handles messages for connections this instance owns.
                         | spoderman_bus::redis::Message::S2CMessage {
                             connection,
                             time: _,
                             message,
                         } => {
-                            crate::logger::LogMessage::now(&t_instance_id, crate::logger::Data::Event {
+                            crate::logger::LogMessage::now(&thread_instance_id, crate::logger::Data::Event {
                                 data: crate::logger::Event::ServerMessagePost {
                                     connection: &connection,
                                 },
                             });
-                            match t_sess_arc.read()?.get(&connection) {
+                            match sessions.read()?.get(&connection) {
                                 | Some(s) => {
                                     s.do_send(crate::messages::WsMessage::Message(message));
                                     Ok(())
@@ -87,18 +104,19 @@ impl Server {
                                 ))),
                             }
                         },
+                        // Handles server disconnect requests for a connection this instance owns..
                         | spoderman_bus::redis::Message::SDisconnect {
                             connection,
                             time: _,
                             reason,
                         } => {
-                            crate::logger::LogMessage::now(&t_instance_id, crate::logger::Data::Event {
+                            crate::logger::LogMessage::now(&thread_instance_id, crate::logger::Data::Event {
                                 data: crate::logger::Event::ServerDisconnect {
                                     connection: &connection,
                                     reason: &reason,
                                 },
                             });
-                            match t_sess_arc.read()?.get(&connection) {
+                            match sessions.read()?.get(&connection) {
                                 | Some(s) => {
                                     s.do_send(crate::messages::WsMessage::Disconnect(reason));
                                     Ok(())
@@ -113,29 +131,82 @@ impl Server {
                 match safecall() {
                     | Ok(_) => {},
                     | Err(e) => {
-                        crate::logger::LogMessage::now(&t_instance_id, crate::logger::Data::Event {
+                        crate::logger::LogMessage::now(&thread_instance_id, crate::logger::Data::Event {
                             data: crate::logger::Event::Error { err: &e.to_string() },
                         });
                         std::thread::sleep(std::time::Duration::from_secs(5));
                     },
                 }
             }
+        })
+    }
+
+    fn start_stats_reporting_thread(instance_id: String, interval: u64, sessions: SharedSessionMap) -> std::thread::JoinHandle<()> {
+        std::thread::spawn(move || loop {
+            crate::logger::LogMessage::now(&instance_id, crate::logger::Data::Interval {
+                stats: crate::logger::Stats::Connections {
+                    count: sessions.read().unwrap().len(),
+                    connections: sessions.read().unwrap().keys().into_iter().collect(),
+                },
+            });
+            std::thread::sleep(std::time::Duration::from_secs(interval));
+        })
+    }
+
+    fn invoke_connect_route(&self, endpoint: &str, headers: &std::collections::HashMap<String, String>, message: &crate::messages::Connect) -> std::result::Result<(), Box<dyn std::error::Error>> {
+        let mut req = ureq::post(endpoint);
+        for (k, v) in headers.iter() {
+            req = req.set(k, v);
+        }
+
+        let resp = req.send_string(&serde_json::to_string(&crate::routes::ConnectRequest {
+            instance_id: self.instance.clone(),
+            connection_id: message.connection.clone(),
+            time: message.time.clone(),
+        })?)?;
+
+        crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
+            data: crate::logger::Event::ConnectRouteResponse {
+                connection: &message.connection,
+                response: resp.status(),
+            },
         });
-        Server {
-            config,
-            instance,
-            sessions: sess_arc,
-            redis: rc_arc,
-            nats: std::sync::Arc::new(nats),
+
+        match resp.status() {
+            | 200 => Ok(()),
+            | _ => Err(Box::new(crate::error::ConnectRouteError::new(&format!(
+                "connect route error code {}",
+                resp.status()
+            )))),
         }
     }
 
-    pub fn make_key(&self, connection: &str) -> String {
-        format!("i2c:{}:{}", self.instance, connection.to_string())
-    }
+    fn invoke_disconnect_route(&self, endpoint: &str, headers: &std::collections::HashMap<String, String>, message: &crate::messages::Disconnect) -> std::result::Result<(), Box<dyn std::error::Error>> {
+        let mut req = ureq::post(endpoint);
+        for (k, v) in headers.iter() {
+            req = req.set(k, v);
+        }
 
-    pub fn make_reverse_key(&self, connection: &str) -> String {
-        format!("c2i:{}", connection)
+        let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
+            instance_id: self.instance.clone(),
+            connection_id: message.connection.clone(),
+            time: message.time.clone(),
+        })?)?;
+
+        crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
+            data: crate::logger::Event::DisconnectRouteResponse {
+                connection: &message.connection,
+                response: resp.status(),
+            },
+        });
+
+        match resp.status() {
+            | 200 => Ok(()),
+            | _ => Err(Box::new(crate::error::DisconnectRouteError::new(&format!(
+                "disconnect route error code {}",
+                resp.status()
+            )))),
+        }
     }
 }
 
@@ -143,9 +214,13 @@ impl Actor for Server {
     type Context = Context<Self>;
 }
 
+/// Handler for the OnConnect event in which a client has been permitted for a server connection and is now
+/// establishing the connection.
 impl Handler<Connect> for Server {
     type Result = std::result::Result<(), u16>;
 
+    /// This function will create a client/server map in redis for the connection (id) and this instance (id).
+    /// It will also invoke the connect route if specified.
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -157,37 +232,6 @@ impl Handler<Connect> for Server {
                 .write()
                 .unwrap()
                 .insert(msg.connection.clone(), msg.addr.clone()); // must never be poisoned
-            match &self.config.routes.connect {
-                | Some(c) => {
-                    let mut req = ureq::post(&c.endpoint);
-                    for (k, v) in c.headers.iter() {
-                        req = req.set(k, v);
-                    }
-
-                    let resp = req.send_string(&serde_json::to_string(&crate::routes::ConnectRequest {
-                        instance_id: self.instance.clone(),
-                        connection_id: msg.connection.clone(),
-                        time: msg.time.clone(),
-                    })?)?;
-
-                    crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
-                        data: crate::logger::Event::ConnectRouteResponse {
-                            connection: &msg.connection,
-                            response: resp.status(),
-                        },
-                    });
-
-                    match resp.status() {
-                        | 200 => Ok(()),
-                        | _ => Err(Box::new(crate::error::ConnectRouteError::new(&format!(
-                            "connect route error code {}",
-                            resp.status()
-                        )))),
-                    }
-                },
-                | None => Ok(()),
-            }?;
-
             let key = self.make_key(&msg.connection);
             let rkey = self.make_reverse_key(&msg.connection);
 
@@ -206,6 +250,13 @@ impl Handler<Connect> for Server {
                 .arg(30)
                 .query::<()>(&mut self.redis.get_connection()?)?;
 
+            match &self.config.routes.connect {
+                | Some(c) => {
+                    self.invoke_connect_route(&c.endpoint, &c.headers, &msg)
+                },
+                | None => Ok(()),
+            }?;
+
             Ok(())
         };
         match safecall() {
@@ -221,9 +272,11 @@ impl Handler<Connect> for Server {
     }
 }
 
+/// Handler for disconnect events which occurr when a client or the server ends the connection.
 impl Handler<Disconnect> for Server {
     type Result = std::result::Result<(), u16>;
 
+    /// This function will purge the redis client/server mappings invoke the disconnect route if specified.
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -245,31 +298,7 @@ impl Handler<Disconnect> for Server {
 
             match &self.config.routes.disconnect {
                 | Some(c) => {
-                    let mut req = ureq::post(&c.endpoint);
-                    for (k, v) in c.headers.iter() {
-                        req = req.set(k, v);
-                    }
-
-                    let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
-                        instance_id: self.instance.clone(),
-                        connection_id: msg.connection.clone(),
-                        time: msg.time.clone(),
-                    })?)?;
-
-                    crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
-                        data: crate::logger::Event::DisconnectRouteResponse {
-                            connection: &msg.connection.to_string(),
-                            response: resp.status(),
-                        },
-                    });
-
-                    match resp.status() {
-                        | 200 => Ok(()),
-                        | _ => Err(Box::new(crate::error::DisconnectRouteError::new(&format!(
-                            "disconnect route error code {}",
-                            resp.status()
-                        )))),
-                    }
+                    self.invoke_disconnect_route(&c.endpoint, &c.headers, &msg)
                 },
                 | None => Ok(()),
             }
@@ -286,9 +315,14 @@ impl Handler<Disconnect> for Server {
     }
 }
 
+/// Handler for heartbeat messages on a connection. Heartbeats are used to ping/pong whether a connection is still
+/// established and a client still active. It also helps to prevent timeouts for connections that are established but
+/// do not see any message for a certain perdiod of time.
 impl Handler<Heartbeat> for Server {
     type Result = std::result::Result<(), u16>;
 
+    /// This function will update the expiry time on the client-to-server as well as server-to-client mappings in
+    /// redis.
     fn handle(&mut self, msg: Heartbeat, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             let key = self.make_key(&msg.connection);
@@ -315,9 +349,13 @@ impl Handler<Heartbeat> for Server {
     }
 }
 
+/// Handler for messages that are sent from this server towards any client.
 impl Handler<ServerMessage> for Server {
     type Result = ();
 
+    /// This function will take the message and the specified connection, lookup the instance of the gateway
+    /// that holds the specified client connection and post the message into the corresponding redis pub/sub
+    /// channel.
     fn handle(&mut self, msg: ServerMessage, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -348,9 +386,12 @@ impl Handler<ServerMessage> for Server {
     }
 }
 
+/// Handler for the event in which the server needs to end the connection to any client.
 impl Handler<ServerDisconnect> for Server {
     type Result = ();
 
+    /// This function will lookup the mapped instance for the given connection in redis and post
+    /// a disconnect request for the specified instance and the given connection id.
     fn handle(&mut self, msg: ServerDisconnect, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
@@ -382,9 +423,11 @@ impl Handler<ServerDisconnect> for Server {
     }
 }
 
+/// Handler for client messages the server receives.
 impl Handler<ClientMessage> for Server {
     type Result = std::result::Result<(), u16>;
 
+    /// This function will publish the message towards a message topic in a NATS/Jetstream stream.
     fn handle(&mut self, msg: ClientMessage, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
             crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {

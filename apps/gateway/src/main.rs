@@ -36,6 +36,7 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
     }
 }
 
+/// Main server function, starting an actix HTTP server with the various endpoints.
 async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn Error>> {
     let instance = uuid::Uuid::new_v4().to_string();
     logger::LogMessage::now(&instance.to_string(), logger::Data::Event {

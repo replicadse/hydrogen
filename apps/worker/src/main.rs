@@ -22,7 +22,7 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
                     endpoint,
                     stream: topic,
                 } => {
-                    nats(&instance.to_string(), &config, &endpoint, &topic).await?;
+                    endless_nats_consumer(&instance.to_string(), &config, &endpoint, &topic).await?;
                 },
             }
             Ok(())
@@ -30,7 +30,7 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
     }
 }
 
-async fn nats(
+async fn endless_nats_consumer(
     instance: &str,
     config: &crate::config::Config,
     nats_endpoint: &str,
@@ -65,7 +65,7 @@ async fn nats(
     while let Some(Ok(message)) = messages.next().await {
         let msg_str = String::from_utf8(message.payload.to_vec())?;
         let msg_typed: spoderman_bus::nats::ClientMessage = serde_json::from_str(&msg_str)?;
-        match handle_message(instance, config, &msg_typed) {
+        match handle_nats_message(instance, config, &msg_typed) {
             | Ok(..) => {
                 message.ack().await.unwrap();
             },
@@ -79,7 +79,7 @@ async fn nats(
     Ok(())
 }
 
-fn handle_message(
+fn handle_nats_message(
     instance: &str,
     config: &crate::config::Config,
     msg: &spoderman_bus::nats::ClientMessage,

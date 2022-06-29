@@ -16,6 +16,10 @@ use crate::{
     ws::WsConn,
 };
 
+/// Handler for initiating connection between client and server. This function is only invoked at the first stage of
+/// initiation and a connection is established from there. This function will also invoke the authorizer route if present
+/// to determine whether the connection may or may not be established. It will also enrich the context of the connection with
+/// the context that is returned by the authorizer in it's response.
 #[get("/ws")]
 pub async fn handler(
     req: HttpRequest,

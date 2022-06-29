@@ -13,6 +13,8 @@ use futures::StreamExt;
 
 use crate::server::Server;
 
+/// Endpoint for sending a message to the given connection, whether this instance is the owner
+/// of it or not is irrelevant as it is an async pub/sub process in the background.
 #[post("/connections/{connection_id}/_send")]
 pub async fn handle_message(
     _req: HttpRequest,
@@ -38,6 +40,8 @@ pub async fn handle_message(
     Ok(actix_web::HttpResponse::Ok().body(""))
 }
 
+/// Endpoint for forcing the disconnect of a given connection, whether this instance is the owner
+/// of it or not is irrelevant as it is an async pub/sub process in the background.
 #[post("/connections/{connection_id}/_disconnect")]
 pub async fn handle_disconnect(
     _req: HttpRequest,
