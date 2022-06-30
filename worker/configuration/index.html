@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="2.3.0.709853885977">
+    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="2.3.0.709898609926">
 
     <!-- See retype.com -->
     <meta name="generator" content="Retype 2.3.0">
@@ -30,11 +30,11 @@
 
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
-    <link href="../../resources/css/retype.css?v=2.3.0.709853885977" rel="stylesheet" />
+    <link href="../../resources/css/retype.css?v=2.3.0.709898609926" rel="stylesheet" />
 
-    <script type="text/javascript" src="../../resources/js/config.js?v=2.3.0.709853885977" data-turbo-eval="false" defer></script>
+    <script type="text/javascript" src="../../resources/js/config.js?v=2.3.0.709898609926" data-turbo-eval="false" defer></script>
     <script type="text/javascript" src="../../resources/js/retype.js?v=2.3.0" data-turbo-eval="false" defer></script>
-    <script id="lunr-js" type="text/javascript" src="../../resources/js/lunr.js?v=2.3.0.709853885977" data-turbo-eval="false" defer></script>
+    <script id="lunr-js" type="text/javascript" src="../../resources/js/lunr.js?v=2.3.0.709898609926" data-turbo-eval="false" defer></script>
 </head>
 <body>
     <div id="docs-app" class="relative text-base antialiased text-gray-700 bg-white font-body dark:bg-dark-850 dark:text-dark-300">
@@ -186,11 +186,27 @@ queue:
     endpoint: &quot;nats://spoderman-nats:4222&quot;
     stream: client
 
-routes:
-  rules_engine:
-    endpoint: &quot;http://spoderman-dss-rules-engine:8080&quot;
-    headers:
-      Authorization: dss-rules-engine-key</code></pre>
+engine_mode:
+  regex:
+    rules:
+      ## forward commands to sink b
+      - regex: &quot;^!&quot;
+        route:
+          endpoint: &quot;http://localhost:8084&quot;
+          headers:
+            Authorization: dss-sink-b-key
+      # catch all rule to sink a
+      - regex: &quot;.*&quot;
+        route:
+          endpoint: &quot;http://localhost:8083&quot;
+          headers:
+            Authorization: dss-sink-a-key
+  # dss:
+  #   rules_engine:
+  #     endpoint: &quot;http://localhost:8082&quot;
+  #     headers:
+  #       Authorization: dss-rules-engine-key
+</code></pre>
 </doc-codeblock></div>
 <doc-anchor-target id="schema">
     <h2>
@@ -246,28 +262,77 @@ routes:
 <td><code v-pre>client</code></td>
 </tr>
 <tr>
-<td>routes</td>
+<td>engine_mode</td>
 <td>yes</td>
-<td>The downstream service routes.</td>
+<td>The engine mode details which are used to process messages.</td>
+<td>object (enum) - needs one mode active</td>
+<td></td>
+</tr>
+<tr>
+<td>engine_mode.regex</td>
+<td>no</td>
+<td>Regex mode - forwarding messages by evaluating them over regular expressions.</td>
 <td>object</td>
 <td></td>
 </tr>
 <tr>
-<td>routes.rules_engine</td>
+<td>engine_mode.regex.rules</td>
+<td>yes</td>
+<td>Contains the regular expressions and the routes to which they lead if they match. The expressions will be checked sequentially. If none match, the message is logged and dropped. A catch-all rule at the end is usually a good idea.</td>
+<td>array</td>
+<td></td>
+</tr>
+<tr>
+<td>engine_mode.regex.rules.$.regex</td>
+<td>yes</td>
+<td>The regular that has to match expression for this destination.</td>
+<td>regex string</td>
+<td>&quot;^!&quot; for every message starting with &quot;!&quot; or &quot;.*&quot; for catching all</td>
+</tr>
+<tr>
+<td>engine_mode.regex.rules.$.route</td>
+<td>yes</td>
+<td>The route to the message destination.</td>
+<td>object</td>
+<td></td>
+</tr>
+<tr>
+<td>engine_mode.regex.rules.$.route.endpoint</td>
+<td>yes</td>
+<td>The HTTP endpoint to the message destination.</td>
+<td>URL string</td>
+<td><code v-pre>http://spoderman-dss-sink-a:8080</code></td>
+</tr>
+<tr>
+<td>engine_mode.regex.rules.$.route.headers</td>
+<td>yes</td>
+<td>Headers to send to the message destination on invocation.</td>
+<td>Map&lt;String, String&gt;</td>
+<td></td>
+</tr>
+<tr>
+<td>engine_mode.dss</td>
 <td>no</td>
+<td>Downstream service mode - invokes a remote rules engine which returns the message destination (for more complex use-cases).</td>
+<td>object</td>
+<td></td>
+</tr>
+<tr>
+<td>engine_mode.dss.rules_engine</td>
+<td>yes</td>
 <td>The rules engine downstream service.</td>
 <td>object</td>
 <td></td>
 </tr>
 <tr>
-<td>routes.rules_engine.endpoint</td>
+<td>engine_mode.dss.rules_engine.endpoint</td>
 <td>yes</td>
 <td>The rules engine endpoint.</td>
 <td>URL string</td>
-<td><code v-pre>http://spoderman-dss-disconnect:8080</code></td>
+<td><code v-pre>http://spoderman-sink-a:8080</code></td>
 </tr>
 <tr>
-<td>routes.rules_engine.headers</td>
+<td>engine_mode.dss.rules_engine.headers</td>
 <td>yes</td>
 <td>Headers to send to the rules engine dss on invocation.</td>
 <td>Map&lt;String, String&gt;</td>
