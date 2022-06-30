@@ -37,7 +37,8 @@ pub enum Event<'a> {
     Startup { message: &'a str },
 
     RulesEngineRouteResponse { connection: &'a str, response: u16 },
-    ForwardRouteResponse { connection: &'a str, response: u16 },
+    DestinationRouteResponse { connection: &'a str, response: u16 },
 
     Message { connection: &'a str },
+    DroppedMessageNoMatch { connection: &'a str },
 }

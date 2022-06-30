@@ -16,22 +16,24 @@ All work, features and generally everything that will be included in / done befo
 
 ## v1.0 features
 
-* Bidirectional communication (client <--> server) \
+* **Bidirectional communication (client <--> server)** \
   Client messages are sent from the client, server messages are sent towards any running instance of spoderman and forwarded towards the client from the instance that holds it's connection. \
   Avoiding persistent connections towards your service is crucial to reach a near zero downtime when deploying and an increased consumer satisfaction.
-* Routing service \
-  No fancy DSL or other technique required. For every request, a routing service is invoked which returns the destination for that message including other metadata (like headers).
-* Authorization service \
+* **Flexible routing** \
+  You can choose from letting the worker application run in `regex` or in `dss` mode. Regex mode will evaluate the messages based on a regular expression and, if it matches, forward the message to the corresponding service. DSS mode will invoke a separate rules engine service that determines and returns the destination for the message which the server then invokes.
+* **Built-in authorizer** \
   It brings built in authorization that is performed before a persistent connection is established.
-* OnConnect/OnDisconnect services \
+* **OnConnect/OnDisconnect services** \
   These are invoked when a client has connected / disconnected respectively.
-* Monitoring \
+* **Monitoring** \
   Structured log messages for events and, if configured, interval reporting about the application's state are available.
-* Easy installs via HELM charts \
+* **Easy installs via HELM charts** \
   It's easy to install the application - just do a helm install with the appropriate chart values and you're ready to go.
-* Multi language / framework support \
-  By deciding against a DSL or other language/framework lock-ins for routing etc., you can implement authorization, connect, message routing, message handling and disconnect in your own favorite language. The only implementations required are the routing service and at least one destination for messages it points to.
-* Message persistence and retries \
-  Messages are sent to a NATS/Jetstream stream which will buffer messages and only release if they are acknowledged. This will guarantee a at-least-once delivery for client->server messages.
-* Connection contexts \
+* **Multi language / framework support** \
+  By deciding against a DSL or other language/framework lock-ins for routing etc., you can implement authorization, connect, message routing, message handling and disconnect in your own favorite language. The only implementations required are the routing service and at least one destination for messages it points to. In regex mode, the worker will use regular expressions to determine the message destination.
+* **Message persistence and retries** \
+  Messages are sent to a NATS/Jetstream stream which will buffer messages and only release if they are acknowledged. This abstraction into an async architecture will guarantee an at-least-once delivery for client->server messages.
+* **Connection contexts** \
   The authorizer can return a context object for the connection if it authorizes it. This context will be included in every client to server message and be available for the downstream services to use.
+* **Forced disconnects** \
+  Sending a disconnect request via the respective route to any gateway will lead to the specified connection being forced to disconnect with the given reason. Useful if you want to enforce a new authorization.

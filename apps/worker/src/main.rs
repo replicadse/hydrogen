@@ -79,6 +79,25 @@ async fn endless_nats_consumer(
     Ok(())
 }
 
+trait RegexFindFirstMatching {
+    fn first_regex_matches(&self, msg: &spoderman_bus::nats::ClientMessage) -> std::result::Result<std::option::Option<&crate::config::DestinationRoute>, Box<dyn std::error::Error>>;
+}
+
+impl RegexFindFirstMatching for std::vec::Vec<crate::config::RegexRule> {
+    fn first_regex_matches(&self, msg: &spoderman_bus::nats::ClientMessage) -> std::result::Result<std::option::Option<&crate::config::DestinationRoute>, Box<dyn std::error::Error>> {
+        for rule in self {
+            let regex = match fancy_regex::Regex::new(&rule.regex) {
+                Ok(it) => {it},
+                Err(err) => return Err(Box::new(crate::error::InvalidRegexError::new(&err.to_string()))),
+            };
+            if regex.is_match(&msg.message)? {
+                return Ok(Some(&rule.route));
+            }
+        }
+        Ok(None)
+    }
+}
+
 fn handle_nats_message(
     instance: &str,
     config: &crate::config::Config,
@@ -90,8 +109,72 @@ fn handle_nats_message(
         },
     });
 
-    let mut re_req = ureq::post(&config.routes.rules_engine.endpoint);
-    for (k, v) in config.routes.rules_engine.headers.iter() {
+    match &config.engine_mode {
+        config::EngineMode::Dss { rules_engine } => {
+            handle_nats_message_dss_mode(instance, msg, &rules_engine)
+        },
+        config::EngineMode::Regex { rules } => {
+            let dest = rules.first_regex_matches(msg)?;
+            match dest {
+                Some(v) => {
+                    handle_nats_message_regex_mode(instance, msg, v)
+                },
+                None => {
+                    crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
+                        data: crate::logger::Event::DroppedMessageNoMatch {
+                            connection: &msg.connection_id.to_string(),
+                        },
+                    });
+                    Ok(())
+                }
+            }
+        }
+    }
+}
+
+fn handle_nats_message_regex_mode(
+    instance: &str,
+    msg: &spoderman_bus::nats::ClientMessage,
+    destination_route: &crate::config::DestinationRoute,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    let mut destination_req = ureq::post(&destination_route.endpoint);
+    for h in destination_route.headers.iter() {
+        destination_req = destination_req.set(h.0, h.1);
+    }
+
+    let forward_resp = destination_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
+        instance_id: msg.instance_id.clone(),
+        connection_id: msg.connection_id.clone(),
+        time: msg.time.clone(),
+        context: crate::routes::MessageContext {
+            authorizer: msg.context.authorizer.clone(),
+        },
+        message: msg.message.clone(),
+    })?)?;
+
+    crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
+        data: crate::logger::Event::DestinationRouteResponse {
+            connection: &msg.connection_id.to_string(),
+            response: forward_resp.status(),
+        },
+    });
+
+    match forward_resp.status() {
+        | 200 => Ok(()),
+        | _ => Err(Box::new(crate::error::ForwardRouteError::new(&format!(
+            "forward route error code {}",
+            forward_resp.status()
+        )))),
+    }
+}
+
+fn handle_nats_message_dss_mode(
+    instance: &str,
+    msg: &spoderman_bus::nats::ClientMessage,
+    rules_engine_route: &crate::config::RulesEngineRoute,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    let mut re_req = ureq::post(&rules_engine_route.endpoint);
+    for (k, v) in rules_engine_route.headers.iter() {
         re_req = re_req.set(k, v);
     }
 
@@ -120,12 +203,12 @@ fn handle_nats_message(
     }
     let re_response_parsed = serde_json::from_str::<crate::routes::RulesEngineResponse>(&re_response.into_string()?)?;
 
-    let mut forwerd_req = ureq::post(&re_response_parsed.endpoint);
+    let mut destination_req = ureq::post(&re_response_parsed.endpoint);
     for h in re_response_parsed.headers.iter() {
-        forwerd_req = forwerd_req.set(h.0, h.1);
+        destination_req = destination_req.set(h.0, h.1);
     }
 
-    let forward_resp = forwerd_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
+    let forward_resp = destination_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
         instance_id: msg.instance_id.clone(),
         connection_id: msg.connection_id.clone(),
         time: msg.time.clone(),
@@ -136,7 +219,7 @@ fn handle_nats_message(
     })?)?;
 
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
-        data: crate::logger::Event::ForwardRouteResponse {
+        data: crate::logger::Event::DestinationRouteResponse {
             connection: &msg.connection_id.to_string(),
             response: forward_resp.status(),
         },
