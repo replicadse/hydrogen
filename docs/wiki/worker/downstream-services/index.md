@@ -3,7 +3,7 @@
 `spoderman` will invoke a multitude of downstream services to process messages. Most of these are optional.
 
 
-## Rules engine (required)
+## Rules engine (required if in DSS mode)
 
 ### Request
 

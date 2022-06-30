@@ -35,9 +35,12 @@ pub async fn handler(
          auth_route: &std::option::Option<crate::config::Authorizer>|
          -> Result<std::option::Option<crate::routes::AuthorizerResponse>, Box<dyn std::error::Error>> {
             match auth_route {
-                | Some(c) => {
-                    Ok(Some(invoke_authorizer_route(&instance, &c.endpoint, &c.headers, conn_id)?))
-                },
+                | Some(c) => Ok(Some(invoke_authorizer_route(
+                    &instance,
+                    &c.endpoint,
+                    &c.headers,
+                    conn_id,
+                )?)),
                 | None => Ok(None),
             }
         };
@@ -70,7 +73,7 @@ pub async fn handler(
 }
 
 fn invoke_authorizer_route(
-    instance:  &str,
+    instance: &str,
     endpoint: &str,
     headers: &std::collections::HashMap<String, String>,
     conn_id: &str,
