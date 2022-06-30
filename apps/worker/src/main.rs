@@ -80,15 +80,21 @@ async fn endless_nats_consumer(
 }
 
 trait RegexFindFirstMatching {
-    fn first_regex_matches(&self, msg: &spoderman_bus::nats::ClientMessage) -> std::result::Result<std::option::Option<&crate::config::DestinationRoute>, Box<dyn std::error::Error>>;
+    fn first_regex_matches(
+        &self,
+        msg: &spoderman_bus::nats::ClientMessage,
+    ) -> std::result::Result<std::option::Option<&crate::config::DestinationRoute>, Box<dyn std::error::Error>>;
 }
 
 impl RegexFindFirstMatching for std::vec::Vec<crate::config::RegexRule> {
-    fn first_regex_matches(&self, msg: &spoderman_bus::nats::ClientMessage) -> std::result::Result<std::option::Option<&crate::config::DestinationRoute>, Box<dyn std::error::Error>> {
+    fn first_regex_matches(
+        &self,
+        msg: &spoderman_bus::nats::ClientMessage,
+    ) -> std::result::Result<std::option::Option<&crate::config::DestinationRoute>, Box<dyn std::error::Error>> {
         for rule in self {
             let regex = match fancy_regex::Regex::new(&rule.regex) {
-                Ok(it) => {it},
-                Err(err) => return Err(Box::new(crate::error::InvalidRegexError::new(&err.to_string()))),
+                | Ok(it) => it,
+                | Err(err) => return Err(Box::new(crate::error::InvalidRegexError::new(&err.to_string()))),
             };
             if regex.is_match(&msg.message)? {
                 return Ok(Some(&rule.route));
@@ -110,25 +116,21 @@ fn handle_nats_message(
     });
 
     match &config.engine_mode {
-        config::EngineMode::Dss { rules_engine } => {
-            handle_nats_message_dss_mode(instance, msg, &rules_engine)
-        },
-        config::EngineMode::Regex { rules } => {
+        | config::EngineMode::Dss { rules_engine } => handle_nats_message_dss_mode(instance, msg, &rules_engine),
+        | config::EngineMode::Regex { rules } => {
             let dest = rules.first_regex_matches(msg)?;
             match dest {
-                Some(v) => {
-                    handle_nats_message_regex_mode(instance, msg, v)
-                },
-                None => {
+                | Some(v) => handle_nats_message_regex_mode(instance, msg, v),
+                | None => {
                     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
                         data: crate::logger::Event::DroppedMessageNoMatch {
                             connection: &msg.connection_id.to_string(),
                         },
                     });
                     Ok(())
-                }
+                },
             }
-        }
+        },
     }
 }
 

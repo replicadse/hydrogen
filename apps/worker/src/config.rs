@@ -15,12 +15,8 @@ pub enum Queue {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EngineMode {
-    Regex {
-        rules: std::vec::Vec<RegexRule>,
-    },
-    Dss {
-        rules_engine: RulesEngineRoute,
-    },
+    Regex { rules: std::vec::Vec<RegexRule> },
+    Dss { rules_engine: RulesEngineRoute },
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
