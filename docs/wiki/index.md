@@ -8,7 +8,7 @@ As `spoderman` now gets more complete in it's feature set, there are final prepa
 
 There will be `1.0.0-alpha.x` releases first with the first coming up end of June 2022. These are meant to be for testing purposes only and will primarily serve for identifying which things are still missing that have not come up yet. \
 Following the alpha releases, there will be a beta phase. The feature set for v1.0 will be complete upon entering the beta phase and there will only be fixes made to the existing features. At this point in time, the documentation about the software will also be much more in depth and detailed although it might not be 100% complete. \
-Following the beta phase with release candidates, v1.0 will be published. Following the v1.0 release, `spoderman` will strictly adhere to the `semver v3` versioning scheme.
+Following the beta phase with release candidates, v1.0 will be published. Following the v1.0 release, `spoderman` will strictly adhere to the `semver v2` versioning scheme.
 
 ## Roadmap to v1
 

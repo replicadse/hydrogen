@@ -37,7 +37,7 @@ engine_mode:
 
 |Key|Required|Description|Type|Example|
 |-- |-- |-- |-- |-- |
-|version|yes|The version of this config.|semver v3 compatible string|`1.0.0`|
+|version|yes|The version of this config.|semver v2 compatible string|`1.0.0`|
 |queue|yes|The config for consuming messages.|object||
 |queue.nats|yes|The `NATS` configuration.|object||
 |queue.nats.endpoint|yes|The endpoint on which to connect to `NATS`.|URL string|`nats://spoderman-nats:4222`|
