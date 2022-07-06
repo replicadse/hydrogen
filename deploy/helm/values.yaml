@@ -46,14 +46,14 @@ apps:
               endpoint: "http://spoderman-dss-disconnect:8080"
               headers:
                 Authorization: dss-disconnect-key
-  worker:
+  mproc:
     enabled: false
     deployment:
       revisions: 0
       strategy:
         type: Recreate
       image:
-        ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-worker:nightly"
+        ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-mproc:nightly"
         pull_policy: Always
     hpa:
       min: 1

@@ -12,7 +12,7 @@ jobs:
       matrix:
         include:
         - dir: "apps/gateway"
-        - dir: "apps/worker"
+        - dir: "apps/mproc"
         - dir: "libs/bus"
         - dir: "libs/error"
     steps:
@@ -29,7 +29,7 @@ jobs:
       matrix:
         include:
         - app: "gateway"
-        - app: "worker"
+        - app: "mproc"
     steps:
       - uses: actions/checkout@v3
       - name: install earthly
@@ -56,7 +56,7 @@ jobs:
       matrix:
         include:
         - app: "gateway"
-        - app: "worker"
+        - app: "mproc"
     steps:
       - name: download image
         uses: actions/download-artifact@v2
@@ -91,7 +91,7 @@ jobs:
       matrix:
         include:
         - app: "gateway"
-        - app: "worker"
+        - app: "mproc"
     steps:
       - name: download image
         uses: actions/download-artifact@v2

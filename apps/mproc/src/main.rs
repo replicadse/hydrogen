@@ -51,8 +51,8 @@ async fn endless_nats_consumer(
         .await
         .unwrap();
     let consumer = stream
-        .get_or_create_consumer("worker", async_nats::jetstream::consumer::pull::Config {
-            durable_name: Some("worker".to_owned()),
+        .get_or_create_consumer("mproc", async_nats::jetstream::consumer::pull::Config {
+            durable_name: Some("mproc".to_owned()),
             deliver_policy: async_nats::jetstream::consumer::DeliverPolicy::All,
             max_deliver: 1,
             max_ack_pending: 256,

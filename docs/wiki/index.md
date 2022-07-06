@@ -20,7 +20,7 @@ All work, features and generally everything that will be included in / done befo
   Client messages are sent from the client, server messages are sent towards any running instance of spoderman and forwarded towards the client from the instance that holds it's connection. \
   Avoiding persistent connections towards your service is crucial to reach a near zero downtime when deploying and an increased consumer satisfaction.
 * **Flexible routing** \
-  You can choose from letting the worker application run in `regex` or in `dss` mode. Regex mode will evaluate the messages based on a regular expression and, if it matches, forward the message to the corresponding service. DSS mode will invoke a separate rules engine service that determines and returns the destination for the message which the server then invokes.
+  You can choose from letting the mproc application run in `regex` or in `dss` mode. Regex mode will evaluate the messages based on a regular expression and, if it matches, forward the message to the corresponding service. DSS mode will invoke a separate rules engine service that determines and returns the destination for the message which the server then invokes.
 * **Built-in authorizer** \
   It brings built in authorization that is performed before a persistent connection is established.
 * **OnConnect/OnDisconnect services** \
@@ -30,7 +30,7 @@ All work, features and generally everything that will be included in / done befo
 * **Easy installs via HELM charts** \
   It's easy to install the application - just do a helm install with the appropriate chart values and you're ready to go.
 * **Multi language / framework support** \
-  By deciding against a DSL or other language/framework lock-ins for routing etc., you can implement authorization, connect, message routing, message handling and disconnect in your own favorite language. The only implementations required are the routing service and at least one destination for messages it points to. In regex mode, the worker will use regular expressions to determine the message destination.
+  By deciding against a DSL or other language/framework lock-ins for routing etc., you can implement authorization, connect, message routing, message handling and disconnect in your own favorite language. The only implementations required are the routing service and at least one destination for messages it points to. In regex mode, the mproc will use regular expressions to determine the message destination.
 * **Message persistence and retries** \
   Messages are sent to a NATS/Jetstream stream which will buffer messages and only release if they are acknowledged. This abstraction into an async architecture will guarantee an at-least-once delivery for client->server messages.
 * **Connection contexts** \

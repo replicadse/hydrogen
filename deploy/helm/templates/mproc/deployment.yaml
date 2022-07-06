@@ -1,0 +1,36 @@
+{{- if .Values.apps.mproc.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-spoderman-mproc
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-spoderman-mproc
+  strategy:
+    {{- toYaml .Values.apps.mproc.deployment.strategy | nindent 4 }}
+  revisionHistoryLimit: {{ .Values.apps.mproc.deployment.revisions }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-spoderman-mproc
+    spec:
+      containers:
+        - name: spoderman-mproc
+          image: {{ .Values.apps.mproc.deployment.image.ref }}
+          imagePullPolicy: {{ .Values.apps.mproc.deployment.image.pull_policy }}
+          volumeMounts:
+            - mountPath: "/app/config"
+              name: config
+              readOnly: true
+          ports:
+            - containerPort: 8080
+      volumes:
+        - name: config
+          secret:
+            secretName: {{ .Release.Name }}-spoderman-mproc-config
+            optional: false
+            items:
+              - key: config
+                path: config.yaml
+{{ end }}

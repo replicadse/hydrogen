@@ -18,7 +18,7 @@ jobs:
       matrix:
         include:
         - app: "gateway"
-        - app: "worker"
+        - app: "mproc"
     steps:
       - uses: actions/checkout@v3
       - name: install earthly

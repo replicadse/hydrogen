@@ -17,12 +17,12 @@ updates:
       time: "04:00"
 
   - package-ecosystem: cargo
-    directory: "./apps/worker"
+    directory: "./apps/mproc"
     schedule:
       interval: daily
       time: "04:00"
   - package-ecosystem: docker
-    directory: "./apps/worker/docker"
+    directory: "./apps/mproc/docker"
     schedule:
       interval: daily
       time: "04:00"

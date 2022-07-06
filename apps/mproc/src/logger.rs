@@ -2,15 +2,15 @@
 #[serde(rename_all = "snake_case")]
 pub struct LogMessage<'a> {
     time: String,
-    worker_instance: &'a str,
+    mproc_instance: &'a str,
     data: Data<'a>,
 }
 
 impl<'a> LogMessage<'a> {
-    pub fn now(worker_instance: &'a str, data: Data<'a>) -> () {
+    pub fn now(mproc_instance: &'a str, data: Data<'a>) -> () {
         Self {
             time: chrono::Utc::now().to_rfc3339(),
-            worker_instance,
+            mproc_instance,
             data,
         }
         .log()
