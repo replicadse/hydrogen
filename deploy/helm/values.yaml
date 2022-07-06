@@ -74,12 +74,12 @@ apps:
               rules:
                 - regex: ".*"
                   route:
-                    endpoint: "http://spoderman-dss-sink-a:8083"
+                    endpoint: "http://spoderman-dss-sink-a:8080"
                     headers:
                       Authorization: dss-sink-a-key
             # dss:
             #   rules_engine:
-            #     endpoint: "http://spoderman-dss-rules-engine:8082"
+            #     endpoint: "http://spoderman-dss-rules-engine:8080"
             #     headers:
             #       Authorization: dss-rules-engine-key
 
