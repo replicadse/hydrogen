@@ -100,7 +100,7 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
             .service(crate::handlers::health::handler)
     })
     .bind(&bind)?
-    // .disable_signals()
+    .disable_signals()
     .run()
     .await?;
     Ok(())
