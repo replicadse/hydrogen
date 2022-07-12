@@ -12,6 +12,6 @@ RUN cargo build --release
 
 FROM gcr.io/distroless/cc
 WORKDIR /app
-COPY --from=build-env /app/apps/mproc/target/release/spoderman-mproc .
+COPY --from=build-env /app/apps/mproc/target/release/hydrogen-mproc .
 USER 1000
-CMD ["./spoderman-mproc", "work", "-c", "./config/config.yaml"]
+CMD ["./hydrogen-mproc", "work", "-c", "./config/config.yaml"]

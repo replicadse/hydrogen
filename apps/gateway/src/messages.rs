@@ -64,9 +64,9 @@ pub struct ServerDisconnect {
     pub reason: String,
 }
 
-impl Into<spoderman_bus::redis::Message> for ServerMessage {
-    fn into(self) -> spoderman_bus::redis::Message {
-        spoderman_bus::redis::Message::S2CMessage {
+impl Into<hydrogen_bus::redis::Message> for ServerMessage {
+    fn into(self) -> hydrogen_bus::redis::Message {
+        hydrogen_bus::redis::Message::S2CMessage {
             connection: self.connection.to_string(),
             time: self.time,
             message: self.message,
@@ -74,9 +74,9 @@ impl Into<spoderman_bus::redis::Message> for ServerMessage {
     }
 }
 
-impl Into<spoderman_bus::redis::Message> for ServerDisconnect {
-    fn into(self) -> spoderman_bus::redis::Message {
-        spoderman_bus::redis::Message::SDisconnect {
+impl Into<hydrogen_bus::redis::Message> for ServerDisconnect {
+    fn into(self) -> hydrogen_bus::redis::Message {
+        hydrogen_bus::redis::Message::SDisconnect {
             connection: self.connection.to_string(),
             time: self.time,
             reason: self.reason,
@@ -84,9 +84,9 @@ impl Into<spoderman_bus::redis::Message> for ServerDisconnect {
     }
 }
 
-impl Into<spoderman_bus::nats::ConnectionContext> for ConnectionContext {
-    fn into(self) -> spoderman_bus::nats::ConnectionContext {
-        spoderman_bus::nats::ConnectionContext {
+impl Into<hydrogen_bus::nats::ConnectionContext> for ConnectionContext {
+    fn into(self) -> hydrogen_bus::nats::ConnectionContext {
+        hydrogen_bus::nats::ConnectionContext {
             authorizer: self.authorizer,
         }
     }

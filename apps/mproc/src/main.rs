@@ -64,7 +64,7 @@ async fn endless_nats_consumer(
     let mut messages = consumer.stream().unwrap();
     while let Some(Ok(message)) = messages.next().await {
         let msg_str = String::from_utf8(message.payload.to_vec())?;
-        let msg_typed: spoderman_bus::nats::ClientMessage = serde_json::from_str(&msg_str)?;
+        let msg_typed: hydrogen_bus::nats::ClientMessage = serde_json::from_str(&msg_str)?;
         match handle_nats_message(instance, config, &msg_typed) {
             | Ok(..) => {
                 message.ack().await.unwrap();
@@ -82,14 +82,14 @@ async fn endless_nats_consumer(
 trait RegexFindFirstMatching {
     fn first_regex_matches(
         &self,
-        msg: &spoderman_bus::nats::ClientMessage,
+        msg: &hydrogen_bus::nats::ClientMessage,
     ) -> std::result::Result<std::option::Option<&crate::config::DestinationRoute>, Box<dyn std::error::Error>>;
 }
 
 impl RegexFindFirstMatching for std::vec::Vec<crate::config::RegexRule> {
     fn first_regex_matches(
         &self,
-        msg: &spoderman_bus::nats::ClientMessage,
+        msg: &hydrogen_bus::nats::ClientMessage,
     ) -> std::result::Result<std::option::Option<&crate::config::DestinationRoute>, Box<dyn std::error::Error>> {
         for rule in self {
             let regex = match fancy_regex::Regex::new(&rule.regex) {
@@ -107,7 +107,7 @@ impl RegexFindFirstMatching for std::vec::Vec<crate::config::RegexRule> {
 fn handle_nats_message(
     instance: &str,
     config: &crate::config::Config,
-    msg: &spoderman_bus::nats::ClientMessage,
+    msg: &hydrogen_bus::nats::ClientMessage,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
         data: crate::logger::Event::Message {
@@ -136,7 +136,7 @@ fn handle_nats_message(
 
 fn handle_nats_message_regex_mode(
     instance: &str,
-    msg: &spoderman_bus::nats::ClientMessage,
+    msg: &hydrogen_bus::nats::ClientMessage,
     destination_route: &crate::config::DestinationRoute,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut destination_req = ureq::post(&destination_route.endpoint);
@@ -172,7 +172,7 @@ fn handle_nats_message_regex_mode(
 
 fn handle_nats_message_dss_mode(
     instance: &str,
-    msg: &spoderman_bus::nats::ClientMessage,
+    msg: &hydrogen_bus::nats::ClientMessage,
     rules_engine_route: &crate::config::RulesEngineRoute,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut re_req = ureq::post(&rules_engine_route.endpoint);

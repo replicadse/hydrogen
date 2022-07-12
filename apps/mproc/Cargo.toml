@@ -1,12 +1,12 @@
 [package]
-name = "spoderman-mproc"
+name = "hydrogen-mproc"
 version = "0.0.0"
 authors = ["alexander weber <aw@voidpointergroup.com>"]
 edition = "2018"
 
 [dependencies]
-spoderman-bus = { path = "../../libs/bus" }
-spoderman-error = { path = "../../libs/error" }
+hydrogen-bus = { path = "../../libs/bus" }
+hydrogen-error = { path = "../../libs/error" }
 
 ureq = "^2.4"
 clap = "^3.2"

@@ -1,6 +1,6 @@
 # Downstream services
 
-`spoderman` will invoke a multitude of downstream services to process messages. Most of these are optional.
+`hydrogen` will invoke a multitude of downstream services to process messages. Most of these are optional.
 
 
 ## Authorizer (optional)

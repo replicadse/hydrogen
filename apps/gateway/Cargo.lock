@@ -1722,7 +1722,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "spoderman-bus"
+name = "hydrogen-bus"
 version = "0.0.0"
 dependencies = [
  "serde",
@@ -1730,11 +1730,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "spoderman-error"
+name = "hydrogen-error"
 version = "0.0.0"
 
 [[package]]
-name = "spoderman-gateway"
+name = "hydrogen-gateway"
 version = "0.0.0"
 dependencies = [
  "actix",
@@ -1749,8 +1749,8 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "spoderman-bus",
- "spoderman-error",
+ "hydrogen-bus",
+ "hydrogen-error",
  "ureq",
  "uuid",
 ]

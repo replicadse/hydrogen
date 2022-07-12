@@ -1,5 +1,5 @@
-spoderman_error::make_error!(UnknownCommandError);
-spoderman_error::make_error!(MissingArgumentError);
-spoderman_error::make_error!(RulesEngineRouteError);
-spoderman_error::make_error!(ForwardRouteError);
-spoderman_error::make_error!(InvalidRegexError);
+hydrogen_error::make_error!(UnknownCommandError);
+hydrogen_error::make_error!(MissingArgumentError);
+hydrogen_error::make_error!(RulesEngineRouteError);
+hydrogen_error::make_error!(ForwardRouteError);
+hydrogen_error::make_error!(InvalidRegexError);

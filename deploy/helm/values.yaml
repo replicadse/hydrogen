@@ -9,7 +9,7 @@ apps:
       strategy:
         type: Recreate
       image:
-        ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-gateway:nightly"
+        ref: "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly"
         pull_policy: Always
     hpa:
       min: 1
@@ -28,22 +28,22 @@ apps:
             max_out_message_size: 262144 # 256kb
 
           nats:
-            endpoint: "nats://spoderman-nats:4222"
+            endpoint: "nats://hydrogen-nats:4222"
             stream: client
           redis:
-            endpoint: "redis://spoderman-redis-master:6379"
+            endpoint: "redis://hydrogen-redis-master:6379"
 
           routes:
             authorizer:
-              endpoint: "http://spoderman-dss-authorizer:8080"
+              endpoint: "http://hydrogen-dss-authorizer:8080"
               headers:
                 Authorization: dss-authorizer-key
             connect:
-              endpoint: "http://spoderman-dss-connect:8080"
+              endpoint: "http://hydrogen-dss-connect:8080"
               headers:
                 Authorization: dss-connect-key
             disconnect:
-              endpoint: "http://spoderman-dss-disconnect:8080"
+              endpoint: "http://hydrogen-dss-disconnect:8080"
               headers:
                 Authorization: dss-disconnect-key
   mproc:
@@ -53,7 +53,7 @@ apps:
       strategy:
         type: Recreate
       image:
-        ref: "harbor.chinook.k8s.voidpointergroup.com/spoderman/spoderman-mproc:nightly"
+        ref: "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly"
         pull_policy: Always
     hpa:
       min: 1
@@ -66,7 +66,7 @@ apps:
 
           queue:
             nats:
-              endpoint: "nats://spoderman-nats:4222"
+              endpoint: "nats://hydrogen-nats:4222"
               stream: client
 
           engine_mode:
@@ -74,12 +74,12 @@ apps:
               rules:
                 - regex: ".*"
                   route:
-                    endpoint: "http://spoderman-dss-sink-a:8080"
+                    endpoint: "http://hydrogen-dss-sink-a:8080"
                     headers:
                       Authorization: dss-sink-a-key
             # dss:
             #   rules_engine:
-            #     endpoint: "http://spoderman-dss-rules-engine:8080"
+            #     endpoint: "http://hydrogen-dss-rules-engine:8080"
             #     headers:
             #       Authorization: dss-rules-engine-key
 

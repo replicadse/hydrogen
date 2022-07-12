@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-spoderman-gateway
+  name: {{ .Release.Name }}-hydrogen-gateway
 spec:
   type: {{ .Values.apps.gateway.service.type }}
   ports:
@@ -10,5 +10,5 @@ spec:
     protocol: TCP
     targetPort: {{ .Values.apps.gateway.service.port }}
   selector:
-    app: {{ .Release.Name }}-spoderman-gateway
+    app: {{ .Release.Name }}-hydrogen-gateway
 {{ end }}

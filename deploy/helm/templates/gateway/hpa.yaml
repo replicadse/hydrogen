@@ -2,13 +2,13 @@
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ .Release.Name }}-spoderman-gateway
+  name: {{ .Release.Name }}-hydrogen-gateway
 spec:
   maxReplicas: {{ .Values.apps.gateway.hpa.max }}
   minReplicas: {{ .Values.apps.gateway.hpa.max }}
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .Release.Name }}-spoderman-gateway
+    name: {{ .Release.Name }}-hydrogen-gateway
   targetCPUUtilizationPercentage: {{ .Values.apps.gateway.hpa.cpu_percentage }}
 {{ end }}

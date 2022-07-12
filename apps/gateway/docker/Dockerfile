@@ -13,6 +13,6 @@ RUN cargo build --release
 
 FROM gcr.io/distroless/cc
 WORKDIR /app
-COPY --from=build-env /app/apps/gateway/target/release/spoderman-gateway .
+COPY --from=build-env /app/apps/gateway/target/release/hydrogen-gateway .
 USER 1000
-CMD ["./spoderman-gateway", "serve", "-c", "./config/config.yaml"]
+CMD ["./hydrogen-gateway", "serve", "-c", "./config/config.yaml"]

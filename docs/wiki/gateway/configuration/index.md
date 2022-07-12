@@ -13,22 +13,22 @@ server:
   max_out_message_size: 262144 # 256kb
 
 nats:
-  endpoint: "nats://spoderman-nats:4222"
+  endpoint: "nats://hydrogen-nats:4222"
   stream: client
 redis:
-  endpoint: "redis://spoderman-redis-master:6379"
+  endpoint: "redis://hydrogen-redis-master:6379"
 
 routes:
   authorizer:
-    endpoint: "http://spoderman-dss-authorizer:8080"
+    endpoint: "http://hydrogen-dss-authorizer:8080"
     headers:
       Authorization: dss-authorizer-key
   connect:
-    endpoint: "http://spoderman-dss-connect:8080"
+    endpoint: "http://hydrogen-dss-connect:8080"
     headers:
       Authorization: dss-connect-key
   disconnect:
-    endpoint: "http://spoderman-dss-disconnect:8080"
+    endpoint: "http://hydrogen-dss-disconnect:8080"
     headers:
       Authorization: dss-disconnect-key
 ```
@@ -45,17 +45,17 @@ routes:
 |server.stats_interval_sec|no|The seconds in between stats reporting. No stats are reported if key is missing.|u16|`30`|
 |server.max_out_message_size|yes|The maximum message size in bytes the server will accept from the client.|u64|`262144` (=256*1024)|
 |nats|yes|The `NATS` configuration.|object||
-|nats.endpoint|yes|The endpoint on which to connect to `NATS`.|URL string|`nats://spoderman-nats:4222`|
+|nats.endpoint|yes|The endpoint on which to connect to `NATS`.|URL string|`nats://hydrogen-nats:4222`|
 |nats.stream|yes|The stream name that will be used for client message brokering.|string|`client`|
 |redis|yes|The `redis` configuration.|object||
-|redis.endpoint|yes|The endpoint on which to connect to `redis`.|URL string|`redis://spoderman-redis-master:6379`|
+|redis.endpoint|yes|The endpoint on which to connect to `redis`.|URL string|`redis://hydrogen-redis-master:6379`|
 |routes|yes|The downstream service routes.|object||
 |routes.authorizer|no|The authorizer downstream service.|object||
-|routes.authorizer.endpoint|yes|The authorizer endpoint.|URL string|`http://spoderman-dss-authorizer:8080`|
+|routes.authorizer.endpoint|yes|The authorizer endpoint.|URL string|`http://hydrogen-dss-authorizer:8080`|
 |routes.authorizer.headers|yes|Headers to send to the authorizer on invocation.|Map<String, String>||
 |routes.connect|no|The connect downstream service.|object||
-|routes.connect.endpoint|yes|The connect endpoint.|URL string|`http://spoderman-dss-connect:8080`|
+|routes.connect.endpoint|yes|The connect endpoint.|URL string|`http://hydrogen-dss-connect:8080`|
 |routes.connect.headers|yes|Headers to send to the connect dss on invocation.|Map<String, String>||
 |routes.disconnect|no|The disconnect downstream service.|object||
-|routes.disconnect.endpoint|yes|The disconnect endpoint.|URL string|`http://spoderman-dss-disconnect:8080`|
+|routes.disconnect.endpoint|yes|The disconnect endpoint.|URL string|`http://hydrogen-dss-disconnect:8080`|
 |routes.disconnect.headers|yes|Headers to send to the disconnect dss on invocation.|Map<String, String>||
