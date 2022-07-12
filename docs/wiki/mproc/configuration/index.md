@@ -13,21 +13,19 @@ queue:
 engine_mode:
   regex:
     rules:
-      ## forward commands to sink b
       - regex: "^!"
         route:
-          endpoint: "http://localhost:8084"
+          endpoint: "http://hydrogen-dss-sink-b:8080"
           headers:
             Authorization: dss-sink-b-key
-      # catch all rule to sink a
       - regex: ".*"
         route:
-          endpoint: "http://localhost:8083"
+          endpoint: "http://hydrogen-dss-sink-a:8080"
           headers:
             Authorization: dss-sink-a-key
   # dss:
   #   rules_engine:
-  #     endpoint: "http://localhost:8082"
+  #     endpoint: "http://hydrogen-dss-rules-engine:8080"
   #     headers:
   #       Authorization: dss-rules-engine-key
 
