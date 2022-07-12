@@ -934,6 +934,40 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 
 [[package]]
+name = "hydrogen-bus"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "hydrogen-error"
+version = "0.0.0"
+
+[[package]]
+name = "hydrogen-gateway"
+version = "0.0.0"
+dependencies = [
+ "actix",
+ "actix-web",
+ "actix-web-actors",
+ "chrono",
+ "clap",
+ "futures",
+ "hydrogen-bus",
+ "hydrogen-error",
+ "json",
+ "nats",
+ "redis",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "ureq",
+ "uuid",
+]
+
+[[package]]
 name = "idna"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1722,40 +1756,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hydrogen-bus"
-version = "0.0.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "hydrogen-error"
-version = "0.0.0"
-
-[[package]]
-name = "hydrogen-gateway"
-version = "0.0.0"
-dependencies = [
- "actix",
- "actix-web",
- "actix-web-actors",
- "chrono",
- "clap",
- "futures",
- "json",
- "nats",
- "redis",
- "serde",
- "serde_json",
- "serde_yaml",
- "hydrogen-bus",
- "hydrogen-error",
- "ureq",
- "uuid",
-]
-
-[[package]]
 name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1952,9 +1952,9 @@ checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
 name = "ureq"
-version = "2.4.0"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9399fa2f927a3d327187cbd201480cee55bee6ac5d3c77dd27f0c6814cff16d5"
+checksum = "b97acb4c28a254fd7a4aeec976c46a7fa404eac4d7c134b30c75144846d7cb8f"
 dependencies = [
  "base64",
  "chunked_transfer",
