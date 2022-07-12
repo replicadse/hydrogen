@@ -444,6 +444,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "hydrogen-bus"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "hydrogen-error"
+version = "0.0.0"
+
+[[package]]
+name = "hydrogen-mproc"
+version = "0.0.0"
+dependencies = [
+ "async-nats",
+ "chrono",
+ "clap",
+ "fancy-regex",
+ "futures",
+ "hydrogen-bus",
+ "hydrogen-error",
+ "json",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tokio",
+ "ureq",
+ "uuid",
+]
+
+[[package]]
 name = "idna"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -865,9 +897,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.81"
+version = "1.0.82"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b7ce2b32a1aed03c558dc61a5cd328f15aff2dbc17daad8fb8af04d2100e15c"
+checksum = "82c2c1fdcd807d1098552c5b9a36e425e42e9fbd7c6a37a8425f390f781f7fa7"
 dependencies = [
  "itoa",
  "ryu",
@@ -981,38 +1013,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c01a0c15da1b0b0e1494112e7af814a678fec9bd157881b49beac661e9b6f32"
 dependencies = [
  "der",
-]
-
-[[package]]
-name = "hydrogen-bus"
-version = "0.0.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "hydrogen-error"
-version = "0.0.0"
-
-[[package]]
-name = "hydrogen-mproc"
-version = "0.0.0"
-dependencies = [
- "async-nats",
- "chrono",
- "clap",
- "fancy-regex",
- "futures",
- "json",
- "serde",
- "serde_json",
- "serde_yaml",
- "hydrogen-bus",
- "hydrogen-error",
- "tokio",
- "ureq",
- "uuid",
 ]
 
 [[package]]
