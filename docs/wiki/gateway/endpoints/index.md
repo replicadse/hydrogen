@@ -1,6 +1,6 @@
 # Endpoints
 
-## `WSS @ /ws`
+## `WS @ /ws`
 
 This is the primary socket endpoint clients need connect to. It will trigger the connection pipeline before and during connect and trigger a disconnect event on client disconnect. \
 Messages are sent through the open connections to this endpoint both from client to server and vice versa. \
