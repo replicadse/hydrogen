@@ -9,7 +9,7 @@ apps:
       strategy:
         type: Recreate
       image:
-        ref: "ghcr.io/voidpointergroup/hydrogen/hydrogen-gateway:nightly"
+        ref: "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly"
         pull_policy: IfNotPresent
     hpa:
       min: 1
@@ -53,7 +53,7 @@ apps:
       strategy:
         type: Recreate
       image:
-        ref: "ghcr.io/voidpointergroup/hydrogen/hydrogen-mproc:nightly"
+        ref: "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly"
         pull_policy: IfNotPresent
     hpa:
       min: 1
