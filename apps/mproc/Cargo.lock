@@ -165,9 +165,9 @@ checksum = "fff857943da45f546682664a79488be82e69e43c1a7a2307679ab9afb3a66d2e"
 
 [[package]]
 name = "clap"
-version = "3.2.6"
+version = "3.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f1fe12880bae935d142c8702d500c63a4e8634b6c3c57ad72bf978fc7b6249a"
+checksum = "29e724a68d9319343bb3328c9cc2dfde263f4b3142ee1059a9980580171c954b"
 dependencies = [
  "atty",
  "bitflags",
@@ -441,6 +441,38 @@ dependencies = [
  "bytes",
  "fnv",
  "itoa",
+]
+
+[[package]]
+name = "hydrogen-bus"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "hydrogen-error"
+version = "0.0.0"
+
+[[package]]
+name = "hydrogen-mproc"
+version = "0.0.0"
+dependencies = [
+ "async-nats",
+ "chrono",
+ "clap",
+ "fancy-regex",
+ "futures",
+ "hydrogen-bus",
+ "hydrogen-error",
+ "json",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tokio",
+ "ureq",
+ "uuid",
 ]
 
 [[package]]
@@ -981,38 +1013,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c01a0c15da1b0b0e1494112e7af814a678fec9bd157881b49beac661e9b6f32"
 dependencies = [
  "der",
-]
-
-[[package]]
-name = "hydrogen-bus"
-version = "0.0.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "hydrogen-error"
-version = "0.0.0"
-
-[[package]]
-name = "hydrogen-mproc"
-version = "0.0.0"
-dependencies = [
- "async-nats",
- "chrono",
- "clap",
- "fancy-regex",
- "futures",
- "json",
- "serde",
- "serde_json",
- "serde_yaml",
- "hydrogen-bus",
- "hydrogen-error",
- "tokio",
- "ureq",
- "uuid",
 ]
 
 [[package]]
