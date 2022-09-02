@@ -14,7 +14,8 @@ server:
 
 nats:
   endpoint: "nats://hydrogen-nats:4222"
-  stream: client
+  stream: "hydrogen"
+
 redis:
   endpoint: "redis://hydrogen-redis-master:6379"
 
@@ -46,7 +47,7 @@ routes:
 |server.max_out_message_size|yes|The maximum message size in bytes the server will accept from the client.|u64|`262144` (=256*1024)|
 |nats|yes|The `NATS` configuration.|object||
 |nats.endpoint|yes|The endpoint on which to connect to `NATS`.|URL string|`nats://hydrogen-nats:4222`|
-|nats.stream|yes|The stream name that will be used for client message brokering.|string|`client`|
+|nats.stream|yes|The stream name that will be used for client message brokering.|string|`hydrogen`|
 |redis|yes|The `redis` configuration.|object||
 |redis.endpoint|yes|The endpoint on which to connect to `redis`.|URL string|`redis://hydrogen-redis-master:6379`|
 |routes|yes|The downstream service routes.|object||

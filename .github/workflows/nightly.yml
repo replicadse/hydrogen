@@ -22,6 +22,7 @@ jobs:
       - name: install earthly
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.6.14/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
       - name: fmt
+        working-directory: ./code
         run: earthly +fmt --toolchain=nightly --sub=${{ matrix.dir }}
 
   build:
@@ -37,6 +38,7 @@ jobs:
       - name: install earthly
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.6.14/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
       - name: build image
+        working-directory: ./code
         run: earthly +image --toolchain=nightly --sub=./apps/${{ matrix.app }} --version=0.1.0 --tag="voidpointergroup/hydrogen-${{ matrix.app }}:nightly"
       - name: save image
         run: |-

@@ -12,7 +12,7 @@ rust:
 
 repo:
   FROM +rust
-  WORKDIR /app
+  WORKDIR /repo
   COPY . .
 
 image:
