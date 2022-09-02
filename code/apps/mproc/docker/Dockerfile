@@ -3,16 +3,18 @@ ARG toolchain
 ARG version
 RUN rustup default $toolchain
 
-WORKDIR /app
-COPY . .
-WORKDIR /app/apps/gateway
-RUN ls -algh /app
+WORKDIR /code
+COPY ./.rust ./.rust
+COPY ./libs ./libs
+COPY ./apps/mproc ./apps/mproc
+RUN ls -alghR /code
+WORKDIR /code/apps/mproc
 RUN sed 's/version = "0.0.0"/version = "'$version'"/g' Cargo.toml > Cargo.toml.tmp
 RUN mv Cargo.toml.tmp Cargo.toml
 RUN cargo build --release
 
 FROM gcr.io/distroless/cc
 WORKDIR /app
-COPY --from=build-env /app/apps/gateway/target/release/hydrogen-gateway .
+COPY --from=build-env /code/apps/mproc/target/release/hydrogen-mproc .
 USER 1000
-CMD ["./hydrogen-gateway", "serve", "-c", "./config/config.yaml"]
+CMD ["./hydrogen-mproc", "work", "-c", "./config/config.yaml"]

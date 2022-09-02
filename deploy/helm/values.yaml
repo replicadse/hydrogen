@@ -10,7 +10,7 @@ apps:
         type: Recreate
       image:
         ref: "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly"
-        pull_policy: IfNotPresent
+        pull_policy: Always
     hpa:
       min: 1
       max: 1
@@ -29,7 +29,8 @@ apps:
 
           nats:
             endpoint: "nats://hydrogen-nats:4222"
-            stream: client
+            stream: "05b42eec8d834f4f8be226825fd7fecf"
+
           redis:
             endpoint: "redis://hydrogen-redis-master:6379"
 
@@ -54,7 +55,7 @@ apps:
         type: Recreate
       image:
         ref: "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly"
-        pull_policy: IfNotPresent
+        pull_policy: Always
     hpa:
       min: 1
       max: 1
@@ -67,7 +68,7 @@ apps:
           queue:
             nats:
               endpoint: "nats://hydrogen-nats:4222"
-              stream: client
+              stream: "05b42eec8d834f4f8be226825fd7fecf"
 
           engine_mode:
             regex:

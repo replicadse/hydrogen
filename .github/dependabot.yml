@@ -6,34 +6,34 @@
 version: 2
 updates:
   - package-ecosystem: cargo
-    directory: "./apps/gateway"
+    directory: "./code/apps/gateway"
     schedule:
       interval: daily
       time: "04:00"
   - package-ecosystem: docker
-    directory: "./apps/gateway/docker"
+    directory: "./code/apps/gateway/docker"
     schedule:
       interval: daily
       time: "04:00"
 
   - package-ecosystem: cargo
-    directory: "./apps/mproc"
+    directory: "./code/apps/mproc"
     schedule:
       interval: daily
       time: "04:00"
   - package-ecosystem: docker
-    directory: "./apps/mproc/docker"
+    directory: "./code/apps/mproc/docker"
     schedule:
       interval: daily
       time: "04:00"
 
   - package-ecosystem: cargo
-    directory: "./libs/bus"
+    directory: "./code/libs/bus"
     schedule:
       interval: daily
       time: "04:00"
   - package-ecosystem: cargo
-    directory: "./libs/error"
+    directory: "./code/libs/error"
     schedule:
       interval: daily
       time: "04:00"

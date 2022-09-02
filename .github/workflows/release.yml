@@ -24,7 +24,8 @@ jobs:
       - name: install earthly
         run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.6.14/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
       - name: build image
-        run: earthly +image --toolchain=nightly --sub=./apps/${{ matrix.app }} --version=${{ github.event.inputs.version }} --tag="voidpointergroup/hydrogen-${{ matrix.app }}:${{ github.event.inputs.tag }}"
+        working-directory: ./code
+        run: earthly +image --toolchain=nightly --sub=apps/${{ matrix.app }} --version=${{ github.event.inputs.version }} --tag="voidpointergroup/hydrogen-${{ matrix.app }}:${{ github.event.inputs.tag }}"
       - name: publish
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin

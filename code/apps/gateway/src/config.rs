@@ -1,4 +1,5 @@
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct Config {
     pub version: String,
     pub server: Server,
@@ -8,6 +9,7 @@ pub struct Config {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct Routes {
     pub authorizer: std::option::Option<Authorizer>,
     pub connect: std::option::Option<ConnectRoute>,
@@ -15,6 +17,7 @@ pub struct Routes {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct Server {
     pub address: String,
     pub heartbeat_interval_sec: u16,
@@ -24,29 +27,34 @@ pub struct Server {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct Authorizer {
     pub endpoint: String,
     pub headers: std::collections::HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct Redis {
     pub endpoint: String,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct Nats {
     pub endpoint: String,
     pub stream: String,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct ConnectRoute {
     pub endpoint: String,
     pub headers: std::collections::HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct DisconnectRoute {
     pub endpoint: String,
     pub headers: std::collections::HashMap<String, String>,

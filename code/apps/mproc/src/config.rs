@@ -20,18 +20,21 @@ pub enum EngineMode {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct RulesEngineRoute {
     pub endpoint: String,
     pub headers: std::collections::HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct DestinationRoute {
     pub endpoint: String,
     pub headers: std::collections::HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct RegexRule {
     pub regex: String,
     pub route: DestinationRoute,

@@ -18,11 +18,8 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
     match args.command {
         | args::Command::Work { config } => {
             match &config.queue {
-                | config::Queue::Nats {
-                    endpoint,
-                    stream: topic,
-                } => {
-                    endless_nats_consumer(&instance.to_string(), &config, &endpoint, &topic).await?;
+                | config::Queue::Nats { endpoint, stream } => {
+                    endless_nats_consumer(&instance.to_string(), &config, endpoint, stream).await?;
                 },
             }
             Ok(())
@@ -34,28 +31,33 @@ async fn endless_nats_consumer(
     instance: &str,
     config: &crate::config::Config,
     nats_endpoint: &str,
-    stream: &str,
+    nats_stream: &str,
 ) -> std::result::Result<(), Box<dyn Error>> {
     let nc = async_nats::connect(nats_endpoint).await?;
     let nc2 = async_nats::jetstream::new(nc);
     let stream = nc2
         .get_or_create_stream(async_nats::jetstream::stream::Config {
-            name: stream.to_owned(),
+            name: nats_stream.to_owned(),
             max_messages: 4096,
             max_messages_per_subject: 1024,
             discard: async_nats::jetstream::stream::DiscardPolicy::Old,
-            retention: async_nats::jetstream::stream::RetentionPolicy::WorkQueue,
+            retention: async_nats::jetstream::stream::RetentionPolicy::Interest,
             max_message_size: 1024 * 256,
+            subjects: vec!["hydrogen.core.v1.>".to_owned()],
             ..Default::default()
         })
         .await
         .unwrap();
     let consumer = stream
-        .get_or_create_consumer("mproc", async_nats::jetstream::consumer::pull::Config {
-            durable_name: Some("mproc".to_owned()),
+        .get_or_create_consumer("hydrogen-mproc", async_nats::jetstream::consumer::pull::Config {
+            durable_name: Some("hydrogen-mproc".to_owned()),
             deliver_policy: async_nats::jetstream::consumer::DeliverPolicy::All,
-            max_deliver: 1,
+            max_deliver: 8,
             max_ack_pending: 256,
+            ack_policy: async_nats::jetstream::consumer::AckPolicy::Explicit,
+            replay_policy: async_nats::jetstream::consumer::ReplayPolicy::Instant,
+            filter_subject: "hydrogen.core.v1.$client".to_owned(),
+            ack_wait: std::time::Duration::from_secs(30),
             ..Default::default()
         })
         .await
@@ -64,7 +66,7 @@ async fn endless_nats_consumer(
     let mut messages = consumer.stream().unwrap();
     while let Some(Ok(message)) = messages.next().await {
         let msg_str = String::from_utf8(message.payload.to_vec())?;
-        let msg_typed: hydrogen_bus::nats::ClientMessage = serde_json::from_str(&msg_str)?;
+        let msg_typed: hydrogen_bus::nats::Message<hydrogen_bus::nats::ClientMessage> = serde_json::from_str(&msg_str)?;
         match handle_nats_message(instance, config, &msg_typed) {
             | Ok(..) => {
                 message.ack().await.unwrap();
@@ -82,21 +84,21 @@ async fn endless_nats_consumer(
 trait RegexFindFirstMatching {
     fn first_regex_matches(
         &self,
-        msg: &hydrogen_bus::nats::ClientMessage,
+        msg: &hydrogen_bus::nats::Message<hydrogen_bus::nats::ClientMessage>,
     ) -> std::result::Result<std::option::Option<&crate::config::DestinationRoute>, Box<dyn std::error::Error>>;
 }
 
 impl RegexFindFirstMatching for std::vec::Vec<crate::config::RegexRule> {
     fn first_regex_matches(
         &self,
-        msg: &hydrogen_bus::nats::ClientMessage,
+        msg: &hydrogen_bus::nats::Message<hydrogen_bus::nats::ClientMessage>,
     ) -> std::result::Result<std::option::Option<&crate::config::DestinationRoute>, Box<dyn std::error::Error>> {
         for rule in self {
             let regex = match fancy_regex::Regex::new(&rule.regex) {
                 | Ok(it) => it,
                 | Err(err) => return Err(Box::new(crate::error::InvalidRegexError::new(&err.to_string()))),
             };
-            if regex.is_match(&msg.message)? {
+            if regex.is_match(&msg.data.message)? {
                 return Ok(Some(&rule.route));
             }
         }
@@ -107,11 +109,11 @@ impl RegexFindFirstMatching for std::vec::Vec<crate::config::RegexRule> {
 fn handle_nats_message(
     instance: &str,
     config: &crate::config::Config,
-    msg: &hydrogen_bus::nats::ClientMessage,
+    msg: &hydrogen_bus::nats::Message<hydrogen_bus::nats::ClientMessage>,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
         data: crate::logger::Event::Message {
-            connection: &msg.connection_id.to_string(),
+            connection: &msg.data.connection_id.to_string(),
         },
     });
 
@@ -124,7 +126,7 @@ fn handle_nats_message(
                 | None => {
                     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
                         data: crate::logger::Event::DroppedMessageNoMatch {
-                            connection: &msg.connection_id.to_string(),
+                            connection: &msg.data.connection_id.to_string(),
                         },
                     });
                     Ok(())
@@ -136,7 +138,7 @@ fn handle_nats_message(
 
 fn handle_nats_message_regex_mode(
     instance: &str,
-    msg: &hydrogen_bus::nats::ClientMessage,
+    msg: &hydrogen_bus::nats::Message<hydrogen_bus::nats::ClientMessage>,
     destination_route: &crate::config::DestinationRoute,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut destination_req = ureq::post(&destination_route.endpoint);
@@ -145,18 +147,18 @@ fn handle_nats_message_regex_mode(
     }
 
     let forward_resp = destination_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
-        instance_id: msg.instance_id.clone(),
-        connection_id: msg.connection_id.clone(),
-        time: msg.time.clone(),
+        instance_id: msg.data.instance_id.clone(),
+        connection_id: msg.data.connection_id.clone(),
+        time: msg.meta.timestamp.clone(),
         context: crate::routes::MessageContext {
-            authorizer: msg.context.authorizer.clone(),
+            authorizer: msg.data.context.authorizer.clone(),
         },
-        message: msg.message.clone(),
+        message: msg.data.message.clone(),
     })?)?;
 
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
         data: crate::logger::Event::DestinationRouteResponse {
-            connection: &msg.connection_id.to_string(),
+            connection: &msg.data.connection_id.to_string(),
             response: forward_resp.status(),
         },
     });
@@ -172,7 +174,7 @@ fn handle_nats_message_regex_mode(
 
 fn handle_nats_message_dss_mode(
     instance: &str,
-    msg: &hydrogen_bus::nats::ClientMessage,
+    msg: &hydrogen_bus::nats::Message<hydrogen_bus::nats::ClientMessage>,
     rules_engine_route: &crate::config::RulesEngineRoute,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut re_req = ureq::post(&rules_engine_route.endpoint);
@@ -181,18 +183,18 @@ fn handle_nats_message_dss_mode(
     }
 
     let re_response = re_req.send_string(&serde_json::to_string(&crate::routes::RulesEngineRequest {
-        instance_id: msg.instance_id.clone(),
-        connection_id: msg.connection_id.clone(),
-        time: msg.time.clone(),
+        instance_id: msg.data.instance_id.clone(),
+        connection_id: msg.data.connection_id.clone(),
+        time: msg.meta.timestamp.clone(),
         context: crate::routes::MessageContext {
-            authorizer: msg.context.authorizer.clone(),
+            authorizer: msg.data.context.authorizer.clone(),
         },
-        message: msg.message.clone(),
+        message: msg.data.message.clone(),
     })?)?;
 
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
         data: crate::logger::Event::RulesEngineRouteResponse {
-            connection: &msg.connection_id.to_string(),
+            connection: &msg.data.connection_id.to_string(),
             response: re_response.status(),
         },
     });
@@ -211,18 +213,18 @@ fn handle_nats_message_dss_mode(
     }
 
     let forward_resp = destination_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
-        instance_id: msg.instance_id.clone(),
-        connection_id: msg.connection_id.clone(),
-        time: msg.time.clone(),
+        instance_id: msg.data.instance_id.clone(),
+        connection_id: msg.data.connection_id.clone(),
+        time: msg.meta.timestamp.clone(),
         context: crate::routes::MessageContext {
-            authorizer: msg.context.authorizer.clone(),
+            authorizer: msg.data.context.authorizer.clone(),
         },
-        message: msg.message.clone(),
+        message: msg.data.message.clone(),
     })?)?;
 
     crate::logger::LogMessage::now(instance, crate::logger::Data::Event {
         data: crate::logger::Event::DestinationRouteResponse {
-            connection: &msg.connection_id.to_string(),
+            connection: &msg.data.connection_id.to_string(),
             response: forward_resp.status(),
         },
     });

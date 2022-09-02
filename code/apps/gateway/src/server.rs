@@ -5,6 +5,7 @@ use actix::prelude::{
     Context,
     Handler,
 };
+use uuid::Uuid;
 
 use crate::messages::{
     ClientMessage,
@@ -23,7 +24,7 @@ pub struct Server {
     instance: String,
     sessions: SharedSessionMap,
     redis: std::sync::Arc<redis::Client>,
-    nats: std::sync::Arc<nats::jetstream::JetStream>,
+    nats_js: std::sync::Arc<nats::jetstream::JetStream>,
 
     #[allow(dead_code)]
     redis_thread: std::thread::JoinHandle<()>,
@@ -36,7 +37,7 @@ impl Server {
         config: crate::config::Config,
         instance: String,
         redis: redis::Client,
-        nats: nats::jetstream::JetStream,
+        nats_js: nats::jetstream::JetStream,
     ) -> Self {
         let redis_connection_arc = std::sync::Arc::new(redis);
         let session_map_arc: SharedSessionMap =
@@ -57,7 +58,7 @@ impl Server {
             instance,
             sessions: session_map_arc,
             redis: redis_connection_arc,
-            nats: std::sync::Arc::new(nats),
+            nats_js: std::sync::Arc::new(nats_js),
             redis_thread: rt,
             stats_reporting_thread: srt,
         }
@@ -462,16 +463,25 @@ impl Handler<ClientMessage> for Server {
                 },
             });
 
-            self.nats.publish(
-                &self.config.nats.stream,
-                serde_json::json!(hydrogen_bus::nats::ClientMessage {
-                    instance_id: self.instance.clone(),
-                    connection_id: msg.connection,
-                    context: msg.context.into(),
-                    time: msg.time,
-                    message: msg.message,
+            self.nats_js.publish_with_options(
+                "hydrogen.core.v1.$client",
+                serde_json::json!(hydrogen_bus::nats::Message {
+                    meta: hydrogen_bus::nats::MessageMeta {
+                        id: Uuid::new_v4().to_string(),
+                        timestamp: chrono::Utc::now().to_rfc3339(),
+                    },
+                    data: hydrogen_bus::nats::ClientMessage {
+                        instance_id: self.instance.clone(),
+                        connection_id: msg.connection,
+                        context: msg.context.into(),
+                        message: msg.message,
+                    }
                 })
                 .to_string(),
+                &nats::jetstream::PublishOptions {
+                    expected_stream: Some(self.config.nats.stream.to_owned()),
+                    ..Default::default()
+                },
             )?;
             Ok(())
         };

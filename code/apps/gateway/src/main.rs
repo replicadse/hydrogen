@@ -74,7 +74,7 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
             return Err(Box::new(crate::error::StartupError::new(&e.to_string())));
         },
     };
-    let nc2 = nats::jetstream::new(nc);
+    let js = nats::jetstream::new(nc);
 
     let bind = config.server.address.clone();
     logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
@@ -83,7 +83,7 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
         },
     });
 
-    let server = Server::new(config.clone(), instance.clone(), redis.clone(), nc2.clone()).start();
+    let server = Server::new(config.clone(), instance.clone(), redis.clone(), js.clone()).start();
     HttpServer::new(move || {
         App::new()
             .service(crate::handlers::websocket::handler)
