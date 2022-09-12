@@ -13,7 +13,7 @@ clap = "^3.2"
 chrono = "0.4.19"
 futures = "0.3.21"
 redis = { version = "0.21.5", features = ["tokio-comp"] }
-actix-web = "^4.1"
+actix-web = "^4.2"
 actix-web-actors = "^4.1"
 actix = "0.13.0"
 uuid = { version = "^1.1", features = ["v4", "serde"] }
