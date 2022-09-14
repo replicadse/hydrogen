@@ -27,22 +27,3 @@ image:
     --build-arg version=$version \
     .
   SAVE IMAGE $tag
-
-fmt:
-  FROM +repo
-
-  ARG sub
-  RUN [ ! -z "$sub" ] || exit 1
-  WORKDIR ./$sub/
-
-  RUN cargo fmt --all -- --check
-
-test:
-  FROM +application
-
-  ARG sub
-  RUN [ ! -z "$sub" ] || exit 1
-  WORKDIR ./$sub/
-
-  ARG features
-  RUN cargo test $features

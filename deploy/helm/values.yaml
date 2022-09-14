@@ -1,4 +1,18 @@
 apps:
+  operator:
+    enabled: true
+    deployment:
+      revisions: 0
+      strategy:
+        type: Recreate
+      image:
+        ref: "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-operator:nightly"
+        pull_policy: Always
+    secrets:
+      config:
+        config: |-
+          version: 0.1.0
+
   gateway:
     enabled: true
     service:
@@ -47,6 +61,7 @@ apps:
               endpoint: "http://hydrogen-dss-disconnect:8080"
               headers:
                 Authorization: dss-disconnect-key
+
   mproc:
     enabled: true
     deployment:
