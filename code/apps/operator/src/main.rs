@@ -70,7 +70,7 @@ async fn check_crds(ctx: Arc<Context>) -> Result<(), WKError> {
         .await
         .or_else(|_| Err(WKError::InvalidCRD("can not list CRDs".to_owned())))?;
 
-    let expected = vec!["echoes.voidpointergroup.com".to_owned()];
+    let expected = vec!["echoes.hydrogen.voidpointergroup.com".to_owned()];
     let mut matches = HashSet::<String>::new();
 
     for crd in crds {

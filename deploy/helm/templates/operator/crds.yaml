@@ -1,9 +1,9 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: echoes.voidpointergroup.com
+  name: echoes.hydrogen.voidpointergroup.com
 spec:
-  group: voidpointergroup.com
+  group: hydrogen.voidpointergroup.com
   scope: Namespaced
   names:
     kind: echo
@@ -24,13 +24,3 @@ spec:
                   type: integer
                   format: int32
               required: ["replicas"]
----
-apiVersion: voidpointergroup.com/v1
-kind: echo
-metadata:
-  name: echo-test-1
-  namespace: hydrogen
-spec:
-  replicas: 2
----
-
