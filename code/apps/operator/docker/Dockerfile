@@ -17,4 +17,4 @@ FROM gcr.io/distroless/cc
 WORKDIR /app
 COPY --from=build-env /code/apps/operator/target/release/hydrogen-operator .
 USER 1000
-CMD ["./hydrogen-operator", "work", "-c", "./config/config.yaml"]
+CMD ["./hydrogen-operator", "exec", "-c", "./config/config.yaml"]

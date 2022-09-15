@@ -1,1 +1,8 @@
-hydrogen_error::make_error_enum!(WKError, UnknownCommand, MissingArgument, InvalidCRD);
+hydrogen_error::make_error_enum!(
+    WKError,
+    Generic,
+    UnknownCommand,
+    MissingArgument,
+    InvalidCRD,
+    ConfigFile
+);

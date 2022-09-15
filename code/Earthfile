@@ -27,3 +27,18 @@ image:
     --build-arg version=$version \
     .
   SAVE IMAGE $tag
+
+all:
+  BUILD +image --toolchain=nightly --version=0.1.0 --tag=harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-operator:nightly --sub=./apps/operator
+  # BUILD +image --toolchain=nightly --version=0.1.0 --tag=harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly --sub=./apps/mproc
+  # BUILD +image --toolchain=nightly --version=0.1.0 --tag=harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly --sub=./apps/gateway
+
+  LOCALLY
+  # RUN podman save hydrogen-operator:local > ./img.tgz
+  # RUN kind load image-archive ./img.tgz
+  # RUN rm ./img.tgz
+  # RUN kind load docker-image harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-operator:nightly
+  RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-operator:nightly
+  # RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly
+  # RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly
+  RUN kubectl -n hydrogen rollout restart deployment/hydrogen-hydrogen-operator

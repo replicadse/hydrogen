@@ -32,16 +32,12 @@ macro_rules! make_error_enum {
         #[derive(Debug, Clone)]
         /// An error type.
         pub enum $name {
-            Unknown,
             $($en (String),)*
         }
 
         impl std::fmt::Display for WKError {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match self {
-                    Self::Unknown => {
-                        f.write_str("unknown")
-                    },
                     $( Self::$en(e) => {
                         f.write_str(e)
                     }, )*

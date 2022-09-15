@@ -55,14 +55,16 @@ impl ClapArgumentLoader {
         let cmd = if let Some(x) = command.subcommand_matches("exec") {
             let config_content = if x.is_present("config") {
                 let config_param = x.value_of("config").unwrap();
-                std::fs::read_to_string(config_param).or_else(|_| Err(crate::error::WKError::Unknown))?
+                std::fs::read_to_string(config_param)
+                    .or_else(|_| Err(crate::error::WKError::ConfigFile("can not read".to_owned())))?
             } else {
                 return Err(crate::error::WKError::MissingArgument(
                     "configuration unspecified".to_owned(),
                 ));
             };
             Command::Exec {
-                config: serde_yaml::from_str(&config_content).or_else(|_| Err(crate::error::WKError::Unknown))?,
+                config: serde_yaml::from_str(&config_content)
+                    .or_else(|_| Err(crate::error::WKError::ConfigFile("can not deserialize".to_owned())))?,
             }
         } else {
             return Err(crate::error::WKError::UnknownCommand("unknown command".to_owned()));
