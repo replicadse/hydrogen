@@ -4,8 +4,9 @@ use std::{
 };
 
 use crds::{
-    Echo,
-    ResourceX,
+    echo::Echo,
+    Context,
+    CRD,
 };
 use error::WKError;
 use futures::stream::StreamExt;
@@ -19,9 +20,7 @@ use kube::{
     Api,
     Client,
     Resource,
-    ResourceExt,
 };
-use tokio::time::Duration;
 
 mod args;
 mod config;
@@ -45,7 +44,7 @@ async fn main() -> std::result::Result<(), WKError> {
                 kube::api::ListParams::default(),
             );
 
-            x.run(reconcile, on_error, ctx)
+            x.run(Echo::reconcile, on_error, ctx)
                 .for_each(|rres| async move {
                     match rres {
                         | Ok(res) => {
@@ -89,40 +88,6 @@ async fn check_crds(ctx: Arc<Context>) -> Result<(), WKError> {
         Ok(())
     } else {
         Err(WKError::InvalidCRD("missing CRDs".to_owned()))
-    }
-}
-
-struct Context {
-    client: Client,
-}
-
-async fn reconcile(resource: Arc<Echo>, context: Arc<Context>) -> Result<Action, WKError> {
-    let ns = resource
-        .namespace()
-        .ok_or(WKError::Generic("can not get namespace".to_owned()))?;
-
-    if !Arc::<Echo>::exists(context.client.clone(), &resource.name_any(), &ns).await? {
-        Arc::<Echo>::create(
-            context.clone().client.clone(),
-            &resource.spec,
-            &resource.name_any(),
-            &ns,
-        )
-        .await?;
-
-        Arc::<Echo>::set_fin(context.clone().client.clone(), &resource.name_any(), &ns, &vec![
-            "echoes.hydrogen.voidpointergroup.com/finalizer".to_owned(),
-        ])
-        .await?;
-
-        Ok(Action::requeue(Duration::from_secs(10)))
-    } else if resource.meta().deletion_timestamp.is_some() {
-        Arc::<Echo>::delete(context.clone().client.clone(), &resource.name_any(), &ns).await?;
-        Arc::<Echo>::set_fin(context.clone().client.clone(), &resource.name_any(), &ns, &vec![]).await?;
-
-        Ok(Action::await_change())
-    } else {
-        Ok(Action::requeue(Duration::from_secs(10)))
     }
 }
 
