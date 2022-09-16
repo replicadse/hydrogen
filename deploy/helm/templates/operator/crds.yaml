@@ -6,7 +6,7 @@ spec:
   group: hydrogen.voidpointergroup.com
   scope: Namespaced
   names:
-    kind: echo
+    kind: Echo
     singular: echo
     plural: echoes
   versions:

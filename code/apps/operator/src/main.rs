@@ -1,12 +1,12 @@
 use std::{
     collections::HashSet,
-    sync::{
-        self,
-        Arc,
-    },
+    sync::Arc,
 };
 
-use crds::Echo;
+use crds::{
+    Echo,
+    ResourceX,
+};
 use error::WKError;
 use futures::stream::StreamExt;
 use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition;
@@ -19,6 +19,7 @@ use kube::{
     Api,
     Client,
     Resource,
+    ResourceExt,
 };
 use tokio::time::Duration;
 
@@ -36,11 +37,11 @@ async fn main() -> std::result::Result<(), WKError> {
                 .await
                 .or_else(|_| Err(WKError::Generic("kube client".to_owned())))?;
 
-            let ctx = sync::Arc::new(Context { client: client.clone() });
+            let ctx = Arc::new(Context { client: client.clone() });
             check_crds(ctx.clone()).await?;
 
             let x = Controller::new(
-                Api::<Echo>::namespaced(ctx.clone().client.clone(), "hydrogen"),
+                Api::<Echo>::all(ctx.clone().client.clone()),
                 kube::api::ListParams::default(),
             );
 
@@ -95,38 +96,37 @@ struct Context {
     client: Client,
 }
 
-// async fn set_fin<T: kube::Resource>(
-//     context: std::sync::Arc<Context>,
-//     name: &str,
-//     ns: &str,
-//     fins: Vec<&str>,
-// ) -> std::result::Result<(), crate::error::WKError>
-// where
-//     T::DynamicType: Default,
-//     T: Clone,
-//     T: serde::de::DeserializeOwned,
-//     T: std::fmt::Debug,
-// {
-//     let finalizer: serde_json::Value = serde_json::json!({
-//         "metadata": {
-//             "finalizers": fins,
-//         }
-//     });
+async fn reconcile(resource: Arc<Echo>, context: Arc<Context>) -> Result<Action, WKError> {
+    let ns = resource
+        .namespace()
+        .ok_or(WKError::Generic("can not get namespace".to_owned()))?;
 
-//     let patch: kube::api::Patch<&serde_json::Value> =
-// kube::api::Patch::Merge(&finalizer);     context
-//         .api_ns::<T>(ns)
-//         .patch(name, &kube::api::PatchParams::default(), &patch)
-//         .await
-//         .or_else(|_| Err(crate::error::WKError::Generic("can not patch
-// resource".to_owned())))?;     Ok(())
-// }
+    if !Arc::<Echo>::exists(context.client.clone(), &resource.name_any(), &ns).await? {
+        Arc::<Echo>::create(
+            context.clone().client.clone(),
+            &resource.spec,
+            &resource.name_any(),
+            &ns,
+        )
+        .await?;
 
-async fn reconcile(_resource: sync::Arc<Echo>, _context: sync::Arc<Context>) -> Result<Action, WKError> {
-    Ok(Action::requeue(Duration::from_secs(10)))
+        Arc::<Echo>::set_fin(context.clone().client.clone(), &resource.name_any(), &ns, &vec![
+            "echoes.hydrogen.voidpointergroup.com/finalizer".to_owned(),
+        ])
+        .await?;
+
+        Ok(Action::requeue(Duration::from_secs(10)))
+    } else if resource.meta().deletion_timestamp.is_some() {
+        Arc::<Echo>::delete(context.clone().client.clone(), &resource.name_any(), &ns).await?;
+        Arc::<Echo>::set_fin(context.clone().client.clone(), &resource.name_any(), &ns, &vec![]).await?;
+
+        Ok(Action::await_change())
+    } else {
+        Ok(Action::requeue(Duration::from_secs(10)))
+    }
 }
 
-fn on_error(error: &WKError, _context: sync::Arc<Context>) -> Action {
-    eprintln!("on_error -> reconciliation error:\n{:?}", error);
+fn on_error(error: &WKError, _context: Arc<Context>) -> Action {
+    eprintln!("on_error -> reconciliation error: {:?}", error);
     Action::requeue(tokio::time::Duration::from_secs(5))
 }

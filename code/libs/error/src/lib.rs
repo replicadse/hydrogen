@@ -35,7 +35,7 @@ macro_rules! make_error_enum {
             $($en (String),)*
         }
 
-        impl std::fmt::Display for WKError {
+        impl std::fmt::Display for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match self {
                     $( Self::$en(e) => {

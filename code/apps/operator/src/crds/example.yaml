@@ -1,0 +1,10 @@
+---
+apiVersion: hydrogen.voidpointergroup.com/v1
+kind: Echo
+metadata:
+  name: echo-1
+  namespace: hydrogen
+spec:
+  replicas: 2
+---
+
