@@ -6,6 +6,17 @@
 version: 2
 updates:
   - package-ecosystem: cargo
+    directory: "./code/apps/operator"
+    schedule:
+      interval: daily
+      time: "04:00"
+  - package-ecosystem: docker
+    directory: "./code/apps/operator/docker"
+    schedule:
+      interval: daily
+      time: "04:00"
+
+  - package-ecosystem: cargo
     directory: "./code/apps/gateway"
     schedule:
       interval: daily

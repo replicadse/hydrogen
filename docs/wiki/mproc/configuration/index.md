@@ -5,10 +5,10 @@
 ```
 version: 0.1.0
 
-queue:
-  nats:
-    endpoint: "nats://hydrogen-nats:4222"
-    stream: "hydrogen"
+stream
+  endpoint: "nats://hydrogen-nats:4222"
+  name: "hydrogen"
+  consumer_name: "0x01"
 
 engine_mode:
   regex:
@@ -36,10 +36,10 @@ engine_mode:
 |Key|Required|Description|Type|Example|
 |-- |-- |-- |-- |-- |
 |version|yes|The version of this config.|semver v2 compatible string|`1.0.0`|
-|queue|yes|The config for consuming messages.|object||
-|queue.nats|yes|The `NATS` configuration.|object||
-|queue.nats.endpoint|yes|The endpoint on which to connect to `NATS`.|URL string|`nats://hydrogen-nats:4222`|
-|queue.nats.stream|yes|The stream name that will be used for client message brokering.|string|`hydrogen`|
+|stream|yes|The config for consuming messages on a stream.|object||
+|stream.endpoint|yes|The endpoint on which to connect to `NATS`.|URL string|`nats://hydrogen-nats:4222`|
+|stream.name|yes|The stream name that will be used for client message brokering.|string|`hydrogen`|
+|stream.consumer_name|yes|The durable name of the consumer on the stream (see NATS documentation for more information).|string|`0x01`|
 |engine_mode|yes|The engine mode details which are used to process messages.|object (enum) - needs one mode active||
 |engine_mode.regex|no|Regex mode - forwarding messages by evaluating them over regular expressions.|object||
 |engine_mode.regex.rules|yes|Contains the regular expressions and the routes to which they lead if they match. The expressions will be checked sequentially. If none match, the message is logged and dropped. A catch-all rule at the end is usually a good idea.|array||
