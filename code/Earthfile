@@ -38,6 +38,4 @@ push:
   RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-operator:nightly
   RUN kubectl -n hydrogen rollout restart deployment/hydrogen-hydrogen-operator
   RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly
-  RUN kubectl -n hydrogen rollout restart deployment/hydrogen-hydrogen-gateway
   RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly
-  RUN kubectl -n hydrogen rollout restart deployment/hydrogen-hydrogen-mproc

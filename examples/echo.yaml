@@ -2,7 +2,7 @@
 apiVersion: hydrogen.voidpointergroup.com/v1
 kind: Mproc
 metadata:
-  name: mproc-1
+  name: echo-mproc
   namespace: hydrogen
 spec:
   hpa:
@@ -24,16 +24,18 @@ spec:
                 endpoint: "http://hydrogen-dss-sink-b:8080"
                 headers:
                   Authorization: dss-sink-b-key
+                  x-return-to: "http://echo-gateway-1:8080"
             - regex: ".*"
               route:
                 endpoint: "http://hydrogen-dss-sink-a:8080"
                 headers:
                   Authorization: dss-sink-a-key
+                  x-return-to: "http://echo-gateway-1:8080"
 ---
 apiVersion: hydrogen.voidpointergroup.com/v1
 kind: Gateway
 metadata:
-  name: gw-1
+  name: echo-gateway-1
   namespace: hydrogen
 spec:
   config:

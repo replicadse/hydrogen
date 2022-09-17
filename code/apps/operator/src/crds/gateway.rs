@@ -23,11 +23,17 @@ use k8s_openapi::{
             PodTemplateSpec,
             Secret,
             SecretVolumeSource,
+            Service,
+            ServicePort,
+            ServiceSpec,
             Volume,
             VolumeMount,
         },
     },
-    apimachinery::pkg::apis::meta::v1::LabelSelector,
+    apimachinery::pkg::{
+        apis::meta::v1::LabelSelector,
+        util::intstr::IntOrString,
+    },
 };
 use kube::{
     api::{
@@ -96,6 +102,7 @@ impl CRD<Gateway, GatewaySpec> for Gateway {
         }
         self.create_deployment(client.clone(), resource.clone(), &ns).await?;
         self.create_hpa(client.clone(), resource.clone(), &ns).await?;
+        self.create_service(client.clone(), resource.clone(), &ns).await?;
 
         Ok(())
     }
@@ -104,6 +111,12 @@ impl CRD<Gateway, GatewaySpec> for Gateway {
         let ns = resource
             .namespace()
             .ok_or(WKError::Generic("can not get namespace".to_owned()))?;
+
+        let api_service = Api::<Service>::namespaced(client.clone(), &ns);
+        api_service
+            .delete(&resource.name_any(), &DeleteParams::default())
+            .await
+            .or_else(|e| Err(WKError::Generic(e.to_string())))?;
 
         let api_hpa = Api::<HorizontalPodAutoscaler>::namespaced(client.clone(), &ns);
         api_hpa
@@ -239,6 +252,37 @@ impl Gateway {
 
         let api = Api::<HorizontalPodAutoscaler>::namespaced(client, &ns);
         api.create(&PostParams::default(), &hpa)
+            .await
+            .or_else(|e| Err(WKError::Generic(e.to_string())))?;
+        Ok(())
+    }
+
+    async fn create_service(&self, client: Client, resource: Arc<Gateway>, ns: &str) -> Result<(), WKError> {
+        let mut selector = BTreeMap::<String, String>::new();
+        selector.insert("app".to_owned(), resource.name_any());
+
+        let service = Service {
+            metadata: ObjectMeta {
+                name: Some(resource.name_any()),
+                namespace: Some(ns.to_owned()),
+                ..Default::default()
+            },
+            spec: Some(ServiceSpec {
+                type_: Some("ClusterIP".to_owned()),
+                ports: Some(vec![ServicePort {
+                    port: 8080,
+                    target_port: Some(IntOrString::Int(8080)),
+                    protocol: Some("TCP".to_owned()),
+                    ..Default::default()
+                }]),
+                selector: Some(selector),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        let api = Api::<Service>::namespaced(client, &ns);
+        api.create(&PostParams::default(), &service)
             .await
             .or_else(|e| Err(WKError::Generic(e.to_string())))?;
         Ok(())
