@@ -1,12 +1,5 @@
 # Security Policy
 
-## Supported Versions
-
-| Version  | Supported          |
-| -------- | ------------------ |
-| >= 0.1.0 | ✅ |
-| <  0.1.0 | ❌ |
-
 ## Vulnerability disclosure policy
 IF a version is supported and will receive updates is ONLY determined on the state of this document on the main repo's master branch.\
 Report vulnerabilities to: [aw@voidpointergroup.com](mailto:aw@voidpointergroup.com)\
