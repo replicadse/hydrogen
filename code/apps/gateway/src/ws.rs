@@ -140,7 +140,7 @@ impl WsConn {
     }
 }
 
-/// Main handler for all immediate socker and context related operations on the
+/// Main handler for all immediate socket and context related operations on the
 /// connection.
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
     /// This function will handle all various events that can occurr in a

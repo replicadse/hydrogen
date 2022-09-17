@@ -37,7 +37,7 @@ async fn endless_nats_consumer(
             discard: async_nats::jetstream::stream::DiscardPolicy::Old,
             retention: async_nats::jetstream::stream::RetentionPolicy::Interest,
             max_message_size: 1024 * 256,
-            subjects: vec!["hydrogen.core.v1.>".to_owned()],
+            subjects: vec![format!("hydrogen.{}.core.v1.>", config.group_id)],
             ..Default::default()
         })
         .await
@@ -50,7 +50,7 @@ async fn endless_nats_consumer(
             max_ack_pending: 256,
             ack_policy: async_nats::jetstream::consumer::AckPolicy::Explicit,
             replay_policy: async_nats::jetstream::consumer::ReplayPolicy::Instant,
-            filter_subject: "hydrogen.core.v1.$client".to_owned(),
+            filter_subject: format!("hydrogen.{}.core.v1.$client", config.group_id),
             ack_wait: std::time::Duration::from_secs(30),
             ..Default::default()
         })

@@ -8,6 +8,7 @@ use actix::prelude::{
 use uuid::Uuid;
 
 use crate::messages::{
+    BroadcastServerMessage,
     ClientMessage,
     Connect,
     Disconnect,
@@ -43,7 +44,12 @@ impl Server {
         let session_map_arc: SharedSessionMap =
             std::sync::Arc::new(std::sync::RwLock::new(HashMap::<String, Socket>::new()));
 
-        let rt = Self::start_redis_thread(instance.clone(), redis_connection_arc.clone(), session_map_arc.clone());
+        let rt = Self::start_redis_thread(
+            instance.clone(),
+            config.group_id.clone(),
+            redis_connection_arc.clone(),
+            session_map_arc.clone(),
+        );
         let srt = match config.server.stats_interval_sec {
             | Some(v) => Some(Self::start_stats_reporting_thread(
                 instance.clone(),
@@ -65,11 +71,16 @@ impl Server {
     }
 
     pub fn make_key(&self, connection: &str) -> String {
-        format!("i2c:{}:{}", self.instance, connection.to_string())
+        format!(
+            "hydrogen:{}:i2c:{}:{}",
+            self.config.group_id,
+            self.instance,
+            connection.to_string()
+        )
     }
 
     pub fn make_reverse_key(&self, connection: &str) -> String {
-        format!("c2i:{}", connection)
+        format!("hydrogen:{}:c2i:{}", self.config.group_id, connection)
     }
 
     /// Function will start a new thread and return it's JoinHandle. This thread
@@ -77,6 +88,7 @@ impl Server {
     /// for this instance and process it's messages.
     fn start_redis_thread(
         instance_id: String,
+        group_id: String,
         redis_conn: std::sync::Arc<redis::Client>,
         sessions: SharedSessionMap,
     ) -> std::thread::JoinHandle<()> {
@@ -84,6 +96,7 @@ impl Server {
             let mut conn = redis_conn.get_connection().unwrap();
             let mut ps = conn.as_pubsub();
             let thread_instance_id = instance_id.clone();
+            ps.subscribe(format!("{}:broadcast", group_id)).unwrap();
             ps.subscribe(instance_id).unwrap();
 
             loop {
@@ -92,6 +105,16 @@ impl Server {
                     let pl: String = msg.get_payload()?;
                     let payload: hydrogen_bus::redis::Message = serde_json::from_str(&pl)?;
                     match payload {
+                        | hydrogen_bus::redis::Message::SBroadcast { time: _, message } => {
+                            crate::logger::LogMessage::now(&thread_instance_id, crate::logger::Data::Event {
+                                data: crate::logger::Event::ServerBroadcastMessagePost {},
+                            });
+
+                            for s in sessions.read()?.iter() {
+                                s.1.do_send(crate::messages::WsMessage::Message(message.clone()));
+                            }
+                            Ok(())
+                        },
                         // Handles messages for connections this instance owns.
                         | hydrogen_bus::redis::Message::S2CMessage {
                             connection,
@@ -410,6 +433,41 @@ impl Handler<ServerMessage> for Server {
     }
 }
 
+/// Handler for messages that are sent from this server towards any client.
+impl Handler<BroadcastServerMessage> for Server {
+    type Result = ();
+
+    /// This function will take the message and the specified connection, lookup
+    /// the instance of the gateway that holds the specified client
+    /// connection and post the message into the corresponding redis pub/sub
+    /// channel.
+    fn handle(&mut self, msg: BroadcastServerMessage, _ctx: &mut Context<Self>) -> Self::Result {
+        let safecall = || -> Result<(), Box<dyn std::error::Error>> {
+            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
+                data: crate::logger::Event::ServerBroadcastMessageEnqueue {},
+            });
+
+            let redis_message: hydrogen_bus::redis::Message = msg.into();
+
+            redis::pipe()
+                .publish(
+                    format!("{}:broadcast", self.config.group_id),
+                    serde_json::to_string(&redis_message)?,
+                )
+                .query::<()>(&mut self.redis.get_connection()?)?;
+            Ok(())
+        };
+        match safecall() {
+            | Ok(_) => {},
+            | Err(e) => {
+                crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
+                    data: crate::logger::Event::Error { err: &e.to_string() },
+                });
+            },
+        }
+    }
+}
+
 /// Handler for the event in which the server needs to end the connection to any
 /// client.
 impl Handler<ServerDisconnect> for Server {
@@ -464,7 +522,7 @@ impl Handler<ClientMessage> for Server {
             });
 
             self.nats_js.publish_with_options(
-                "hydrogen.core.v1.$client",
+                &format!("hydrogen.{}.core.v1.$client", self.config.group_id),
                 serde_json::json!(hydrogen_bus::nats::Message {
                     meta: hydrogen_bus::nats::MessageMeta {
                         id: Uuid::new_v4().to_string(),

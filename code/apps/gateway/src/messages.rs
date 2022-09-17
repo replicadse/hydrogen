@@ -58,10 +58,26 @@ pub struct ServerMessage {
 
 #[derive(Debug, Message, serde::Serialize, serde::Deserialize)]
 #[rtype(result = "()")]
+pub struct BroadcastServerMessage {
+    pub time: String,
+    pub message: String,
+}
+
+#[derive(Debug, Message, serde::Serialize, serde::Deserialize)]
+#[rtype(result = "()")]
 pub struct ServerDisconnect {
     pub connection: String,
     pub time: String,
     pub reason: String,
+}
+
+impl Into<hydrogen_bus::redis::Message> for BroadcastServerMessage {
+    fn into(self) -> hydrogen_bus::redis::Message {
+        hydrogen_bus::redis::Message::SBroadcast {
+            time: self.time,
+            message: self.message,
+        }
+    }
 }
 
 impl Into<hydrogen_bus::redis::Message> for ServerMessage {

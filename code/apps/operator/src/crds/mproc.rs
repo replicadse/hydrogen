@@ -186,6 +186,7 @@ impl Mproc {
                                 mount_path: "/app/config".to_owned(),
                                 ..Default::default()
                             }]),
+                            image_pull_policy: Some("Always".to_owned()),
                             ..Default::default()
                         }],
                         volumes: Some(vec![Volume {

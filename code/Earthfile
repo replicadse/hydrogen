@@ -27,3 +27,14 @@ image:
     --build-arg version=$version \
     .
   SAVE IMAGE $tag
+
+all:
+  BUILD +image --toolchain=nightly --version=0.1.0 --tag=harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-operator:nightly --sub=./apps/operator
+  BUILD +image --toolchain=nightly --version=0.1.0 --tag=harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly --sub=./apps/mproc
+  BUILD +image --toolchain=nightly --version=0.1.0 --tag=harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly --sub=./apps/gateway
+
+push:
+  LOCALLY
+  RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-operator:nightly
+  RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly
+  RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly

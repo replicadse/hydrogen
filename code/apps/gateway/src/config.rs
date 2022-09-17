@@ -2,6 +2,7 @@
 #[serde(rename_all = "snake_case")]
 pub struct Config {
     pub version: String,
+    pub group_id: String,
     pub server: Server,
     pub redis: Redis,
     pub nats: Nats,

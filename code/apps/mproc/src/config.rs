@@ -2,6 +2,7 @@
 #[serde(rename_all = "snake_case")]
 pub struct Config {
     pub version: String,
+    pub group_id: String,
     pub engine_mode: EngineMode,
     pub stream: Stream,
 }

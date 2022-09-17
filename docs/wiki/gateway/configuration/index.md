@@ -5,6 +5,8 @@
 ```
 version: 0.1.0
 
+group_id: "0x0001"
+
 server:
   address: "0.0.0.0:8080"
   heartbeat_interval_sec: 10
@@ -39,6 +41,7 @@ routes:
 |Key|Required|Description|Type|Example|
 |-- |-- |-- |-- |-- |
 |version|yes|The version of this config.|semver v2 compatible string|`1.0.0`|
+|group_id|yes|An identifier for grouping multiple instances.|semver v2 compatible string|`1.0.0`|
 |server|yes|The server configuration.|object||
 |server.address|yes|The address to which the server binds.|$host:$port string|`0.0.0.0:8080`|
 |server.heartbeat_interval_sec|yes|The duration (in seconds) between heartbeats the client has to answer. This must be less than the timeout duration `server.connection_timeout_sec`.|u16|`30`|
