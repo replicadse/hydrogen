@@ -33,3 +33,11 @@ all:
   BUILD +image --toolchain=nightly --version=0.1.0 --tag=harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly --sub=./apps/mproc
   BUILD +image --toolchain=nightly --version=0.1.0 --tag=harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly --sub=./apps/gateway
 
+push:
+  LOCALLY
+  RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-operator:nightly
+  RUN kubectl -n hydrogen rollout restart deployment/hydrogen-hydrogen-operator
+  RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly
+  RUN kubectl -n hydrogen rollout restart deployment/hydrogen-hydrogen-gateway
+  RUN podman push harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly
+  RUN kubectl -n hydrogen rollout restart deployment/hydrogen-hydrogen-mproc

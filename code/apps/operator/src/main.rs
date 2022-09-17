@@ -27,6 +27,12 @@ use kube::{
     Resource,
 };
 
+use crate::crds::{
+    gateway::GatewaySpec,
+    mproc::MprocSpec,
+    reconcile,
+};
+
 mod args;
 mod config;
 mod crds;
@@ -35,6 +41,7 @@ mod error;
 #[tokio::main]
 async fn main() -> std::result::Result<(), WKError> {
     let args = args::ClapArgumentLoader::load()?;
+
     match args.command {
         | args::Command::Exec { .. } => {
             let client = Client::try_default()
@@ -42,44 +49,31 @@ async fn main() -> std::result::Result<(), WKError> {
                 .or_else(|_| Err(WKError::Generic("kube client".to_owned())))?;
 
             let ctx = Arc::new(Context { client: client.clone() });
-            check_crds(ctx.clone()).await?;
+            check_crds(ctx.clone(), vec![Gateway::group_name(), Mproc::group_name()]).await?;
 
-            let gateway_controller = Controller::new(
-                Api::<Gateway>::all(ctx.clone().client.clone()),
-                kube::api::ListParams::default(),
-            );
-            let mproc_controller = Controller::new(
-                Api::<Mproc>::all(ctx.clone().client.clone()),
-                kube::api::ListParams::default(),
-            );
+            macro_rules! start_controller {
+                ($type:ident, $typeArgs:ident) => {
+                    Controller::new(
+                        Api::<$type>::all(ctx.clone().client.clone()),
+                        ListParams::default(),
+                    )
+                    .run(reconcile::<$type, $typeArgs>, on_error, ctx.clone())
+                    .for_each(|rres| async move {
+                        match rres {
+                            | Ok(res) => {
+                                println!("run -> reconciliation successful - resource: {:?}", res);
+                            },
+                            | Err(err) => {
+                                eprintln!("run -> reconciliation error: {:?}", err)
+                            },
+                        }
+                    })
+                    .fuse()
+                };
+            }
 
-            let gateway_stream = gateway_controller.run(Gateway::reconcile, on_error, ctx.clone());
-            let mproc_stream = mproc_controller.run(Mproc::reconcile, on_error, ctx.clone());
-
-            let gateway_fut = gateway_stream
-                .for_each(|rres| async move {
-                    match rres {
-                        | Ok(res) => {
-                            println!("run -> reconciliation successful - resource: {:?}", res);
-                        },
-                        | Err(err) => {
-                            eprintln!("run -> reconciliation error: {:?}", err)
-                        },
-                    }
-                })
-                .fuse();
-            let mproc_fut = mproc_stream
-                .for_each(|rres| async move {
-                    match rres {
-                        | Ok(res) => {
-                            println!("run -> reconciliation successful - resource: {:?}", res);
-                        },
-                        | Err(err) => {
-                            eprintln!("run -> reconciliation error: {:?}", err)
-                        },
-                    }
-                })
-                .fuse();
+            let gateway_fut = start_controller!(Gateway, GatewaySpec);
+            let mproc_fut = start_controller!(Mproc, MprocSpec);
 
             futures::pin_mut!(gateway_fut, mproc_fut);
             select! {
@@ -94,7 +88,7 @@ async fn main() -> std::result::Result<(), WKError> {
     }
 }
 
-async fn check_crds(ctx: Arc<Context>) -> Result<(), WKError> {
+async fn check_crds(ctx: Arc<Context>, expected: Vec<String>) -> Result<(), WKError> {
     let crd_api = Api::<CustomResourceDefinition>::all(ctx.client.clone());
     let lp = ListParams::default();
     let crds = crd_api
@@ -102,12 +96,7 @@ async fn check_crds(ctx: Arc<Context>) -> Result<(), WKError> {
         .await
         .or_else(|_| Err(WKError::InvalidCRD("can not list CRDs".to_owned())))?;
 
-    let expected = vec![
-        "gateways.hydrogen.voidpointergroup.com".to_owned(),
-        "mprocs.hydrogen.voidpointergroup.com".to_owned(),
-    ];
     let mut matches = HashSet::<String>::new();
-
     for crd in crds {
         match crd.meta().name.clone() {
             | Some(v) => {

@@ -79,12 +79,10 @@ apps:
       config:
         config: |-
           version: 0.1.0
-
-          queue:
-            nats:
-              endpoint: "nats://hydrogen-nats:4222"
-              stream: "05b42eec8d834f4f8be226825fd7fecf"
-
+          stream:
+            endpoint: "nats://hydrogen-nats:4222"
+            name: "05b42eec8d834f4f8be226825fd7fecf"
+            consumer_name: "0x01"
           engine_mode:
             regex:
               rules:
