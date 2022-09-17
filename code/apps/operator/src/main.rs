@@ -4,12 +4,17 @@ use std::{
 };
 
 use crds::{
-    echo::Echo,
+    gateway::Gateway,
+    mproc::Mproc,
     Context,
     CRD,
 };
 use error::WKError;
-use futures::stream::StreamExt;
+use futures::{
+    select,
+    FutureExt,
+    StreamExt,
+};
 use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition;
 use kube::{
     api::ListParams,
@@ -39,12 +44,19 @@ async fn main() -> std::result::Result<(), WKError> {
             let ctx = Arc::new(Context { client: client.clone() });
             check_crds(ctx.clone()).await?;
 
-            let x = Controller::new(
-                Api::<Echo>::all(ctx.clone().client.clone()),
+            let gateway_controller = Controller::new(
+                Api::<Gateway>::all(ctx.clone().client.clone()),
+                kube::api::ListParams::default(),
+            );
+            let mproc_controller = Controller::new(
+                Api::<Mproc>::all(ctx.clone().client.clone()),
                 kube::api::ListParams::default(),
             );
 
-            x.run(Echo::reconcile, on_error, ctx)
+            let gateway_stream = gateway_controller.run(Gateway::reconcile, on_error, ctx.clone());
+            let mproc_stream = mproc_controller.run(Mproc::reconcile, on_error, ctx.clone());
+
+            let gateway_fut = gateway_stream
                 .for_each(|rres| async move {
                     match rres {
                         | Ok(res) => {
@@ -55,9 +67,29 @@ async fn main() -> std::result::Result<(), WKError> {
                         },
                     }
                 })
-                .await;
+                .fuse();
+            let mproc_fut = mproc_stream
+                .for_each(|rres| async move {
+                    match rres {
+                        | Ok(res) => {
+                            println!("run -> reconciliation successful - resource: {:?}", res);
+                        },
+                        | Err(err) => {
+                            eprintln!("run -> reconciliation error: {:?}", err)
+                        },
+                    }
+                })
+                .fuse();
 
-            Ok(())
+            futures::pin_mut!(gateway_fut, mproc_fut);
+            select! {
+                () = gateway_fut => {},
+                () = mproc_fut => {},
+            }
+
+            Err(WKError::Generic(
+                "operator terminated - controller task error".to_owned(),
+            ))
         },
     }
 }
@@ -70,7 +102,10 @@ async fn check_crds(ctx: Arc<Context>) -> Result<(), WKError> {
         .await
         .or_else(|_| Err(WKError::InvalidCRD("can not list CRDs".to_owned())))?;
 
-    let expected = vec!["echoes.hydrogen.voidpointergroup.com".to_owned()];
+    let expected = vec![
+        "gateways.hydrogen.voidpointergroup.com".to_owned(),
+        "mprocs.hydrogen.voidpointergroup.com".to_owned(),
+    ];
     let mut matches = HashSet::<String>::new();
 
     for crd in crds {

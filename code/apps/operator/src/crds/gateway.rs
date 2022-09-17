@@ -45,19 +45,20 @@ use crate::error::WKError;
 #[kube(
     group = "hydrogen.voidpointergroup.com",
     version = "v1",
-    kind = "Echo",
-    singular = "echo",
-    plural = "echoes",
+    kind = "Gateway",
+    singular = "gateway",
+    plural = "gateways",
     derive = "PartialEq",
     namespaced
 )]
-pub struct EchoSpec {
+#[serde(rename_all = "snake_case")]
+pub struct GatewaySpec {
     pub replicas: i32,
 }
 
 #[async_trait::async_trait]
-impl CRD<Echo, EchoSpec> for Echo {
-    async fn reconcile(resource: Arc<Echo>, context: Arc<Context>) -> Result<Action, WKError> {
+impl CRD<Gateway, GatewaySpec> for Gateway {
+    async fn reconcile(resource: Arc<Gateway>, context: Arc<Context>) -> Result<Action, WKError> {
         let action = resource.determine_action(resource.clone()).await?;
         println!("{:?}", action);
         match action {
@@ -67,7 +68,7 @@ impl CRD<Echo, EchoSpec> for Echo {
                     .create(context.clone().client.clone(), &resource.spec, resource.clone())
                     .await?;
 
-                set_finalizers::<Echo>(context.clone().client.clone(), resource.clone(), &vec![
+                set_finalizers::<Gateway>(context.clone().client.clone(), resource.clone(), &vec![
                     Self::finalizer_name(),
                 ])
                 .await?;
@@ -78,19 +79,20 @@ impl CRD<Echo, EchoSpec> for Echo {
                 resource
                     .delete(context.clone().client.clone(), resource.clone())
                     .await?;
-                set_finalizers::<Echo>(context.clone().client.clone(), resource.clone(), &vec![]).await?;
+                set_finalizers::<Gateway>(context.clone().client.clone(), resource.clone(), &vec![]).await?;
                 Ok(Action::await_change())
             },
+            | CRDAction::Recreate => Ok(Action::requeue(Duration::from_secs(10))),
         }
     }
 
     fn finalizer_name() -> String {
-        "echoes.hydrogen.voidpointergroup.com/finalizer".to_owned()
+        "gateways.hydrogen.voidpointergroup.com/finalizer".to_owned()
     }
 }
 
-impl Echo {
-    async fn determine_action(&self, resource: Arc<Echo>) -> Result<CRDAction, WKError> {
+impl Gateway {
+    async fn determine_action(&self, resource: Arc<Gateway>) -> Result<CRDAction, WKError> {
         let was_created = resource
             .meta()
             .finalizers
@@ -113,7 +115,7 @@ impl Echo {
         }
     }
 
-    async fn create(&self, client: Client, args: &EchoSpec, resource: Arc<Echo>) -> Result<(), WKError> {
+    async fn create(&self, client: Client, args: &GatewaySpec, resource: Arc<Gateway>) -> Result<(), WKError> {
         let ns = resource
             .namespace()
             .ok_or(WKError::Generic("can not get namespace".to_owned()))?;
@@ -121,7 +123,6 @@ impl Echo {
 
         let mut labels = BTreeMap::<String, String>::new();
         labels.insert("app".to_owned(), resource.name_any().to_owned());
-
         let deployment = Deployment {
             metadata: ObjectMeta {
                 name: Some(resource.name_any()),
@@ -164,7 +165,7 @@ impl Echo {
         Ok(())
     }
 
-    async fn delete(&self, client: Client, resource: Arc<Echo>) -> Result<(), WKError> {
+    async fn delete(&self, client: Client, resource: Arc<Gateway>) -> Result<(), WKError> {
         let ns = resource
             .namespace()
             .ok_or(WKError::Generic("can not get namespace".to_owned()))?;

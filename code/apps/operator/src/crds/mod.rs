@@ -19,7 +19,8 @@ use serde_json::Value;
 
 use crate::error::WKError;
 
-pub(crate) mod echo;
+pub(crate) mod gateway;
+pub(crate) mod mproc;
 
 pub struct Context {
     pub client: Client,
@@ -30,6 +31,7 @@ pub enum CRDAction {
     NoOp,
     Create,
     Delete,
+    Recreate,
 }
 
 #[async_trait::async_trait]
@@ -65,6 +67,34 @@ where
     });
 
     let patch: Patch<&Value> = Patch::Merge(&finalizer);
+    api.patch(&resource.name_any(), &PatchParams::default(), &patch)
+        .await
+        .or_else(|e| Err(WKError::Generic(e.to_string())))?;
+    Ok(())
+}
+
+async fn set_annotation<T>(client: Client, resource: Arc<T>, k: &str, v: &str) -> Result<(), WKError>
+where
+    T: Debug,
+    T: Clone,
+    T: Resource,
+    T: DeserializeOwned,
+    <T as Resource>::DynamicType: Default,
+{
+    let ns = resource
+        .namespace()
+        .ok_or(WKError::Generic("can not get namespace".to_owned()))?;
+
+    let api: Api<T> = Api::namespaced(client, &ns);
+    let annotations: Value = serde_json::json!({
+        "metadata": {
+            "annotations": {
+                k: v,
+            },
+        }
+    });
+
+    let patch: Patch<&Value> = Patch::Merge(&annotations);
     api.patch(&resource.name_any(), &PatchParams::default(), &patch)
         .await
         .or_else(|e| Err(WKError::Generic(e.to_string())))?;

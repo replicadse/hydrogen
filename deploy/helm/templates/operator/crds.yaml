@@ -1,14 +1,14 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: echoes.hydrogen.voidpointergroup.com
+  name: gateways.hydrogen.voidpointergroup.com
 spec:
   group: hydrogen.voidpointergroup.com
   scope: Namespaced
   names:
-    kind: Echo
-    singular: echo
-    plural: echoes
+    kind: Gateway
+    singular: gateway
+    plural: gateways
   versions:
     - name: v1
       served: true
@@ -24,3 +24,51 @@ spec:
                   type: integer
                   format: int32
               required: ["replicas"]
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: mprocs.hydrogen.voidpointergroup.com
+spec:
+  group: hydrogen.voidpointergroup.com
+  scope: Namespaced
+  names:
+    kind: Mproc
+    singular: mproc
+    plural: mprocs
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                hpa:
+                  type: object
+                  properties:
+                    min:
+                      type: integer
+                      format: int32
+                    max:
+                      type: integer
+                      format: int32
+                    cpu:
+                      type: integer
+                      format: int32
+                  required: ["min", "max", "cpu"]
+                config:
+                  type: object
+                  properties:
+                    inline:
+                      type: string
+                    from_secret:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                      required: ["name"]
+              required: ["hpa", "config"]
