@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="2.4.0.716738571741">
+    <meta name="turbo-cache-control" content="no-cache" data-turbo-track="reload" data-track-token="2.4.0.716739147205">
 
     <!-- See retype.com -->
     <meta name="generator" content="Retype 2.4.0">
@@ -30,11 +30,11 @@
 
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
-    <link href="../../resources/css/retype.css?v=2.4.0.716738571741" rel="stylesheet" />
+    <link href="../../resources/css/retype.css?v=2.4.0.716739147205" rel="stylesheet" />
 
-    <script type="text/javascript" src="../../resources/js/config.js?v=2.4.0.716738571741" data-turbo-eval="false" defer></script>
+    <script type="text/javascript" src="../../resources/js/config.js?v=2.4.0.716739147205" data-turbo-eval="false" defer></script>
     <script type="text/javascript" src="../../resources/js/retype.js?v=2.4.0" data-turbo-eval="false" defer></script>
-    <script id="lunr-js" type="text/javascript" src="../../resources/js/lunr.js?v=2.4.0.716738571741" data-turbo-eval="false" defer></script>
+    <script id="lunr-js" type="text/javascript" src="../../resources/js/lunr.js?v=2.4.0.716739147205" data-turbo-eval="false" defer></script>
 </head>
 <body>
     <div id="docs-app" class="relative text-base antialiased text-gray-700 bg-white font-body dark:bg-dark-850 dark:text-dark-300">
@@ -181,10 +181,10 @@
 <div class="codeblock-wrapper"><doc-codeblock>
 <pre class="language-none"><code v-pre class="language-none">version: 0.1.0
 
-queue:
-  nats:
-    endpoint: &quot;nats://hydrogen-nats:4222&quot;
-    stream: &quot;hydrogen&quot;
+stream
+  endpoint: &quot;nats://hydrogen-nats:4222&quot;
+  name: &quot;hydrogen&quot;
+  consumer_name: &quot;0x01&quot;
 
 engine_mode:
   regex:
@@ -232,32 +232,32 @@ engine_mode:
 <td><code v-pre>1.0.0</code></td>
 </tr>
 <tr>
-<td>queue</td>
+<td>stream</td>
 <td>yes</td>
-<td>The config for consuming messages.</td>
+<td>The config for consuming messages on a stream.</td>
 <td>object</td>
 <td></td>
 </tr>
 <tr>
-<td>queue.nats</td>
-<td>yes</td>
-<td>The <code v-pre>NATS</code> configuration.</td>
-<td>object</td>
-<td></td>
-</tr>
-<tr>
-<td>queue.nats.endpoint</td>
+<td>stream.endpoint</td>
 <td>yes</td>
 <td>The endpoint on which to connect to <code v-pre>NATS</code>.</td>
 <td>URL string</td>
 <td><code v-pre>nats://hydrogen-nats:4222</code></td>
 </tr>
 <tr>
-<td>queue.nats.stream</td>
+<td>stream.name</td>
 <td>yes</td>
 <td>The stream name that will be used for client message brokering.</td>
 <td>string</td>
 <td><code v-pre>hydrogen</code></td>
+</tr>
+<tr>
+<td>stream.consumer_name</td>
+<td>yes</td>
+<td>The durable name of the consumer on the stream (see NATS documentation for more information).</td>
+<td>string</td>
+<td><code v-pre>0x01</code></td>
 </tr>
 <tr>
 <td>engine_mode</td>
