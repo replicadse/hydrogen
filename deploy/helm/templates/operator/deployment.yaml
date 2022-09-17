@@ -1,0 +1,36 @@
+{{- if .Values.apps.operator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-hydrogen-operator
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-hydrogen-operator
+  strategy:
+    {{- toYaml .Values.apps.operator.deployment.strategy | nindent 4 }}
+  revisionHistoryLimit: {{ .Values.apps.operator.deployment.revisions }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-hydrogen-operator
+    spec:
+      containers:
+        - name: hydrogen-operator
+          image: {{ .Values.apps.operator.deployment.image.ref }}
+          imagePullPolicy: {{ .Values.apps.operator.deployment.image.pull_policy }}
+          volumeMounts:
+            - mountPath: "/app/config"
+              name: config
+              readOnly: true
+          ports:
+            - containerPort: 8080
+      volumes:
+        - name: config
+          secret:
+            secretName: {{ .Release.Name }}-hydrogen-operator-config
+            optional: false
+            items:
+              - key: config
+                path: config.yaml
+{{ end }}

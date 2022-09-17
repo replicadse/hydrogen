@@ -16,6 +16,9 @@ All work, features and generally everything that will be included in / done befo
 
 ## v1.0 features
 
+* **Gateway & Message processor deployment via CRDs & custom resources** \
+  Gateways and message processors are not deployed from the HELM chart but can be deployed by creating the respective custom resources which will then be synced by the operator that is running in the namespace. This allows ingress/egress route definition similar to other gateways, n-k relations between gateways and message processors (eg. many gateways (routes) -> single processor). \
+  Changes to the spec of the CRs will result in the components related to this resource being recreated.
 * **Bidirectional communication (client <--> server)** \
   Client messages are sent from the client, server messages are sent towards any running instance of hydrogen and forwarded towards the client from the instance that holds it's connection. \
   Avoiding persistent connections towards your service is crucial to reach a near zero downtime when deploying and an increased consumer satisfaction.

@@ -3,13 +3,15 @@
 pub struct Config {
     pub version: String,
     pub engine_mode: EngineMode,
-    pub queue: Queue,
+    pub stream: Stream,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Queue {
-    Nats { endpoint: String, stream: String },
+pub struct Stream {
+    pub endpoint: String,
+    pub name: String,
+    pub consumer_name: String,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

@@ -59,7 +59,7 @@ data:
             body = JSONDecoder().decode(self.rfile.read(int(self.headers['Content-Length'])).decode('UTF-8'))
             print(body, flush=True)
 
-            r = requests.post(f'http://{{ tpl .Release.Name . }}-hydrogen-gateway:8080/connections/{body["connection_id"]}/_send', data=f'command: {body["message"]} not found')
+            r = requests.post(f'{self.headers["x-return-to"]}/connections/{body["connection_id"]}/_send', data=f'command: {body["message"]} not found')
             print(r.text)
 
             self.send_response(200)
