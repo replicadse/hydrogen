@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'The tag for the image.'
+        description: "The tag for the image."
         required: true
       version:
-        description: 'The version of the application inside the image.'
+        description: "The version of the application inside the image."
         required: true
 
 jobs:
@@ -17,8 +17,9 @@ jobs:
     strategy:
       matrix:
         include:
-        - app: "gateway"
-        - app: "mproc"
+          - app: "operator"
+          - app: "gateway"
+          - app: "mproc"
     steps:
       - uses: actions/checkout@v3
       - name: install earthly

@@ -1,38 +1,21 @@
 name: nightly
 on:
   workflow_dispatch:
-  schedule: [{cron: "0 0 * * *"}]
+  schedule: [{ cron: "0 0 * * *" }]
   push:
     branches-ignore:
-      - 'dependabot/**'
+      - "dependabot/**"
 
 jobs:
-  check:
-    name: check code
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-        - dir: "apps/gateway"
-        - dir: "apps/mproc"
-        - dir: "libs/bus"
-        - dir: "libs/error"
-    steps:
-      - uses: actions/checkout@v3
-      - name: install earthly
-        run: "sudo /bin/sh -c 'wget https://github.com/earthly/earthly/releases/download/v0.6.14/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'"
-      - name: fmt
-        working-directory: ./code
-        run: earthly +fmt --toolchain=nightly --sub=${{ matrix.dir }}
-
   build:
     name: build image
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-        - app: "gateway"
-        - app: "mproc"
+          - app: "operator"
+          - app: "gateway"
+          - app: "mproc"
     steps:
       - uses: actions/checkout@v3
       - name: install earthly
@@ -59,8 +42,9 @@ jobs:
     strategy:
       matrix:
         include:
-        - app: "gateway"
-        - app: "mproc"
+          - app: "operator"
+          - app: "gateway"
+          - app: "mproc"
     steps:
       - name: download image
         uses: actions/download-artifact@v2
@@ -77,14 +61,14 @@ jobs:
       - name: run trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'docker.pkg.github.com/voidpointergroup/hydrogen/hydrogen-${{ matrix.app }}:nightly'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'
+          image-ref: "docker.pkg.github.com/voidpointergroup/hydrogen/hydrogen-${{ matrix.app }}:nightly"
+          format: "template"
+          template: "@/contrib/sarif.tpl"
+          output: "trivy-results.sarif"
       - name: upload trivy results
         uses: github/codeql-action/upload-sarif@v1
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 
   publish-harbor:
     name: publish to harbor (nightly)
@@ -94,8 +78,9 @@ jobs:
     strategy:
       matrix:
         include:
-        - app: "gateway"
-        - app: "mproc"
+          - app: "operator"
+          - app: "gateway"
+          - app: "mproc"
     steps:
       - name: download image
         uses: actions/download-artifact@v2

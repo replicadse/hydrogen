@@ -17,11 +17,7 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
     let args = args::ClapArgumentLoader::load()?;
     match args.command {
         | args::Command::Work { config } => {
-            match &config.queue {
-                | config::Queue::Nats { endpoint, stream } => {
-                    endless_nats_consumer(&instance.to_string(), &config, endpoint, stream).await?;
-                },
-            }
+            endless_nats_consumer(&instance.to_string(), &config).await?;
             Ok(())
         },
     }
@@ -30,14 +26,12 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
 async fn endless_nats_consumer(
     instance: &str,
     config: &crate::config::Config,
-    nats_endpoint: &str,
-    nats_stream: &str,
 ) -> std::result::Result<(), Box<dyn Error>> {
-    let nc = async_nats::connect(nats_endpoint).await?;
+    let nc = async_nats::connect(&config.stream.endpoint).await?;
     let nc2 = async_nats::jetstream::new(nc);
     let stream = nc2
         .get_or_create_stream(async_nats::jetstream::stream::Config {
-            name: nats_stream.to_owned(),
+            name: config.stream.name.to_owned(),
             max_messages: 4096,
             max_messages_per_subject: 1024,
             discard: async_nats::jetstream::stream::DiscardPolicy::Old,
@@ -50,7 +44,7 @@ async fn endless_nats_consumer(
         .unwrap();
     let consumer = stream
         .get_or_create_consumer("hydrogen-mproc", async_nats::jetstream::consumer::pull::Config {
-            durable_name: Some("hydrogen-mproc".to_owned()),
+            durable_name: Some(config.stream.consumer_name.to_owned()),
             deliver_policy: async_nats::jetstream::consumer::DeliverPolicy::All,
             max_deliver: 8,
             max_ack_pending: 256,
