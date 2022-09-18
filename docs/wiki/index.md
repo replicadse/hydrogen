@@ -22,6 +22,8 @@ All work, features and generally everything that will be included in / done befo
 * **Bidirectional communication (client <--> server)** \
   Client messages are sent from the client, server messages are sent towards any running instance of hydrogen and forwarded towards the client from the instance that holds it's connection. \
   Avoiding persistent connections towards your service is crucial to reach a near zero downtime when deploying and an increased consumer satisfaction.
+* **Broadcasting** \
+  Broadcast messages to all connections that are connected to instances of one group. This can be interesting for periodic updates, ticks or similar use-cases with connections that act as subscriptions to updates.
 * **Flexible routing** \
   You can choose from letting the mproc application run in `regex` or in `dss` mode. Regex mode will evaluate the messages based on a regular expression and, if it matches, forward the message to the corresponding service. DSS mode will invoke a separate rules engine service that determines and returns the destination for the message which the server then invokes.
 * **Built-in authorizer** \
