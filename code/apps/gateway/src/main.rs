@@ -20,6 +20,7 @@ use actix_web::{
     App,
     HttpServer,
 };
+use nats::jetstream::JetStream;
 use server::Server;
 
 #[actix_web::main]
@@ -60,21 +61,25 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
         return Err(Box::new(crate::error::StartupError::new(e)));
     }
 
-    logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
-        data: logger::Event::Startup {
-            message: &format!("nats client opening @ {}", &config.nats.endpoint),
-        },
-    });
-    let nc = match nats::connect(&config.nats.endpoint) {
-        | Ok(v) => v,
-        | Err(e) => {
+    let js = match config.server.comms {
+        | crate::config::CommsMode::UniServerToClient => Result::<Option<JetStream>, Box<dyn Error>>::Ok(None),
+        | crate::config::CommsMode::Bidi { ref stream } => {
             logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
-                data: logger::Event::Error { err: &e.to_string() },
+                data: logger::Event::Startup {
+                    message: &format!("nats client opening @ {}", stream.endpoint),
+                },
             });
-            return Err(Box::new(crate::error::StartupError::new(&e.to_string())));
+            match nats::connect(&stream.endpoint) {
+                | Ok(v) => Ok(Some(nats::jetstream::new(v))),
+                | Err(e) => {
+                    logger::LogMessage::now(&instance.to_string(), logger::Data::Event {
+                        data: logger::Event::Error { err: &e.to_string() },
+                    });
+                    return Err(Box::new(crate::error::StartupError::new(&e.to_string())));
+                },
+            }
         },
-    };
-    let js = nats::jetstream::new(nc);
+    }?;
 
     let bind = config.server.address.clone();
     logger::LogMessage::now(&instance.to_string(), logger::Data::Event {

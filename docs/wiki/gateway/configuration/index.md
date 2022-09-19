@@ -13,10 +13,11 @@ server:
   connection_timeout_sec: 31
   stats_interval_sec: 10
   max_out_message_size: 262144 # 256kb
-
-nats:
-  endpoint: "nats://hydrogen-nats:4222"
-  stream: "hydrogen"
+  comms:
+    bidi:
+      stream:
+        endpoint: "nats://hydrogen-nats:4222"
+        name: "hydrogen"
 
 redis:
   endpoint: "redis://hydrogen-redis-master:6379"
@@ -48,9 +49,12 @@ routes:
 |server.connection_timeout_sec|yes|The duration (in seconds) when a connection times out after missing heartbeats.|u16|`60`|
 |server.stats_interval_sec|no|The seconds in between stats reporting. No stats are reported if key is missing.|u16|`30`|
 |server.max_out_message_size|yes|The maximum message size in bytes the server will accept from the client.|u64|`262144` (=256*1024)|
-|nats|yes|The `NATS` configuration.|object||
-|nats.endpoint|yes|The endpoint on which to connect to `NATS`.|URL string|`nats://hydrogen-nats:4222`|
-|nats.stream|yes|The stream name that will be used for client message brokering.|string|`hydrogen`|
+|server.comms|yes|Communication mode of the server.|object|`bidi` or `uni_server_to_client`|
+|server.comms.uni_server_to_client|no|Marks server as server to client messages only.|empty object||
+|server.comms.bidi|no|Makes server support bidirectional messages.|object||
+|server.comms.bidi.stream|no|Information about the message stream to use (NATS/JetStream).|object||
+|server.comms.bidi.stream.endpoint|yes|The endpoint on which to connect to `NATS`.|URL string|`nats://hydrogen-nats:4222`|
+|server.comms.bidi.stream.name|yes|The stream name that will be used for client message brokering.|string|`hydrogen`|
 |redis|yes|The `redis` configuration.|object||
 |redis.endpoint|yes|The endpoint on which to connect to `redis`.|URL string|`redis://hydrogen-redis-master:6379`|
 |routes|yes|The downstream service routes.|object||

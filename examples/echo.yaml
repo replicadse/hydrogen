@@ -1,5 +1,48 @@
 ---
 apiVersion: hydrogen.voidpointergroup.com/v1
+kind: Gateway
+metadata:
+  name: echo-gateway-1
+  namespace: hydrogen
+spec:
+  config:
+    inline: |-
+      version: 0.1.0
+      group_id: "0x0001"
+      server:
+        address: "0.0.0.0:8080"
+        heartbeat_interval_sec: 10
+        connection_timeout_sec: 31
+        stats_interval_sec: 10
+        max_out_message_size: 262144 # 256kb
+
+        comms:
+          # uni_server_to_client:
+          bidi:
+            stream:
+              endpoint: "nats://hydrogen-nats:4222"
+              name: "05b42eec8d834f4f8be226825fd7fecf"
+      redis:
+        endpoint: "redis://hydrogen-redis-master:6379"
+      routes:
+        authorizer:
+          endpoint: "http://hydrogen-dss-authorizer:8080"
+          headers:
+            Authorization: dss-authorizer-key
+        connect:
+          endpoint: "http://hydrogen-dss-connect:8080"
+          headers:
+            Authorization: dss-connect-key
+        disconnect:
+          endpoint: "http://hydrogen-dss-disconnect:8080"
+          headers:
+            Authorization: dss-disconnect-key
+  hpa:
+    cpu: 50
+    max: 4
+    min: 2
+---
+apiVersion: hydrogen.voidpointergroup.com/v1
 kind: Mproc
 metadata:
   name: echo-mproc
@@ -32,44 +75,5 @@ spec:
                 headers:
                   Authorization: dss-sink-a-key
                   x-return-to: "http://echo-gateway-1:8080"
----
-apiVersion: hydrogen.voidpointergroup.com/v1
-kind: Gateway
-metadata:
-  name: echo-gateway-1
-  namespace: hydrogen
-spec:
-  config:
-    inline: |-
-      version: 0.1.0
-      group_id: "0x0001"
-      server:
-        address: "0.0.0.0:8080"
-        heartbeat_interval_sec: 10
-        connection_timeout_sec: 31
-        stats_interval_sec: 10
-        max_out_message_size: 262144 # 256kb
-      nats:
-        endpoint: "nats://hydrogen-nats:4222"
-        stream: "05b42eec8d834f4f8be226825fd7fecf"
-      redis:
-        endpoint: "redis://hydrogen-redis-master:6379"
-      routes:
-        authorizer:
-          endpoint: "http://hydrogen-dss-authorizer:8080"
-          headers:
-            Authorization: dss-authorizer-key
-        connect:
-          endpoint: "http://hydrogen-dss-connect:8080"
-          headers:
-            Authorization: dss-connect-key
-        disconnect:
-          endpoint: "http://hydrogen-dss-disconnect:8080"
-          headers:
-            Authorization: dss-disconnect-key
-  hpa:
-    cpu: 50
-    max: 4
-    min: 2
 ---
 

@@ -5,7 +5,6 @@ pub struct Config {
     pub group_id: String,
     pub server: Server,
     pub redis: Redis,
-    pub nats: Nats,
     pub routes: Routes,
 }
 
@@ -25,6 +24,15 @@ pub struct Server {
     pub stats_interval_sec: std::option::Option<u16>,
     pub connection_timeout_sec: u16,
     pub max_out_message_size: usize,
+
+    pub comms: CommsMode,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CommsMode {
+    UniServerToClient,
+    Bidi { stream: Stream },
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -42,9 +50,9 @@ pub struct Redis {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub struct Nats {
+pub struct Stream {
     pub endpoint: String,
-    pub stream: String,
+    pub name: String,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

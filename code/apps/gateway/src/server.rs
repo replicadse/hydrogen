@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::Arc,
+};
 
 use actix::prelude::{
     Actor,
@@ -7,14 +10,17 @@ use actix::prelude::{
 };
 use uuid::Uuid;
 
-use crate::messages::{
-    BroadcastServerMessage,
-    ClientMessage,
-    Connect,
-    Disconnect,
-    Heartbeat,
-    ServerDisconnect,
-    ServerMessage,
+use crate::{
+    config::CommsMode,
+    messages::{
+        BroadcastServerMessage,
+        ClientMessage,
+        Connect,
+        Disconnect,
+        Heartbeat,
+        ServerDisconnect,
+        ServerMessage,
+    },
 };
 
 type Socket = actix::prelude::Recipient<crate::messages::WsMessage>;
@@ -25,7 +31,7 @@ pub struct Server {
     instance: String,
     sessions: SharedSessionMap,
     redis: std::sync::Arc<redis::Client>,
-    nats_js: std::sync::Arc<nats::jetstream::JetStream>,
+    nats_js: Option<std::sync::Arc<nats::jetstream::JetStream>>,
 
     #[allow(dead_code)]
     redis_thread: std::thread::JoinHandle<()>,
@@ -38,7 +44,7 @@ impl Server {
         config: crate::config::Config,
         instance: String,
         redis: redis::Client,
-        nats_js: nats::jetstream::JetStream,
+        nats_js: Option<nats::jetstream::JetStream>,
     ) -> Self {
         let redis_connection_arc = std::sync::Arc::new(redis);
         let session_map_arc: SharedSessionMap =
@@ -64,7 +70,10 @@ impl Server {
             instance,
             sessions: session_map_arc,
             redis: redis_connection_arc,
-            nats_js: std::sync::Arc::new(nats_js),
+            nats_js: match nats_js {
+                | Some(v) => Some(Arc::new(v)),
+                | None => None,
+            },
             redis_thread: rt,
             stats_reporting_thread: srt,
         }
@@ -521,26 +530,37 @@ impl Handler<ClientMessage> for Server {
                 },
             });
 
-            self.nats_js.publish_with_options(
-                &format!("hydrogen.{}.core.v1.$client", self.config.group_id),
-                serde_json::json!(hydrogen_bus::nats::Message {
-                    meta: hydrogen_bus::nats::MessageMeta {
-                        id: Uuid::new_v4().to_string(),
-                        timestamp: chrono::Utc::now().to_rfc3339(),
-                    },
-                    data: hydrogen_bus::nats::ClientMessage {
-                        instance_id: self.instance.clone(),
-                        connection_id: msg.connection,
-                        context: msg.context.into(),
-                        message: msg.message,
-                    }
-                })
-                .to_string(),
-                &nats::jetstream::PublishOptions {
-                    expected_stream: Some(self.config.nats.stream.to_owned()),
-                    ..Default::default()
+            match &self.nats_js {
+                | Some(v) => {
+                    let stream_name = match &self.config.server.comms {
+                        | CommsMode::UniServerToClient => {
+                            Err(crate::error::ConfigError::new("server comms mode is uni"))
+                        },
+                        | CommsMode::Bidi { stream } => Ok(stream.name.clone()),
+                    }?;
+                    v.publish_with_options(
+                        &format!("hydrogen.{}.core.v1.$client", self.config.group_id),
+                        serde_json::json!(hydrogen_bus::nats::Message {
+                            meta: hydrogen_bus::nats::MessageMeta {
+                                id: Uuid::new_v4().to_string(),
+                                timestamp: chrono::Utc::now().to_rfc3339(),
+                            },
+                            data: hydrogen_bus::nats::ClientMessage {
+                                instance_id: self.instance.clone(),
+                                connection_id: msg.connection,
+                                context: msg.context.into(),
+                                message: msg.message,
+                            }
+                        })
+                        .to_string(),
+                        &nats::jetstream::PublishOptions {
+                            expected_stream: Some(stream_name),
+                            ..Default::default()
+                        },
+                    )?;
                 },
-            )?;
+                | None => {},
+            }
             Ok(())
         };
         match safecall() {
