@@ -1,0 +1,26 @@
+apiVersion: hydrogen.voidpointergroup.com/v1
+kind: Gateway
+metadata:
+  name: "{{ .Values.apps.timer.gateway.name }}"
+spec:
+  config:
+    inline: |-
+      version: 0.1.0
+      group_id: "0x0001"
+      server:
+        address: "0.0.0.0:8080"
+        heartbeat_interval_sec: 10
+        connection_timeout_sec: 31
+        stats_interval_sec: 10
+        max_out_message_size: 262144 # 256kb
+
+        comms:
+          uni_server_to_client:
+      redis:
+        endpoint: "redis://hydrogen-redis-master:6379"
+      routes: {}
+
+  hpa:
+    cpu: 50
+    max: 4
+    min: 2

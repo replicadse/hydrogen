@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-timer
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-timer
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 0
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-timer
+    spec:
+      containers:
+        - name: timer
+          image: alpine:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: APP_GATEWAY_ENDPOINT
+              value: "{{ .Values.apps.timer.gateway.endpoint }}"
+            - name: APP_INTERVAL_SECONDS
+              value: "{{ .Values.apps.timer.interval_seconds }}"
+          command: ["/bin/sh", "-c", "apk update && apk add curl && watch -n $APP_INTERVAL_SECONDS curl -X POST -d '$(date +%s)' $APP_GATEWAY_ENDPOINT"]
