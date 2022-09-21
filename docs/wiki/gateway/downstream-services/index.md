@@ -17,6 +17,9 @@
     "connection_id": {
       "type": "string"
     },
+    "group_id": {
+      "type": "string"
+    },
     "endpoint": {
       "type": "string"
     },
@@ -80,6 +83,9 @@ HTTP code 200 for success, other codes will make the connection abort due to an 
     "connection_id": {
       "type": "string"
     },
+    "group_id": {
+      "type": "string"
+    },
     "endpoint": {
       "type": "string"
     },
@@ -115,6 +121,9 @@ HTTP code 200 for success, other codes will make the connection abort due to an 
       "type": "string"
     },
     "connection_id": {
+      "type": "string"
+    },
+    "group_id": {
       "type": "string"
     },
     "endpoint": {
