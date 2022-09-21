@@ -81,7 +81,7 @@ impl Server {
 
     pub fn make_key(&self, connection: &str) -> String {
         format!(
-            "hydrogen:{}:i2c:{}:{}",
+            "hydrogen:group:{}:i2c:{}:{}",
             self.config.group_id,
             self.instance,
             connection.to_string()
@@ -89,7 +89,7 @@ impl Server {
     }
 
     pub fn make_reverse_key(&self, connection: &str) -> String {
-        format!("hydrogen:{}:c2i:{}", self.config.group_id, connection)
+        format!("hydrogen:group:{}:c2i:{}", self.config.group_id, connection)
     }
 
     /// Function will start a new thread and return it's JoinHandle. This thread
@@ -105,8 +105,8 @@ impl Server {
             let mut conn = redis_conn.get_connection().unwrap();
             let mut ps = conn.as_pubsub();
             let thread_instance_id = instance_id.clone();
-            ps.subscribe(format!("hydrogen:{}:broadcast", group_id)).unwrap();
-            ps.subscribe(format!("hydrogen:{}", instance_id)).unwrap();
+            ps.subscribe(format!("hydrogen:group:{}:broadcast", group_id)).unwrap();
+            ps.subscribe(format!("hydrogen:instance:{}", instance_id)).unwrap();
 
             loop {
                 let mut safecall = || -> Result<(), Box<dyn std::error::Error>> {
@@ -437,7 +437,10 @@ impl Handler<ServerMessage> for Server {
                 .arg(&self.make_reverse_key(&conn))
                 .query::<String>(&mut self.redis.get_connection()?)?;
             redis::pipe()
-                .publish(target_instance, serde_json::to_string(&redis_message)?)
+                .publish(
+                    format!("hydrogen:instance:{}", target_instance),
+                    serde_json::to_string(&redis_message)?,
+                )
                 .query::<()>(&mut self.redis.get_connection()?)?;
             Ok(())
         };
@@ -470,7 +473,7 @@ impl Handler<BroadcastServerMessage> for Server {
 
             redis::pipe()
                 .publish(
-                    format!("hydrogen:{}:broadcast", self.config.group_id),
+                    format!("hydrogen:group:{}:broadcast", self.config.group_id),
                     serde_json::to_string(&redis_message)?,
                 )
                 .query::<()>(&mut self.redis.get_connection()?)?;
