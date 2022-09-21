@@ -18,7 +18,9 @@ spec:
           uni_server_to_client:
       redis:
         endpoint: "redis://hydrogen-redis-master:6379"
-      routes: {}
+      routes:
+        endpoints:
+          - "/"
 
   hpa:
     cpu: 50

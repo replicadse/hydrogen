@@ -23,6 +23,8 @@ redis:
   endpoint: "redis://hydrogen-redis-master:6379"
 
 routes:
+  endpoints:
+    - "/"
   authorizer:
     endpoint: "http://hydrogen-dss-authorizer:8080"
     headers:
@@ -58,6 +60,7 @@ routes:
 |redis|yes|The `redis` configuration.|object||
 |redis.endpoint|yes|The endpoint on which to connect to `redis`.|URL string|`redis://hydrogen-redis-master:6379`|
 |routes|yes|The downstream service routes.|object||
+|routes.endpoints|yes|All the different routes to which a client can connect.|Array of string||
 |routes.authorizer|no|The authorizer downstream service.|object||
 |routes.authorizer.endpoint|yes|The authorizer endpoint.|URL string|`http://hydrogen-dss-authorizer:8080`|
 |routes.authorizer.headers|yes|Headers to send to the authorizer on invocation.|Map<String, String>||

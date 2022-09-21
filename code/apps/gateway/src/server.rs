@@ -24,7 +24,7 @@ use crate::{
 };
 
 type Socket = actix::prelude::Recipient<crate::messages::WsMessage>;
-type SharedSessionMap = std::sync::Arc<std::sync::RwLock<HashMap<String, Socket>>>;
+type SharedSessionMap = std::sync::Arc<std::sync::RwLock<HashMap<String, (String, Socket)>>>;
 
 pub struct Server {
     config: crate::config::Config,
@@ -48,7 +48,7 @@ impl Server {
     ) -> Self {
         let redis_connection_arc = std::sync::Arc::new(redis);
         let session_map_arc: SharedSessionMap =
-            std::sync::Arc::new(std::sync::RwLock::new(HashMap::<String, Socket>::new()));
+            std::sync::Arc::new(std::sync::RwLock::new(HashMap::<String, (String, Socket)>::new()));
 
         let rt = Self::start_redis_thread(
             instance.clone(),
@@ -120,7 +120,10 @@ impl Server {
                             });
 
                             for s in sessions.read()?.iter() {
-                                s.1.do_send(crate::messages::WsMessage::Message(message.clone()));
+                                s.1 .1.do_send(crate::messages::WsMessage::Message {
+                                    endpoint: s.1 .0.to_owned(),
+                                    message: message.clone(),
+                                });
                             }
                             Ok(())
                         },
@@ -137,7 +140,10 @@ impl Server {
                             });
                             match sessions.read()?.get(&connection) {
                                 | Some(s) => {
-                                    s.do_send(crate::messages::WsMessage::Message(message));
+                                    s.1.do_send(crate::messages::WsMessage::Message {
+                                        endpoint: s.0.to_owned(),
+                                        message: message.clone(),
+                                    });
                                     Ok(())
                                 },
                                 | None => Err(Box::new(crate::error::ConnectionNotFoundError::new(
@@ -159,7 +165,7 @@ impl Server {
                             });
                             match sessions.read()?.get(&connection) {
                                 | Some(s) => {
-                                    s.do_send(crate::messages::WsMessage::Disconnect(reason));
+                                    s.1.do_send(crate::messages::WsMessage::Disconnect(reason));
                                     Ok(())
                                 },
                                 | None => Err(Box::new(crate::error::ConnectionNotFoundError::new(
@@ -211,6 +217,7 @@ impl Server {
 
         let resp = req.send_string(&serde_json::to_string(&crate::routes::ConnectRequest {
             instance_id: self.instance.clone(),
+            endpoint: message.endpoint.clone(),
             connection_id: message.connection.clone(),
             time: message.time.clone(),
         })?)?;
@@ -244,6 +251,7 @@ impl Server {
 
         let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
             instance_id: self.instance.clone(),
+            endpoint: message.endpoint.clone(),
             connection_id: message.connection.clone(),
             time: message.time.clone(),
         })?)?;
@@ -287,7 +295,7 @@ impl Handler<Connect> for Server {
             self.sessions
                 .write()
                 .unwrap()
-                .insert(msg.connection.clone(), msg.addr.clone()); // must never be poisoned
+                .insert(msg.connection.clone(), (msg.endpoint.clone(), msg.addr.clone())); // must never be poisoned
             let key = self.make_key(&msg.connection);
             let rkey = self.make_reverse_key(&msg.connection);
 

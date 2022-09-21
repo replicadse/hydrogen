@@ -11,6 +11,7 @@ pub struct Config {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct Routes {
+    pub endpoints: Vec<String>,
     pub authorizer: std::option::Option<Authorizer>,
     pub connect: std::option::Option<ConnectRoute>,
     pub disconnect: std::option::Option<DisconnectRoute>,

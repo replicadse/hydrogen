@@ -47,6 +47,7 @@ pub struct WsConn {
     address: Addr<Server>,
     heartbeat: Instant,
     pub connection: String,
+    pub endpoint: String,
     pub context: WsConnContext,
     heartbeat_int: std::time::Duration,
     timeout: std::time::Duration,
@@ -59,6 +60,7 @@ impl WsConn {
 
     pub fn new(
         connection: String,
+        endpoint: String,
         server: Addr<Server>,
         context: WsConnContext,
         heartbeat_int: std::time::Duration,
@@ -66,6 +68,7 @@ impl WsConn {
     ) -> WsConn {
         WsConn {
             connection,
+            endpoint,
             address: server,
             heartbeat: Instant::now(),
             context,
@@ -89,6 +92,7 @@ impl Actor for WsConn {
                 addr: addr.recipient(),
                 time: chrono::Utc::now().to_rfc3339(),
                 connection: self.connection.clone(),
+                endpoint: self.endpoint.clone(),
             })
             .into_actor(self)
             .then(
@@ -112,6 +116,7 @@ impl Actor for WsConn {
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         self.address.do_send(Disconnect {
             connection: self.connection.clone(),
+            endpoint: self.endpoint.clone(),
             time: chrono::Utc::now().to_rfc3339(),
         });
         Running::Stop
@@ -126,10 +131,12 @@ impl WsConn {
         interval: std::time::Duration,
         timeout: std::time::Duration,
     ) {
+        let ep = self.endpoint.clone();
         ctx.run_interval(interval, move |act, ctx| {
             if Instant::now().duration_since(act.heartbeat) > timeout {
                 act.address.do_send(Disconnect {
                     connection: act.connection.clone(),
+                    endpoint: ep.clone(),
                     time: chrono::Utc::now().to_rfc3339(),
                 });
                 ctx.stop();
@@ -192,8 +199,8 @@ impl Handler<WsMessage> for WsConn {
     /// Will handle low-level server events for a given connection.
     fn handle(&mut self, msg: WsMessage, ctx: &mut Self::Context) {
         match msg {
-            | WsMessage::Message(v) => {
-                ctx.text(v);
+            | WsMessage::Message { message, .. } => {
+                ctx.text(message);
             },
             | WsMessage::Disconnect(v) => {
                 ctx.close(Some(CloseReason {

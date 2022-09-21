@@ -6,7 +6,7 @@ use actix::prelude::{
 #[derive(Message)]
 #[rtype(result = "()")]
 pub enum WsMessage {
-    Message(String),
+    Message { endpoint: String, message: String },
     Disconnect(String),
 }
 
@@ -14,6 +14,7 @@ pub enum WsMessage {
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct Connect {
     pub connection: String,
+    pub endpoint: String,
     pub time: String,
     pub addr: Recipient<WsMessage>,
 }
@@ -22,6 +23,7 @@ pub struct Connect {
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct Disconnect {
     pub connection: String,
+    pub endpoint: String,
     pub time: String,
 }
 

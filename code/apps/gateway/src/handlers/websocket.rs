@@ -1,6 +1,5 @@
 use actix::Addr;
 use actix_web::{
-    get,
     web::{
         Data,
         Payload,
@@ -22,12 +21,12 @@ use crate::{
 /// if present to determine whether the connection may or may not be
 /// established. It will also enrich the context of the connection with
 /// the context that is returned by the authorizer in it's response.
-#[get("/ws")]
 pub async fn handler(
     req: HttpRequest,
     stream: Payload,
     srv: Data<Addr<Server>>,
     instance: Data<String>,
+    endpoint: Data<String>,
     config: Data<crate::config::Config>,
 ) -> Result<HttpResponse, Error> {
     let safecall_auth =
@@ -50,6 +49,7 @@ pub async fn handler(
         | Ok(ar) => {
             let ws = WsConn::new(
                 ws_id,
+                endpoint.get_ref().to_owned(),
                 srv.get_ref().clone(),
                 crate::ws::WsConnContext {
                     authorizer: match ar {
@@ -83,8 +83,9 @@ fn invoke_authorizer_route(
         auth_req = auth_req.set(k, v);
     }
     let resp = auth_req.send_string(&serde_json::to_string(&crate::routes::AuthorizerRequest {
-        instance_id: instance.to_string(),
-        connection_id: conn_id.to_string(),
+        instance_id: instance.to_owned(),
+        connection_id: conn_id.to_owned(),
+        endpoint: endpoint.to_owned(),
         time: chrono::Utc::now().to_rfc3339(),
         headers: headers.iter().map(|v| (v.0.to_owned(), v.1.to_owned())).collect(),
     })?)?;
