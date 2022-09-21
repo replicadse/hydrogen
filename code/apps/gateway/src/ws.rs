@@ -46,10 +46,10 @@ pub struct WsConnContext {
 pub struct WsConn {
     address: Addr<Server>,
     heartbeat: Instant,
-    pub connection: String,
-    pub group: String,
-    pub endpoint: String,
-    pub context: WsConnContext,
+    connection: String,
+    group: String,
+    endpoint: String,
+    context: WsConnContext,
     heartbeat_int: std::time::Duration,
     timeout: std::time::Duration,
 }

@@ -3,4 +3,4 @@ apps:
     gateway:
       name: timer-gateway-1
       endpoint: http://timer-gateway-1:8080/connections/_broadcast
-    interval_seconds: 10
+    interval_seconds: 2
