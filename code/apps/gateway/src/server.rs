@@ -105,8 +105,8 @@ impl Server {
             let mut conn = redis_conn.get_connection().unwrap();
             let mut ps = conn.as_pubsub();
             let thread_instance_id = instance_id.clone();
-            ps.subscribe(format!("{}:broadcast", group_id)).unwrap();
-            ps.subscribe(instance_id).unwrap();
+            ps.subscribe(format!("hydrogen:{}:broadcast", group_id)).unwrap();
+            ps.subscribe(format!("hydrogen:{}", instance_id)).unwrap();
 
             loop {
                 let mut safecall = || -> Result<(), Box<dyn std::error::Error>> {
@@ -470,7 +470,7 @@ impl Handler<BroadcastServerMessage> for Server {
 
             redis::pipe()
                 .publish(
-                    format!("{}:broadcast", self.config.group_id),
+                    format!("hydrogen:{}:broadcast", self.config.group_id),
                     serde_json::to_string(&redis_message)?,
                 )
                 .query::<()>(&mut self.redis.get_connection()?)?;
