@@ -47,6 +47,7 @@ pub struct WsConn {
     address: Addr<Server>,
     heartbeat: Instant,
     pub connection: String,
+    pub group: String,
     pub endpoint: String,
     pub context: WsConnContext,
     heartbeat_int: std::time::Duration,
@@ -60,6 +61,7 @@ impl WsConn {
 
     pub fn new(
         connection: String,
+        group: String,
         endpoint: String,
         server: Addr<Server>,
         context: WsConnContext,
@@ -68,6 +70,7 @@ impl WsConn {
     ) -> WsConn {
         WsConn {
             connection,
+            group,
             endpoint,
             address: server,
             heartbeat: Instant::now(),
@@ -92,6 +95,7 @@ impl Actor for WsConn {
                 addr: addr.recipient(),
                 time: chrono::Utc::now().to_rfc3339(),
                 connection: self.connection.clone(),
+                group_id: self.group.clone(),
                 endpoint: self.endpoint.clone(),
             })
             .into_actor(self)
@@ -116,6 +120,7 @@ impl Actor for WsConn {
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         self.address.do_send(Disconnect {
             connection: self.connection.clone(),
+            group_id: self.group.clone(),
             endpoint: self.endpoint.clone(),
             time: chrono::Utc::now().to_rfc3339(),
         });
@@ -131,12 +136,14 @@ impl WsConn {
         interval: std::time::Duration,
         timeout: std::time::Duration,
     ) {
-        let ep = self.endpoint.clone();
+        let endpoint = self.endpoint.clone();
+        let group = self.group.clone();
         ctx.run_interval(interval, move |act, ctx| {
             if Instant::now().duration_since(act.heartbeat) > timeout {
                 act.address.do_send(Disconnect {
                     connection: act.connection.clone(),
-                    endpoint: ep.clone(),
+                    group_id: group.clone(),
+                    endpoint: endpoint.clone(),
                     time: chrono::Utc::now().to_rfc3339(),
                 });
                 ctx.stop();
@@ -181,6 +188,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
             | Ok(ws::Message::Nop) => (),
             | Ok(Text(s)) => self.address.do_send(ClientMessage {
                 connection: self.connection.clone(),
+                group_id: self.group.clone(),
+                endpoint: self.endpoint.clone(),
                 time: chrono::Utc::now().to_rfc3339(),
                 context: crate::messages::ConnectionContext {
                     authorizer: self.context.authorizer.clone(),

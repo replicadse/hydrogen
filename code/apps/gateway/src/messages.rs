@@ -15,6 +15,7 @@ pub enum WsMessage {
 pub struct Connect {
     pub connection: String,
     pub endpoint: String,
+    pub group_id: String,
     pub time: String,
     pub addr: Recipient<WsMessage>,
 }
@@ -24,6 +25,7 @@ pub struct Connect {
 pub struct Disconnect {
     pub connection: String,
     pub endpoint: String,
+    pub group_id: String,
     pub time: String,
 }
 
@@ -45,6 +47,8 @@ pub struct ConnectionContext {
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct ClientMessage {
     pub connection: String,
+    pub endpoint: String,
+    pub group_id: String,
     pub time: String,
     pub context: ConnectionContext,
     pub message: String,

@@ -125,6 +125,7 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
                 )
                 .app_data(Data::new(server.clone()))
                 .app_data(Data::new(instance.clone()))
+                .app_data(Data::new(config.group_id.clone()))
                 .app_data(Data::new(ep_san.clone()))
                 .app_data(Data::new(config.clone()))
         }

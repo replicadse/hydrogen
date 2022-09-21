@@ -26,6 +26,7 @@ pub async fn handler(
     stream: Payload,
     srv: Data<Addr<Server>>,
     instance: Data<String>,
+    group: Data<String>,
     endpoint: Data<String>,
     config: Data<crate::config::Config>,
 ) -> Result<HttpResponse, Error> {
@@ -36,6 +37,7 @@ pub async fn handler(
             match auth_route {
                 | Some(c) => Ok(Some(invoke_authorizer_route(
                     &instance,
+                    &group,
                     &c.endpoint,
                     &c.headers,
                     conn_id,
@@ -49,6 +51,7 @@ pub async fn handler(
         | Ok(ar) => {
             let ws = WsConn::new(
                 ws_id,
+                group.as_ref().to_owned(),
                 endpoint.get_ref().to_owned(),
                 srv.get_ref().clone(),
                 crate::ws::WsConnContext {
@@ -74,6 +77,7 @@ pub async fn handler(
 
 fn invoke_authorizer_route(
     instance: &str,
+    group: &str,
     endpoint: &str,
     headers: &std::collections::HashMap<String, String>,
     conn_id: &str,
@@ -84,6 +88,7 @@ fn invoke_authorizer_route(
     }
     let resp = auth_req.send_string(&serde_json::to_string(&crate::routes::AuthorizerRequest {
         instance_id: instance.to_owned(),
+        group_id: group.to_owned(),
         connection_id: conn_id.to_owned(),
         endpoint: endpoint.to_owned(),
         time: chrono::Utc::now().to_rfc3339(),

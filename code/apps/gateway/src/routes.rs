@@ -2,6 +2,7 @@
 #[serde(rename_all = "snake_case")]
 pub struct AuthorizerRequest {
     pub instance_id: String,
+    pub group_id: String,
     pub endpoint: String,
     pub connection_id: String,
     pub time: String,
@@ -18,6 +19,7 @@ pub struct AuthorizerResponse {
 #[serde(rename_all = "snake_case")]
 pub struct ConnectRequest {
     pub instance_id: String,
+    pub group_id: String,
     pub endpoint: String,
     pub connection_id: String,
     pub time: String,
@@ -27,6 +29,7 @@ pub struct ConnectRequest {
 #[serde(rename_all = "snake_case")]
 pub struct DisconnectRequest {
     pub instance_id: String,
+    pub group_id: String,
     pub endpoint: String,
     pub connection_id: String,
     pub time: String,

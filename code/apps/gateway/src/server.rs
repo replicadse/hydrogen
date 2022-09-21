@@ -217,6 +217,7 @@ impl Server {
 
         let resp = req.send_string(&serde_json::to_string(&crate::routes::ConnectRequest {
             instance_id: self.instance.clone(),
+            group_id: self.config.group_id.clone(),
             endpoint: message.endpoint.clone(),
             connection_id: message.connection.clone(),
             time: message.time.clone(),
@@ -251,6 +252,7 @@ impl Server {
 
         let resp = req.send_string(&serde_json::to_string(&crate::routes::DisconnectRequest {
             instance_id: self.instance.clone(),
+            group_id: self.config.group_id.clone(),
             endpoint: message.endpoint.clone(),
             connection_id: message.connection.clone(),
             time: message.time.clone(),
