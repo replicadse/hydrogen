@@ -11,7 +11,13 @@ use actix_web::{
 use actix_web_actors::ws;
 
 use crate::{
+    config::Config,
     server::Server,
+    types::{
+        Endpoint,
+        GroupID,
+        InstanceID,
+    },
     ws::WsConn,
 };
 
@@ -25,11 +31,12 @@ pub async fn handler(
     req: HttpRequest,
     stream: Payload,
     srv: Data<Addr<Server>>,
-    instance: Data<String>,
-    group: Data<String>,
-    endpoint: Data<String>,
-    config: Data<crate::config::Config>,
+    config: Data<Config>,
+    instance: Data<InstanceID>,
+    group: Data<GroupID>,
+    endpoint: Data<Endpoint>,
 ) -> Result<HttpResponse, Error> {
+    println!("endpoint is {}", endpoint.clone().into_inner());
     let safecall_auth =
         |conn_id: &str,
          auth_route: &std::option::Option<crate::config::Authorizer>|

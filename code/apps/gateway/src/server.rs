@@ -114,12 +114,25 @@ impl Server {
                     let pl: String = msg.get_payload()?;
                     let payload: hydrogen_bus::redis::Message = serde_json::from_str(&pl)?;
                     match payload {
-                        | hydrogen_bus::redis::Message::SBroadcast { time: _, message } => {
+                        | hydrogen_bus::redis::Message::SBroadcast { message, .. } => {
                             crate::logger::LogMessage::now(&thread_instance_id, crate::logger::Data::Event {
                                 data: crate::logger::Event::ServerBroadcastMessagePost {},
                             });
 
                             for s in sessions.read()?.iter() {
+                                s.1 .1.do_send(crate::messages::WsMessage::Message {
+                                    endpoint: s.1 .0.to_owned(),
+                                    message: message.clone(),
+                                });
+                            }
+                            Ok(())
+                        },
+                        | hydrogen_bus::redis::Message::SEBroadcast { endpoint, message, .. } => {
+                            crate::logger::LogMessage::now(&thread_instance_id, crate::logger::Data::Event {
+                                data: crate::logger::Event::ServerEndpointBroadcastMessagePost { endpoint: &endpoint },
+                            });
+
+                            for s in sessions.read()?.iter().filter(|s| s.1 .0 == endpoint) {
                                 s.1 .1.do_send(crate::messages::WsMessage::Message {
                                     endpoint: s.1 .0.to_owned(),
                                     message: message.clone(),
@@ -465,9 +478,18 @@ impl Handler<BroadcastServerMessage> for Server {
     /// channel.
     fn handle(&mut self, msg: BroadcastServerMessage, _ctx: &mut Context<Self>) -> Self::Result {
         let safecall = || -> Result<(), Box<dyn std::error::Error>> {
-            crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
-                data: crate::logger::Event::ServerBroadcastMessageEnqueue {},
-            });
+            match &msg {
+                | BroadcastServerMessage::All { .. } => {
+                    crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
+                        data: crate::logger::Event::ServerBroadcastMessageEnqueue {},
+                    });
+                },
+                | BroadcastServerMessage::Endpoint { endpoint, .. } => {
+                    crate::logger::LogMessage::now(&self.instance.to_string(), crate::logger::Data::Event {
+                        data: crate::logger::Event::ServerEndpointBroadcastMessageEnqueue { endpoint },
+                    });
+                },
+            }
 
             let redis_message: hydrogen_bus::redis::Message = msg.into();
 

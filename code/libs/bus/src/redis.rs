@@ -4,6 +4,11 @@ pub enum Message {
         time: String,
         message: String,
     },
+    SEBroadcast {
+        endpoint: String,
+        time: String,
+        message: String,
+    },
     S2CMessage {
         connection: String,
         time: String,

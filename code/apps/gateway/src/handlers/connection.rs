@@ -1,8 +1,10 @@
 use actix::Addr;
 use actix_web::{
+    self,
     post,
     web::{
         Data,
+        Path,
         Payload,
     },
     Error,
@@ -11,16 +13,26 @@ use actix_web::{
 };
 use futures::StreamExt;
 
-use crate::server::Server;
+use crate::{
+    config::Config,
+    server::Server,
+};
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct BroadcastQueryParams {
+    pub endpoints: Option<Vec<String>>,
+}
 
 /// Endpoint for broadcasting a message to all connections.
 #[post("/connections/_broadcast")]
 pub async fn handle_broadcast_message(
-    _req: HttpRequest,
+    req: HttpRequest,
     mut stream: Payload,
     srv: Data<Addr<Server>>,
-    config: Data<crate::config::Config>,
+    config: Data<Config>,
 ) -> Result<HttpResponse, Error> {
+    let q_params = serde_qs::Config::new(4, false).deserialize_str::<BroadcastQueryParams>(&req.query_string())?;
     let mut body = actix_web::web::BytesMut::new();
     while let Some(chunk) = stream.next().await {
         let chunk = chunk?;
@@ -30,10 +42,24 @@ pub async fn handle_broadcast_message(
         }
         body.extend_from_slice(&chunk);
     }
-    srv.do_send(crate::messages::BroadcastServerMessage {
-        time: chrono::Utc::now().to_rfc3339(),
-        message: String::from_utf8(body.to_vec()).unwrap(),
-    });
+
+    match &q_params.endpoints {
+        | Some(endpoints) => {
+            for ep in endpoints.iter() {
+                srv.do_send(crate::messages::BroadcastServerMessage::Endpoint {
+                    endpoint: ep.to_owned(),
+                    time: chrono::Utc::now().to_rfc3339(),
+                    message: String::from_utf8(body.to_vec()).unwrap(),
+                });
+            }
+        },
+        | None => {
+            srv.do_send(crate::messages::BroadcastServerMessage::All {
+                time: chrono::Utc::now().to_rfc3339(),
+                message: String::from_utf8(body.to_vec()).unwrap(),
+            });
+        },
+    }
     Ok(actix_web::HttpResponse::Ok().body(""))
 }
 
@@ -42,11 +68,10 @@ pub async fn handle_broadcast_message(
 /// process in the background.
 #[post("/connections/{connection_id}/_send")]
 pub async fn handle_server_message(
-    _req: HttpRequest,
     mut stream: Payload,
-    path: actix_web::web::Path<String>,
+    path: Path<String>,
     srv: Data<Addr<Server>>,
-    config: Data<crate::config::Config>,
+    config: Data<Config>,
 ) -> Result<HttpResponse, Error> {
     let mut body = actix_web::web::BytesMut::new();
     while let Some(chunk) = stream.next().await {
@@ -70,11 +95,10 @@ pub async fn handle_server_message(
 /// process in the background.
 #[post("/connections/{connection_id}/_disconnect")]
 pub async fn handle_disconnect(
-    _req: HttpRequest,
     mut stream: Payload,
-    path: actix_web::web::Path<String>,
+    path: Path<String>,
     srv: Data<Addr<Server>>,
-    config: Data<crate::config::Config>,
+    config: Data<Config>,
 ) -> Result<HttpResponse, Error> {
     let mut body = actix_web::web::BytesMut::new();
     while let Some(chunk) = stream.next().await {

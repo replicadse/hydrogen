@@ -42,6 +42,8 @@ pub enum Event<'a> {
     ServerDisconnect { connection: &'a str, reason: &'a str },
 
     ClientMessage { connection: &'a str },
+    ServerEndpointBroadcastMessageEnqueue { endpoint: &'a str },
+    ServerEndpointBroadcastMessagePost { endpoint: &'a str },
     ServerBroadcastMessageEnqueue {},
     ServerBroadcastMessagePost {},
     ServerMessageEnqueue { connection: &'a str },

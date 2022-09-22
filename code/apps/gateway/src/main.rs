@@ -5,6 +5,7 @@ mod logger;
 mod messages;
 mod routes;
 mod server;
+mod types;
 mod ws;
 mod handlers {
     pub mod connection;
@@ -26,6 +27,12 @@ use actix_web::{
 };
 use nats::jetstream::JetStream;
 use server::Server;
+
+use crate::types::{
+    Endpoint,
+    GroupID,
+    InstanceID,
+};
 
 #[actix_web::main]
 async fn main() -> std::result::Result<(), Box<dyn Error>> {
@@ -95,44 +102,31 @@ async fn serve(config: crate::config::Config) -> std::result::Result<(), Box<dyn
     let server = Server::new(config.clone(), instance.clone(), redis.clone(), js.clone()).start();
     HttpServer::new(move || {
         let mut app = App::new()
+            .app_data(Data::new(server.clone()))
+            .app_data(Data::new(config.clone()))
+            .app_data(Data::new(InstanceID::from(instance.clone())))
+            .app_data(Data::new(GroupID::from(config.group_id.clone())))
             .service(crate::handlers::connection::handle_broadcast_message)
-            .app_data(Data::new(server.clone()))
-            .app_data(Data::new(config.clone()))
             .service(crate::handlers::connection::handle_server_message)
-            .app_data(Data::new(server.clone()))
-            .app_data(Data::new(config.clone()))
             .service(crate::handlers::connection::handle_disconnect)
-            .app_data(Data::new(server.clone()))
-            .app_data(Data::new(config.clone()))
             .service(crate::handlers::health::handler);
 
         for ep in config.clone().routes.endpoints {
-            let mut ep_san = ep.trim_end_matches("/").to_owned(); // no ending slash
-            if ep_san.len() > 0 && !ep_san.starts_with("/") {
-                // ensure a leading slash
-                ep_san = format!("/{}", ep_san).to_owned();
-            }
-            assert!(ep_san.starts_with("/") || ep_san.len() == 0);
-            assert!(!ep_san.ends_with("/"));
+            assert!(ep.starts_with("/"), "routes need to start with a forward slash");
 
-            app = app
-                .service(
-                    web::resource(format!("/ws{}", ep_san)).route(
+            app = app.service(
+                web::resource(format!("/ws{}", ep))
+                    .route(
                         web::get()
                             .method(http::Method::GET)
                             .to(crate::handlers::websocket::handler),
-                    ),
-                )
-                .app_data(Data::new(server.clone()))
-                .app_data(Data::new(instance.clone()))
-                .app_data(Data::new(config.group_id.clone()))
-                .app_data(Data::new(ep_san.clone()))
-                .app_data(Data::new(config.clone()))
+                    )
+                    .app_data(Data::new(Endpoint::from(ep.clone()))),
+            )
         }
         app
     })
     .bind(&bind)?
-    .disable_signals()
     .run()
     .await?;
     Ok(())
