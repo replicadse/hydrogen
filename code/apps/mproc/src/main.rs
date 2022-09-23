@@ -143,6 +143,7 @@ fn handle_nats_message_regex_mode(
     let forward_resp = destination_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
         instance_id: msg.data.instance_id.clone(),
         connection_id: msg.data.connection_id.clone(),
+        endpoint: msg.data.endpoint.clone(),
         time: msg.meta.timestamp.clone(),
         context: crate::routes::MessageContext {
             authorizer: msg.data.context.authorizer.clone(),
@@ -179,6 +180,7 @@ fn handle_nats_message_dss_mode(
     let re_response = re_req.send_string(&serde_json::to_string(&crate::routes::RulesEngineRequest {
         instance_id: msg.data.instance_id.clone(),
         connection_id: msg.data.connection_id.clone(),
+        endpoint: msg.data.endpoint.clone(),
         time: msg.meta.timestamp.clone(),
         context: crate::routes::MessageContext {
             authorizer: msg.data.context.authorizer.clone(),
@@ -209,6 +211,7 @@ fn handle_nats_message_dss_mode(
     let forward_resp = destination_req.send_string(&serde_json::to_string(&crate::routes::ForwardRequest {
         instance_id: msg.data.instance_id.clone(),
         connection_id: msg.data.connection_id.clone(),
+        endpoint: msg.data.endpoint.clone(),
         time: msg.meta.timestamp.clone(),
         context: crate::routes::MessageContext {
             authorizer: msg.data.context.authorizer.clone(),

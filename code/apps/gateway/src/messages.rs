@@ -47,8 +47,8 @@ pub struct ConnectionContext {
 #[rtype(result = "std::result::Result<(), u16>")]
 pub struct ClientMessage {
     pub connection: String,
-    pub endpoint: String,
     pub group_id: String,
+    pub endpoint: String,
     pub time: String,
     pub context: ConnectionContext,
     pub message: String,

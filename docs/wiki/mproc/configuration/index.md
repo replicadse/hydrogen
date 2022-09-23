@@ -38,7 +38,7 @@ engine_mode:
 |Key|Required|Description|Type|Example|
 |-- |-- |-- |-- |-- |
 |version|yes|The version of this config.|semver v2 compatible string|`1.0.0`|
-|group_id|yes|An identifier for grouping multiple instances.|semver v2 compatible string|`1.0.0`|
+|group_id|yes|An identifier for grouping multiple instances.|string|`0x0001`|
 |stream|yes|The config for consuming messages on a stream.|object||
 |stream.endpoint|yes|The endpoint on which to connect to `NATS`.|URL string|`nats://hydrogen-nats:4222`|
 |stream.name|yes|The stream name that will be used for client message brokering.|string|`hydrogen`|

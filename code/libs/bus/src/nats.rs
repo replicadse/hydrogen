@@ -11,6 +11,7 @@ pub struct ConnectionContext {
 pub struct ClientMessage {
     pub instance_id: String,
     pub connection_id: String,
+    pub endpoint: String,
     pub context: ConnectionContext,
     pub message: String,
 }

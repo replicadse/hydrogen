@@ -11,6 +11,7 @@ pub struct MessageContext {
 pub struct RulesEngineRequest {
     pub instance_id: String,
     pub connection_id: String,
+    pub endpoint: String,
     pub time: String,
     pub context: MessageContext,
     pub message: String,
@@ -28,6 +29,7 @@ pub struct RulesEngineResponse {
 pub struct ForwardRequest {
     pub instance_id: String,
     pub connection_id: String,
+    pub endpoint: String,
     pub time: String,
     pub context: MessageContext,
     pub message: String,

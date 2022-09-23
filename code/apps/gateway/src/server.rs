@@ -583,6 +583,7 @@ impl Handler<ClientMessage> for Server {
                             data: hydrogen_bus::nats::ClientMessage {
                                 instance_id: self.instance.clone(),
                                 connection_id: msg.connection,
+                                endpoint: msg.endpoint,
                                 context: msg.context.into(),
                                 message: msg.message,
                             }

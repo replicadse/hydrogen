@@ -36,7 +36,6 @@ pub async fn handler(
     group: Data<GroupID>,
     endpoint: Data<Endpoint>,
 ) -> Result<HttpResponse, Error> {
-    println!("endpoint is {}", endpoint.clone().into_inner());
     let safecall_auth =
         |conn_id: &str,
          auth_route: &std::option::Option<crate::config::Authorizer>|

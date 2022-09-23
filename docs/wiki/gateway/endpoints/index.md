@@ -17,3 +17,8 @@ This endpoint is used in order to have a message sent from the backend to a conn
 ## `HTTP/POST @ /connections/$connection_id/_disconnect`
 
 Forces a disconnect for the given connection.
+
+## `HTTP/POST @ /connections/_broadcast`
+
+Broadcasts a message to all connections. \
+Optional query params are `endpoints[]=`, can be set multiple times. If specified, only connections to the specified endpoints will receive the broadcast message. Example: `$BASE_URL/connections/_broadcast?endpoints%5B%5D=%2Ftest&endpoints%5B%5D=%2F` will send broadcast to endpoint `/` and `/test`.
