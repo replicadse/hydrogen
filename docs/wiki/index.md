@@ -42,3 +42,7 @@ All work, features and generally everything that will be included in / done befo
   The authorizer can return a context object for the connection if it authorizes it. This context will be included in every client to server message and be available for the downstream services to use.
 * **Forced disconnects** \
   Sending a disconnect request via the respective route to any gateway will lead to the specified connection being forced to disconnect with the given reason. Useful if you want to enforce a new authorization.
+
+## v1 Architecture abstract
+
+<img src="./v1-architecture-abstract.png" alt="v1 architecture abstract" style="width=80%"/>
