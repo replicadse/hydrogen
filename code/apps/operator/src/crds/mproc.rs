@@ -55,6 +55,7 @@ use crate::error::WKError;
 )]
 #[serde(rename_all = "snake_case")]
 pub struct MprocSpec {
+    pub image: String,
     pub hpa: MprocHpa,
     pub config: MprocSpecConfig,
 }
@@ -176,9 +177,7 @@ impl Mproc {
                     spec: Some(PodSpec {
                         containers: vec![Container {
                             name: resource.name_any(),
-                            image: Some(
-                                "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly".to_owned(),
-                            ),
+                            image: Some(resource.spec.image.clone()),
                             ports: None,
                             volume_mounts: Some(vec![VolumeMount {
                                 name: "config".to_owned(),

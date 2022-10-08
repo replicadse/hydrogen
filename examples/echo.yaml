@@ -5,6 +5,7 @@ metadata:
   name: echo-gateway-1
   namespace: hydrogen
 spec:
+  image: "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly"
   config:
     inline: |-
       version: 0.1.0
@@ -48,6 +49,7 @@ metadata:
   name: echo-mproc
   namespace: hydrogen
 spec:
+  image: "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-mproc:nightly"
   hpa:
     min: 2
     max: 10

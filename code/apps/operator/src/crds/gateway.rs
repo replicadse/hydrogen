@@ -61,6 +61,7 @@ use crate::error::WKError;
     namespaced
 )]
 pub struct GatewaySpec {
+    pub image: String,
     pub hpa: GatewayHpa,
     pub config: GatewaySpecConfig,
 }
@@ -189,9 +190,7 @@ impl Gateway {
                     spec: Some(PodSpec {
                         containers: vec![Container {
                             name: resource.name_any(),
-                            image: Some(
-                                "harbor.chinook.k8s.voidpointergroup.com/hydrogen/hydrogen-gateway:nightly".to_owned(),
-                            ),
+                            image: Some(resource.spec.image.clone()),
                             ports: None,
                             volume_mounts: Some(vec![VolumeMount {
                                 name: "config".to_owned(),
