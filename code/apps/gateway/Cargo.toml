@@ -10,7 +10,7 @@ hydrogen-error = { path = "../../libs/error" }
 
 ureq = "^2.4"
 clap = "^3.2"
-chrono = "0.4.19"
+chrono = "0.4.23"
 futures = "0.3.21"
 redis = { version = "0.21.5", features = ["tokio-comp"] }
 actix-web = "^4.1"
