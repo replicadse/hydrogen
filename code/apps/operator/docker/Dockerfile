@@ -1,4 +1,4 @@
-FROM rust:1.61.0 as build-env
+FROM rust:1.66.0 as build-env
 ARG toolchain
 ARG version
 RUN rustup default $toolchain
