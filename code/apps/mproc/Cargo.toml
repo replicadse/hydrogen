@@ -8,7 +8,7 @@ edition = "2018"
 hydrogen-bus = { path = "../../libs/bus" }
 hydrogen-error = { path = "../../libs/error" }
 
-ureq = "^2.4"
+ureq = "^2.6"
 clap = "^3.2"
 chrono = "0.4.19"
 futures = "0.3.21"
