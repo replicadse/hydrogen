@@ -116,7 +116,7 @@ impl Actor for WsConn {
             .wait(ctx);
     }
 
-    /// Handles a connection which is in the process of bein stopped.
+    /// Handles a connection which is in the process of being stopped.
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         self.address.do_send(Disconnect {
             connection: self.connection.clone(),

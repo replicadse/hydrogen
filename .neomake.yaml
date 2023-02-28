@@ -1,0 +1,15 @@
+version: 0.3
+
+chains:
+  protoc:
+    matrix:
+      - - env:
+            APP: mproc
+        - env:
+            APP: gateway
+    tasks:
+      - script: |
+          set -e
+          cd ./code/apps/$APP
+          rm -rf ./src/__generated__/bus && mkdir -p ./src/__generated__/bus
+          protoc -I ../../libs --rust_out ./src/__generated__/bus ../../libs/bus2/*.proto

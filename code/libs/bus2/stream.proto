@@ -1,0 +1,28 @@
+syntax = "proto3";
+package stream;
+
+import "google/protobuf/any.proto";
+
+message ConnectionContext {
+  map<string, google.protobuf.Any> authorizer = 1;
+}
+
+message ClientMessage {
+    string instance_id = 1;
+    string connection_id = 2;
+    string endpoint = 3;
+    ConnectionContext context = 4;
+    string message = 5;
+}
+
+message MessageMeta {
+    string id = 1;
+    string timestamp = 2;
+}
+
+message Message {
+    MessageMeta meta = 1;
+    oneof data {
+        ClientMessage client_message = 2;
+    }
+}
